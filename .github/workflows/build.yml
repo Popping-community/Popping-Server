@@ -74,5 +74,8 @@ jobs:
           key: ${{ secrets.REMOTE_SSH_KEY }}
           port: ${{ secrets.REMOTE_SSH_PORT }}
           script: |
-            docker-compose pull popping-community
-            docker-compose up -d popping-community
+            docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+            docker pull chooh1010/popping-community
+            docker stop popping-community || true
+            docker rm popping-community || true
+            docker run -d --name popping-community -p 8080:8080 chooh1010/popping-community:latest
