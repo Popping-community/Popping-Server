@@ -74,6 +74,5 @@ jobs:
           key: ${{ secrets.REMOTE_SSH_KEY }}
           port: ${{ secrets.REMOTE_SSH_PORT }}
           script: |
-            cd docker
-            docker compose pull popping-community
-            docker compose up -d popping-community
+            docker-compose pull popping-community
+            docker-compose up -d popping-community
