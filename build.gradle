@@ -21,7 +21,7 @@ java {
 
 jib {
 	from {
-		image = "openjdk:21-jdk-alpine"
+		image = "eclipse-temurin:21-jdk-alpine"
 	}
 	to {
 		image = "chooh1010/popping-community"
