@@ -1,5 +1,8 @@
+import java.text.SimpleDateFormat
+
 plugins {
 	id 'java'
+	id 'com.google.cloud.tools.jib' version '3.4.0'
 	id 'jacoco'
 	id 'checkstyle'
 	id 'org.springframework.boot' version '3.4.3'
@@ -15,6 +18,21 @@ java {
 		languageVersion = JavaLanguageVersion.of(21)
 	}
 }
+
+jib {
+	from {
+		image = "eclipse-temurin:21-jdk-alpine"
+	}
+	to {
+		image = "chooh1010/popping-community"
+		tags = ['latest', new SimpleDateFormat('yyyyMMddHHmmss').format(System.currentTimeMillis())]
+	}
+	container {
+		environment = [TZ: "Asia/Seoul"]
+		jvmFlags = ['-Dspring.profiles.active=dev', '-XX:+UseContainerSupport', '-Dfile.encoding=UTF-8', '-Duser.timezone="Asia/Seoul"']
+	}
+}
+
 
 configurations {
 	compileOnly {
