@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>커뮤니티</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        background: 'hsl(0 0% 100%)',
+                        foreground: 'hsl(222.2 84% 4.9%)',
+                        primary: {
+                            DEFAULT: 'hsl(222.2 47.4% 11.2%)',
+                            foreground: 'hsl(210 40% 98%)',
+                        },
+                        muted: {
+                            DEFAULT: 'hsl(210 40% 96.1%)',
+                            foreground: 'hsl(215.4 16.3% 46.9%)',
+                        },
+                        border: 'hsl(214.3 31.8% 91.4%)',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        .center-content {
+            max-width: 1200px;
+            width: 100%;
+            margin-left: auto;
+            margin-right: auto;
+            padding-left: 1rem;
+            padding-right: 1rem;
+        }
+    </style>
+</head>
+<body>
+<header class="sticky top-0 z-40 w-full border-b bg-background">
+    <div class="center-content flex h-16 items-center">
+        <a href="/" class="mr-6 flex items-center space-x-2">
+            <span class="font-bold text-xl">커뮤니티</span>
+        </a>
+        <div class="flex items-center md:gap-2 lg:gap-4">
+            <nav class="hidden md:flex items-center space-x-4 lg:space-x-6 text-sm font-medium">
+                <a href="/" class="hover:text-primary">홈</a>
+                <a href="#" class="hover:text-primary">인기글</a>
+                <a href="#" class="hover:text-primary">새글</a>
+                <a href="#" class="hover:text-primary">갤러리</a>
+            </nav>
+        </div>
+        <div class="ml-auto flex items-center gap-2">
+            <a href="/login" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2 gap-1">
+                로그인
+            </a>
+            <a href="/users/join" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-4 py-2">
+                회원가입
+            </a>
+        </div>
+    </div>
+</header>
+
+<main>
+    <section class="w-full py-12 md:py-24 lg:py-32 bg-muted flex items-center justify-center">
+        <div class="center-content text-center">
+            <div class="max-w-3xl mx-auto space-y-8">
+                <div class="space-y-4">
+                    <h1 class="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">커뮤니티에 오신 것을 환영합니다</h1>
+                    <p class="mx-auto max-w-[700px] text-muted-foreground md:text-xl">
+                        다양한 주제의 게시글을 읽고 의견을 나눠보세요. 회원가입 후 더 많은 기능을 이용할 수 있습니다.
+                    </p>
+                </div>
+                <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                    <a href="/login" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-8 py-2">
+                        로그인
+                    </a>
+                    <a href="/users/join" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-8 py-2">
+                        회원가입
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="w-full py-12 md:py-24 lg:py-32 flex items-center justify-center">
+        <div class="center-content">
+            <div class="max-w-4xl mx-auto">
+                <div class="grid gap-8 md:grid-cols-3">
+                    <div class="space-y-4 text-center">
+                        <div class="inline-flex items-center justify-center rounded-md bg-muted p-2 h-12 w-12 mx-auto">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-6 w-6">
+                                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-xl font-bold">다양한 주제의 게시판</h3>
+                        <p class="text-muted-foreground">
+                            유머, 이슈/뉴스, 게임, 스포츠, 연예 등 다양한 주제의 게시판에서 관심사를 나눠보세요.
+                        </p>
+                    </div>
+                    <div class="space-y-4 text-center">
+                        <div class="inline-flex items-center justify-center rounded-md bg-muted p-2 h-12 w-12 mx-auto">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-6 w-6">
+                                <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="12" cy="7" r="4"></circle>
+                            </svg>
+                        </div>
+                        <h3 class="text-xl font-bold">회원 전용 기능</h3>
+                        <p class="text-muted-foreground">
+                            회원가입 후 글 작성, 댓글 달기, 좋아요 등 다양한 기능을 이용할 수 있습니다.
+                        </p>
+                    </div>
+                    <div class="space-y-4 text-center">
+                        <div class="inline-flex items-center justify-center rounded-md bg-muted p-2 h-12 w-12 mx-auto">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-6 w-6">
+                                <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
+                                <polyline points="17 6 23 6 23 12"></polyline>
+                            </svg>
+                        </div>
+                        <h3 class="text-xl font-bold">실시간 인기 콘텐츠</h3>
+                        <p class="text-muted-foreground">
+                            실시간으로 업데이트되는 인기 게시글과 댓글을 확인해보세요.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
+
+<footer class="border-t py-6 md:py-0">
+    <div class="center-content flex flex-col items-center justify-between gap-4 md:h-16 md:flex-row">
+        <p class="text-center text-sm leading-loose text-muted-foreground md:text-left">
+            © 2025 커뮤니티. 모든 권리 보유.
+        </p>
+        <div class="flex items-center gap-4 text-sm text-muted-foreground">
+            <a href="#" class="hover:underline">이용약관</a>
+            <a href="#" class="hover:underline">개인정보처리방침</a>
+            <a href="#" class="hover:underline">문의하기</a>
+        </div>
+    </div>
+</footer>
+</body>
+</html>
