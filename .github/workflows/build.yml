@@ -48,6 +48,9 @@ jobs:
       - name: SonarQube Analyze
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          DB_URL: ${{ secrets.DB_URL }}
+          DB_USERNAME: ${{ secrets.DB_USERNAME }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
         run: ./gradlew build sonar --info
 
       # Gradle 설정
