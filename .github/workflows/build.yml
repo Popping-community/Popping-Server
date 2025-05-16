@@ -44,6 +44,11 @@ jobs:
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle') }}
           restore-keys: ${{ runner.os }}-gradle
 
+      # ✅ application.properties 생성 (여기!)
+      - name: Set up application.properties
+        run: |
+          echo "${{ secrets.APPLICATION }}" > ./src/main/resources/application.properties
+
       # SonarQube 분석
       - name: SonarQube Analyze
         env:
