@@ -13,6 +13,21 @@ jobs:
   build:
     name: Build, Analyze and Deploy (JDK 21)
     runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8
+        env:
+          MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
+          MYSQL_DATABASE: ${{ secrets.MYSQL_DATABASE }}
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+
     steps:
       - uses: actions/checkout@v4
         with:
@@ -44,6 +59,11 @@ jobs:
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle') }}
           restore-keys: ${{ runner.os }}-gradle
 
+      # ✅ application.properties 생성 (여기!)
+      - name: Set up application.properties
+        run: |
+          echo "${{ secrets.APPLICATION }}" > ./src/main/resources/application.properties
+
       # SonarQube 분석
       - name: SonarQube Analyze
         env:
@@ -51,7 +71,10 @@ jobs:
           DB_URL: ${{ secrets.DB_URL }}
           DB_USERNAME: ${{ secrets.DB_USERNAME }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-        run: ./gradlew build sonar --info
+        run: |
+          ./gradlew build sonar \
+            -Dsonar.projectVersion=${{ github.run_number }} \
+            --info
 
       # Gradle 설정
       - name: Setup Gradle
