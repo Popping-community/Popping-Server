@@ -73,7 +73,7 @@ jobs:
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
         run: |
           ./gradlew build sonar \
-            -Dsonar.projectVersion=${{ github.run_number }} \
+            -Dorg.gradle.project.sonar.projectVersion=${{ github.run_number }} \
             --info
 
       # Gradle 설정
