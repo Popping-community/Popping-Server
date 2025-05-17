@@ -72,9 +72,9 @@ jobs:
           DB_USERNAME: ${{ secrets.DB_USERNAME }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
         run: |
-          ./gradlew build sonar \
-            -Dorg.gradle.project.sonar.projectVersion=${{ github.run_number }} \
-            --info
+          ./gradlew build \
+            -Dsonar.projectVersion=${{ github.run_number }} \
+            sonar --info
 
       # Gradle 설정
       - name: Setup Gradle
