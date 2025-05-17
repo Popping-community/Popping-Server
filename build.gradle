@@ -77,14 +77,10 @@ jacocoTestReport {
 
 sonar {
 	properties {
-		def version = System.getProperty("sonar.projectVersion", "1.0.0")
-		println("👉 sonar.projectVersion: " + version)
-
 		property "sonar.projectKey", "Popping-community_Popping-Server"
 		property "sonar.organization", "popping-community"
 		property "sonar.host.url", "https://sonarcloud.io"
 		property "sonar.coverage.jacoco.xmlReportPaths", "build/reports/jacoco/test/jacocoTestReport.xml"
 		property "sonar.java.checkstyle.reportPaths", "build/reports/checkstyle/main.xml"
-		property "sonar.projectVersion", version
 	}
 }

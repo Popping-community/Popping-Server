@@ -76,9 +76,6 @@ jobs:
             -Dsonar.projectVersion=${{ github.run_number }} \
             --info
 
-      - name: Check version variable
-        run: echo "VERSION IS ${{ github.run_number }}"
-
       # Gradle 설정
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v2
