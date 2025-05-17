@@ -75,6 +75,9 @@ jacocoTestReport {
 	}
 }
 
+def versionFromArg = System.getProperty("sonar.projectVersion", "0.0.1-SNAPSHOT")
+println "👉 sonar.projectVersion (from CLI arg or fallback): $versionFromArg"
+
 sonar {
 	properties {
 		property "sonar.projectKey", "Popping-community_Popping-Server"
@@ -82,5 +85,6 @@ sonar {
 		property "sonar.host.url", "https://sonarcloud.io"
 		property "sonar.coverage.jacoco.xmlReportPaths", "build/reports/jacoco/test/jacocoTestReport.xml"
 		property "sonar.java.checkstyle.reportPaths", "build/reports/checkstyle/main.xml"
+		property "sonar.projectVersion", versionFromArg
 	}
 }
