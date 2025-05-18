@@ -101,6 +101,5 @@ jobs:
           port: ${{ secrets.REMOTE_SSH_PORT }}
           script: |
             docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
-            docker-compose down
             docker-compose pull
             docker-compose up -d
