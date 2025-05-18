@@ -2,6 +2,7 @@ package com.example.popping.dto;
 
 import com.example.popping.domain.User;
 import com.example.popping.domain.UserRole;
+
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

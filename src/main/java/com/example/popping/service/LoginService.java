@@ -1,15 +1,17 @@
 package com.example.popping.service;
 
+import java.util.Optional;
+
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+
 import com.example.popping.domain.User;
 import com.example.popping.dto.JoinRequest;
 import com.example.popping.dto.LoginRequest;
 import com.example.popping.repository.UserRepository;
+
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
-
-import java.util.Optional;
 
 @Service
 @Transactional
@@ -35,13 +37,13 @@ public class LoginService {
     public User login(LoginRequest req) {
         Optional<User> optionalUser = userRepository.findByLoginId(req.getLoginId());
 
-        if(optionalUser.isEmpty()) {
+        if (optionalUser.isEmpty()) {
             return null;
         }
 
         User user = optionalUser.get();
 
-        if(!passwordEncoder.matches(req.getPassword(), user.getPassword())) {
+        if (!passwordEncoder.matches(req.getPassword(), user.getPassword())) {
             return null;
         }
 
@@ -49,14 +51,18 @@ public class LoginService {
     }
 
     public User getLoginUserById(Long userId) {
-        if(userId == null) return null;
+        if (userId == null) {
+            return null;
+        }
 
         Optional<User> optionalUser = userRepository.findById(userId);
         return optionalUser.orElse(null);
     }
 
     public User getLoginUserByLoginId(String loginId) {
-        if(loginId == null) return null;
+        if (loginId == null) {
+            return null;
+        }
 
         Optional<User> optionalUser = userRepository.findByLoginId(loginId);
         return optionalUser.orElse(null);
