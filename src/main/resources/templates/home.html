@@ -56,9 +56,9 @@
         <div class="flex items-center md:gap-2 lg:gap-4">
             <nav class="hidden md:flex items-center space-x-4 lg:space-x-6 text-sm font-medium">
                 <a href="/" class="hover:text-primary">홈</a>
+                <a href="/boards" class="hover:text-primary">게시판</a>
                 <a href="#" class="hover:text-primary">인기글</a>
                 <a href="#" class="hover:text-primary">새글</a>
-                <a href="#" class="hover:text-primary">갤러리</a>
             </nav>
         </div>
         <div class="ml-auto flex items-center gap-2">
@@ -94,6 +94,23 @@
         </div>
     </section>
 
+    <!-- 게시판 바로가기 섹션 추가 -->
+    <section class="w-full py-8 md:py-12 flex items-center justify-center">
+        <div class="center-content">
+            <div class="max-w-4xl mx-auto">
+                <div class="text-center mb-8">
+                    <h2 class="text-2xl font-bold mb-2">게시판 둘러보기</h2>
+                    <p class="text-muted-foreground">다양한 주제의 게시판을 확인해보세요.</p>
+                </div>
+                <div class="flex justify-center">
+                    <a href="/boards" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-8 py-2">
+                        게시판 목록 보기
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <section class="w-full py-12 md:py-24 lg:py-32 flex items-center justify-center">
         <div class="center-content">
             <div class="max-w-4xl mx-auto">
@@ -108,6 +125,13 @@
                         <p class="text-muted-foreground">
                             유머, 이슈/뉴스, 게임, 스포츠, 연예 등 다양한 주제의 게시판에서 관심사를 나눠보세요.
                         </p>
+                        <a href="/boards" class="text-primary hover:underline inline-flex items-center">
+                            게시판 바로가기
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 ml-1">
+                                <path d="M5 12h14"></path>
+                                <path d="m12 5 7 7-7 7"></path>
+                            </svg>
+                        </a>
                     </div>
                     <div class="space-y-4 text-center">
                         <div class="inline-flex items-center justify-center rounded-md bg-muted p-2 h-12 w-12 mx-auto">
