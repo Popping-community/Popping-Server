@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>게시판 생성 - 커뮤니티</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        background: 'hsl(0 0% 100%)',
+                        foreground: 'hsl(222.2 84% 4.9%)',
+                        primary: {
+                            DEFAULT: 'hsl(222.2 47.4% 11.2%)',
+                            foreground: 'hsl(210 40% 98%)',
+                        },
+                        muted: {
+                            DEFAULT: 'hsl(210 40% 96.1%)',
+                            foreground: 'hsl(215.4 16.3% 46.9%)',
+                        },
+                        border: 'hsl(214.3 31.8% 91.4%)',
+                        destructive: {
+                            DEFAULT: 'hsl(0 84.2% 60.2%)',
+                            foreground: 'hsl(210 40% 98%)',
+                        },
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        .center-content {
+            max-width: 1200px;
+            width: 100%;
+            margin-left: auto;
+            margin-right: auto;
+            padding-left: 1rem;
+            padding-right: 1rem;
+        }
+    </style>
+</head>
+<body>
+<header class="sticky top-0 z-40 w-full border-b bg-background">
+    <div class="center-content flex h-16 items-center">
+        <a href="/" class="mr-6 flex items-center space-x-2">
+            <span class="font-bold text-xl">커뮤니티</span>
+        </a>
+        <div class="flex items-center md:gap-2 lg:gap-4">
+            <nav class="hidden md:flex items-center space-x-4 lg:space-x-6 text-sm font-medium">
+                <a href="/" class="hover:text-primary">홈</a>
+                <a href="#" class="hover:text-primary">인기글</a>
+                <a href="#" class="hover:text-primary">새글</a>
+                <a href="#" class="hover:text-primary">갤러리</a>
+            </nav>
+        </div>
+        <div class="ml-auto flex items-center gap-2">
+            <form action="/logout" method="post">
+                <button type="submit" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2">
+                    로그아웃
+                </button>
+            </form>
+        </div>
+    </div>
+</header>
+
+<main class="flex-1 flex items-center justify-center">
+    <div class="center-content py-8 md:py-12">
+        <div class="max-w-md mx-auto w-full">
+            <div class="rounded-lg border bg-card text-card-foreground shadow-sm">
+                <div class="p-6 space-y-1.5">
+                    <h3 class="text-2xl font-semibold leading-none tracking-tight">게시판 생성</h3>
+                    <p class="text-sm text-muted-foreground">새로운 게시판을 만들어보세요.</p>
+                </div>
+                <div class="p-6 pt-0">
+                    <form th:action="@{/boards}" th:object="${boardCreateRequest}" method="post" class="space-y-4">
+                        <!-- 게시판 이름 필드 -->
+                        <div class="space-y-2">
+                            <label for="name" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">게시판 이름</label>
+                            <input
+                                    type="text"
+                                    id="name"
+                                    th:field="*{name}"
+                                    class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                    placeholder="게시판 이름을 입력하세요"
+                            />
+                            <p th:if="${#fields.hasErrors('name')}" th:errors="*{name}" class="text-xs text-destructive"></p>
+                        </div>
+
+                        <!-- 설명 필드 -->
+                        <div class="space-y-2">
+                            <label for="description" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">설명</label>
+                            <textarea
+                                    id="description"
+                                    th:field="*{description}"
+                                    class="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                    placeholder="게시판에 대한 설명을 입력하세요"
+                            ></textarea>
+                            <p th:if="${#fields.hasErrors('description')}" th:errors="*{description}" class="text-xs text-destructive"></p>
+                        </div>
+
+                        <!-- 슬러그 필드 -->
+                        <div class="space-y-2">
+                            <label for="slug" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">슬러그</label>
+                            <div class="flex items-center">
+                                <span class="text-sm text-muted-foreground mr-1">/boards/</span>
+                                <input
+                                        type="text"
+                                        id="slug"
+                                        th:field="*{slug}"
+                                        class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                        placeholder="영문-숫자-하이픈만 사용 (예: my-board)"
+                                />
+                            </div>
+                            <p class="text-xs text-muted-foreground">URL에 사용될 고유 식별자입니다. 영문, 숫자, 하이픈(-)만 사용 가능합니다.</p>
+                            <p th:if="${#fields.hasErrors('slug')}" th:errors="*{slug}" class="text-xs text-destructive"></p>
+                        </div>
+
+                        <div class="flex items-center justify-end gap-2 pt-4">
+                            <a href="/boards" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2">
+                                취소
+                            </a>
+                            <button
+                                    type="submit"
+                                    class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2"
+                            >
+                                생성하기
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer class="border-t py-6 md:py-0">
+    <div class="center-content flex flex-col items-center justify-between gap-4 md:h-16 md:flex-row">
+        <p class="text-center text-sm leading-loose text-muted-foreground md:text-left">
+            © 2025 커뮤니티. 모든 권리 보유.
+        </p>
+        <div class="flex items-center gap-4 text-sm text-muted-foreground">
+            <a href="#" class="hover:underline">이용약관</a>
+            <a href="#" class="hover:underline">개인정보처리방침</a>
+            <a href="#" class="hover:underline">문의하기</a>
+        </div>
+    </div>
+</footer>
+</body>
+</html>
