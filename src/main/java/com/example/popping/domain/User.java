@@ -3,10 +3,7 @@ package com.example.popping.domain;
 import java.io.Serial;
 import java.io.Serializable;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 
 import lombok.Builder;
 import lombok.Getter;
@@ -18,7 +15,7 @@ import lombok.AllArgsConstructor;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class User implements Serializable {
+public class User extends BaseEntity implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
@@ -27,8 +24,9 @@ public class User implements Serializable {
     private Long id;
 
     private String loginId;
-    private String password;
+    private String passwordHash;
     private String nickname;
 
+    @Enumerated(EnumType.STRING)
     private UserRole role;
 }

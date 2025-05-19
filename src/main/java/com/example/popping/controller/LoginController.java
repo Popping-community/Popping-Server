@@ -36,13 +36,13 @@ public class LoginController {
             BindingResult bindingResult,
             HttpServletRequest request) {
         if (bindingResult.hasErrors()) {
-            return "login/loginForm";
+            return LOGIN_FORM;
         }
         User loginUser = loginService.login(loginRequest);
         log.info("login? {}", loginUser);
         if (loginUser == null) {
             bindingResult.reject("loginFail", "아이디 또는 비밀번호가 맞지 않습니다.");
-            return "login/loginForm";
+            return LOGIN_FORM;
         }
 
         HttpSession session = request.getSession();
