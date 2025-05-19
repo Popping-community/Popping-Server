@@ -1,0 +1,26 @@
+package com.example.popping.dto;
+
+import com.example.popping.domain.Post;
+import lombok.Builder;
+import lombok.Getter;
+
+@Getter
+@Builder
+public class PostResponse {
+
+    private Long id;
+    private String title;
+    private String content;
+    private String authorName;
+    private String boardName;
+
+    public static PostResponse from(Post post) {
+        return PostResponse.builder()
+                .id(post.getId())
+                .title(post.getTitle())
+                .content(post.getContent())
+                .authorName(post.getAuthor().getNickname())
+                .boardName(post.getBoard().getName())
+                .build();
+    }
+}
