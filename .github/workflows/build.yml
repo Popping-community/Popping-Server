@@ -99,13 +99,7 @@ jobs:
           username: ${{ secrets.REMOTE_SSH_ID }}
           key: ${{ secrets.REMOTE_SSH_KEY }}
           port: ${{ secrets.REMOTE_SSH_PORT }}
-          script_stop: true         # 실패 시 멈춤
-          debug: true               # 디버그 출력 활성화
           script: |
-            echo "✅ Connected to server"
             docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
-            echo "✅ Docker login success"
             docker-compose pull
-            echo "✅ Docker images pulled"
             docker-compose up -d
-            echo "✅ Docker containers started"
