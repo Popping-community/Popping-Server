@@ -43,7 +43,7 @@ public class LoginService {
 
         User user = optionalUser.get();
 
-        if (!passwordEncoder.matches(req.getPassword(), user.getPassword())) {
+        if (!passwordEncoder.matches(req.getPassword(), user.getPasswordHash())) {
             return null;
         }
 
