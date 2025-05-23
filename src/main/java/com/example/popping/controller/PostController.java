@@ -1,16 +1,16 @@
 package com.example.popping.controller;
 
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.*;
+import lombok.RequiredArgsConstructor;
+
 import com.example.popping.constant.SessionConst;
 import com.example.popping.domain.User;
-import com.example.popping.dto.BoardResponse;
 import com.example.popping.dto.PostCreateRequest;
 import com.example.popping.dto.PostResponse;
 import com.example.popping.dto.PostUpdateRequest;
 import com.example.popping.service.PostService;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
 
 @Controller
 @RequiredArgsConstructor

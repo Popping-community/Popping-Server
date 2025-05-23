@@ -3,9 +3,10 @@ package com.example.popping.dto;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 import com.example.popping.domain.Board;
 import com.example.popping.domain.User;
-import lombok.Setter;
 
 @Getter
 @Setter

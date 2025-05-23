@@ -1,18 +1,18 @@
 package com.example.popping.service;
 
-import com.example.popping.dto.BoardResponse;
-import com.example.popping.dto.BoardUpdateRequest;
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
 
+import com.example.popping.domain.Board;
 import com.example.popping.domain.User;
 import com.example.popping.dto.BoardCreateRequest;
+import com.example.popping.dto.BoardResponse;
+import com.example.popping.dto.BoardUpdateRequest;
 import com.example.popping.repository.BoardRepository;
-import com.example.popping.domain.Board;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 @Service
 @Transactional
