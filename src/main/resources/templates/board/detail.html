@@ -93,12 +93,17 @@
                         개설자: <span th:text="${board.createdBy}">사용자</span>
                     </p>
                 </div>
-                <div class="flex gap-2">
-                    <a th:href="@{/boards/{slug}/edit(slug=${board.slug})}" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2">
+                <div class="flex gap-2"
+                     th:if="${loginUser != null and loginUser.id == board.createdById}">
+                    <a th:href="@{/boards/{slug}/edit(slug=${board.slug})}"
+                       class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2">
                         수정
                     </a>
-                    <form th:action="@{/boards/{slug}/delete(slug=${board.slug})}" method="post" onsubmit="return confirm('정말 삭제하시겠습니까?');">
-                        <button type="submit" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-destructive text-destructive-foreground hover:bg-destructive/90 h-9 px-4 py-2">
+                    <form th:action="@{/boards/{slug}/delete(slug=${board.slug})}"
+                          method="post"
+                          onsubmit="return confirm('정말 삭제하시겠습니까?');">
+                        <button type="submit"
+                                class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-destructive text-destructive-foreground hover:bg-destructive/90 h-9 px-4 py-2">
                             삭제
                         </button>
                     </form>

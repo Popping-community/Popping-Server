@@ -20,12 +20,14 @@ public class PostController {
     private final PostService postService;
 
     @GetMapping("/{postId}")
-    public String getPost(@PathVariable String slug,
-                          @PathVariable Long postId,
+    public String getPost(@SessionAttribute(name = SessionConst.LOGIN_USER, required = false) User loginUser,
+                          @PathVariable String slug, @PathVariable Long postId,
                           Model model) {
+        System.out.println(postId);
         PostResponse dto = postService.getPost(postId);
         model.addAttribute("post", dto);
         model.addAttribute("slug", slug);
+        model.addAttribute("loginUser", loginUser);
         return "post/detail";
     }
 

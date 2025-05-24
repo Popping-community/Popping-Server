@@ -33,11 +33,13 @@ public class BoardController {
     }
 
     @GetMapping("/{slug}")
-    public String getBoard(@PathVariable String slug, Model model) {
+    public String getBoard(@SessionAttribute(name = SessionConst.LOGIN_USER, required = false) User loginUser,
+                           @PathVariable String slug, Model model) {
         BoardResponse dto = boardService.getBoard(slug);
         List<PostResponse> posts = postService.getPostsByBoardSlug(slug);
         model.addAttribute("board", dto);
         model.addAttribute("posts", posts);
+        model.addAttribute("loginUser", loginUser);
         return "board/detail";
     }
 
