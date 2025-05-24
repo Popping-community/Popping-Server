@@ -255,33 +255,30 @@
     </div>
 </footer>
 
-<script>
-    // 수정 폼에서 기존 데이터 설정
+<script th:inline="javascript">
     document.addEventListener('DOMContentLoaded', function() {
-        // 회원 게시글 수정 시 기존 데이터 설정
         const memberTitleInput = document.getElementById('title');
         const memberContentTextarea = document.getElementById('content');
 
-        if (memberTitleInput && '[[${form.title}]]') {
-            memberTitleInput.value = '[[${form.title}]]';
+        if (memberTitleInput) {
+            memberTitleInput.value = [[${form.title}]];
         }
-        if (memberContentTextarea && '[[${form.content}]]') {
-            memberContentTextarea.value = '[[${form.content}]]';
+        if (memberContentTextarea) {
+            memberContentTextarea.value = [[${form.content}]];
         }
 
-        // 게스트 게시글 수정 시 기존 데이터 설정
         const guestNicknameInput = document.getElementById('guestNickname');
         const guestTitleInput = document.getElementById('guestTitle');
         const guestContentTextarea = document.getElementById('guestContent');
 
-        if (guestNicknameInput && '[[${form.guestNickname}]]') {
-            guestNicknameInput.value = '[[${form.guestNickname}]]';
+        if (guestNicknameInput) {
+            guestNicknameInput.value = [[${form.guestNickname}]];
         }
-        if (guestTitleInput && '[[${form.title}]]') {
-            guestTitleInput.value = '[[${form.title}]]';
+        if (guestTitleInput) {
+            guestTitleInput.value = [[${form.title}]];
         }
-        if (guestContentTextarea && '[[${form.content}]]') {
-            guestContentTextarea.value = '[[${form.content}]]';
+        if (guestContentTextarea) {
+            guestContentTextarea.value = [[${form.content}]];
         }
     });
 </script>
