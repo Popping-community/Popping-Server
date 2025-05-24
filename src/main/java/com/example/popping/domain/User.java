@@ -2,6 +2,7 @@ package com.example.popping.domain;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.util.Objects;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -28,4 +29,17 @@ public class User extends BaseEntity implements Serializable {
 
     @Enumerated(EnumType.STRING)
     private UserRole role;
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        User user = (User) o;
+        return Objects.equals(id, user.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
+    }
 }

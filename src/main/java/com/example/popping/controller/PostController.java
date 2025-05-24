@@ -52,10 +52,10 @@ public class PostController {
                                @PathVariable String slug,
                                @PathVariable Long postId,
                                Model model) {
-        PostResponse dto = postService.getPost(postId);
+        PostResponse dto = postService.getPostForEdit(postId, loginUser);
         model.addAttribute("form", dto);
         model.addAttribute("slug", slug);
-        return "post/edit-form"; // templates/post/edit-form.html
+        return "post/edit-form";
     }
 
     @PostMapping("/{postId}/edit")
@@ -63,7 +63,7 @@ public class PostController {
                              @PathVariable String slug,
                              @PathVariable Long postId,
                              @ModelAttribute PostUpdateRequest dto) {
-        postService.updatePost(postId, dto);
+        postService.updatePost(postId, dto, loginUser);
         return "redirect:/boards/" + slug + "/" + postId;
     }
 
@@ -71,7 +71,7 @@ public class PostController {
     public String deletePost(@SessionAttribute(name = SessionConst.LOGIN_USER, required = true) User loginUser,
                              @PathVariable String slug,
                              @PathVariable Long postId) {
-        postService.deletePost(postId);
+        postService.deletePost(postId, loginUser);
         return "redirect:/boards/" + slug;
     }
 }
