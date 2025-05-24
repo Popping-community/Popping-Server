@@ -33,41 +33,50 @@ public class BoardController {
     }
 
     @GetMapping("/{slug}")
-    public String getBoard(@PathVariable String slug, Model model) {
+    public String getBoard(@SessionAttribute(name = SessionConst.LOGIN_USER, required = false) User loginUser,
+                           @PathVariable String slug, Model model) {
         BoardResponse dto = boardService.getBoard(slug);
         List<PostResponse> posts = postService.getPostsByBoardSlug(slug);
         model.addAttribute("board", dto);
         model.addAttribute("posts", posts);
+        model.addAttribute("loginUser", loginUser);
         return "board/detail";
     }
 
     @GetMapping("/new")
-    public String newBoardForm(@ModelAttribute BoardCreateRequest boardCreateRequest, @SessionAttribute(name = SessionConst.LOGIN_USER, required = true) User loginUser) {
+    public String newBoardForm(@ModelAttribute BoardCreateRequest boardCreateRequest,
+                               @SessionAttribute(name = SessionConst.LOGIN_USER, required = true) User loginUser) {
         return "board/form";
     }
 
     @PostMapping
-    public String createBoard(@ModelAttribute BoardCreateRequest dto, @SessionAttribute(name = SessionConst.LOGIN_USER, required = true) User loginUser) {
+    public String createBoard(@ModelAttribute BoardCreateRequest dto,
+                              @SessionAttribute(name = SessionConst.LOGIN_USER, required = true) User loginUser) {
         String slug = boardService.createBoard(dto, loginUser);
         return REDIRECT_BOARDS + "/" + slug;
     }
 
     @GetMapping("/{slug}/edit")
-    public String editBoardForm(@ModelAttribute BoardUpdateRequest boardUpdateRequest, @SessionAttribute(name = SessionConst.LOGIN_USER, required = true) User loginUser, @PathVariable String slug, Model model) {
-        BoardResponse dto = boardService.getBoard(slug);
+    public String editBoardForm(@ModelAttribute BoardUpdateRequest boardUpdateRequest,
+                                @SessionAttribute(name = SessionConst.LOGIN_USER, required = true) User loginUser,
+                                @PathVariable String slug, Model model) {
+        BoardResponse dto = boardService.getBoardForEdit(slug, loginUser);
         model.addAttribute("form", dto);
         return "board/edit-form";
     }
 
     @PostMapping("/{slug}/edit")
-    public String updateBoard(@PathVariable String slug, @SessionAttribute(name = SessionConst.LOGIN_USER, required = true) User loginUser, @ModelAttribute BoardUpdateRequest dto) {
-        boardService.updateBoard(slug, dto);
+    public String updateBoard(@PathVariable String slug,
+                              @SessionAttribute(name = SessionConst.LOGIN_USER, required = true) User loginUser,
+                              @ModelAttribute BoardUpdateRequest dto) {
+        boardService.updateBoard(slug, dto, loginUser);
         return REDIRECT_BOARDS;
     }
 
     @PostMapping("/{slug}/delete")
-    public String deleteBoard(@PathVariable String slug, @SessionAttribute(name = SessionConst.LOGIN_USER, required = true) User loginUser) {
-        boardService.deleteBoard(slug);
+    public String deleteBoard(@PathVariable String slug,
+                              @SessionAttribute(name = SessionConst.LOGIN_USER, required = true) User loginUser) {
+        boardService.deleteBoard(slug, loginUser);
         return REDIRECT_BOARDS;
     }
 }
