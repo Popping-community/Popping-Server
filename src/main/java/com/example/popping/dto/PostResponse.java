@@ -14,6 +14,7 @@ public class PostResponse {
     private String content;
     private String authorName;
     private String boardName;
+    private Long authorId;
 
     public static PostResponse from(Post post) {
         return PostResponse.builder()
@@ -22,6 +23,7 @@ public class PostResponse {
                 .content(post.getContent())
                 .authorName(post.getAuthor().getNickname())
                 .boardName(post.getBoard().getName())
+                .authorId(post.getAuthor().getId())
                 .build();
     }
 }

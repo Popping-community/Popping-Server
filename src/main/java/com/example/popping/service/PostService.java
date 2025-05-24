@@ -2,6 +2,7 @@ package com.example.popping.service;
 
 import java.util.List;
 
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import jakarta.persistence.EntityNotFoundException;
@@ -34,16 +35,20 @@ public class PostService {
         return post.getId();
     }
 
-    public void updatePost(Long postId, PostUpdateRequest dto) {
+    public void updatePost(Long postId, PostUpdateRequest dto, User user) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new EntityNotFoundException("해당 게시글이 존재하지 않습니다."));
+
+        validateAuthor(post, user);
 
         post.update(dto.getTitle(), dto.getContent());
     }
 
-    public void deletePost(Long postId) {
+    public void deletePost(Long postId, User user) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new EntityNotFoundException("해당 게시글이 존재하지 않습니다."));
+
+        validateAuthor(post, user);
 
         postRepository.delete(post);
     }
@@ -52,6 +57,16 @@ public class PostService {
     public PostResponse getPost(Long postId) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new EntityNotFoundException("해당 게시글이 존재하지 않습니다."));
+
+        return PostResponse.from(post);
+    }
+
+    @Transactional(readOnly = true)
+    public PostResponse getPostForEdit(Long postId, User user) {
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new EntityNotFoundException("해당 게시글이 존재하지 않습니다."));
+
+        validateAuthor(post, user);
 
         return PostResponse.from(post);
     }
@@ -75,4 +90,11 @@ public class PostService {
                 .map(PostResponse::from)
                 .toList();
     }
+
+    private void validateAuthor(Post post, User user) {
+        if (!post.getAuthor().equals(user)) {
+            throw new AccessDeniedException("작성자가 아닙니다.");
+        }
+    }
+
 }

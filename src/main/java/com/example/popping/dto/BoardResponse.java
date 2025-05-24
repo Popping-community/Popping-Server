@@ -13,6 +13,7 @@ public class BoardResponse {
     private String description;
     private String slug;
     private String createdBy;
+    private Long createdById;
 
     public static BoardResponse from(Board board) {
         return BoardResponse.builder()
@@ -20,6 +21,7 @@ public class BoardResponse {
                 .description(board.getDescription())
                 .slug(board.getSlug())
                 .createdBy(board.getCreatedBy().getNickname())
+                .createdById(board.getCreatedBy().getId())
                 .build();
     }
 }
