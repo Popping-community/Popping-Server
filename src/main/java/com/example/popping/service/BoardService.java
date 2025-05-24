@@ -32,7 +32,7 @@ public class BoardService {
         Board board = boardRepository.findBySlug(slug)
                 .orElseThrow(() -> new EntityNotFoundException("해당 게시판이 존재하지 않습니다."));
 
-        validateAuthor(board, user);
+        validateCreatedBy(board, user);
 
         board.update(dto.getName(), dto.getDescription());
     }
@@ -41,7 +41,7 @@ public class BoardService {
         Board board = boardRepository.findBySlug(slug)
                 .orElseThrow(() -> new EntityNotFoundException("해당 게시판이 존재하지 않습니다."));
 
-        validateAuthor(board, user);
+        validateCreatedBy(board, user);
 
         boardRepository.delete(board);
     }
@@ -59,7 +59,7 @@ public class BoardService {
         Board board = boardRepository.findBySlug(slug)
                 .orElseThrow(() -> new EntityNotFoundException("해당 게시판이 존재하지 않습니다."));
 
-        validateAuthor(board, user);
+        validateCreatedBy(board, user);
 
         return BoardResponse.from(board);
     }
@@ -72,8 +72,8 @@ public class BoardService {
                 .toList();
     }
 
-    private void validateAuthor(Board board, User user) {
-        if (!board.getCreatedBy().equals(user)) {
+    private void validateCreatedBy(Board board, User user) {
+        if (!board.isCreatedBy(user)) {
             throw new AccessDeniedException("작성자가 아닙니다.");
         }
     }

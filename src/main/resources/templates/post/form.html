@@ -64,11 +64,19 @@
             </nav>
         </div>
         <div class="ml-auto flex items-center gap-2">
-            <form action="/logout" method="post">
-                <button type="submit" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2">
-                    로그아웃
-                </button>
-            </form>
+            <div th:if="${loginUser != null}" class="flex items-center gap-2">
+                <span class="text-sm font-medium" th:text="${loginUser.nickname} + '님'">사용자님</span>
+                <form action="/logout" method="post">
+                    <button type="submit" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2">
+                        로그아웃
+                    </button>
+                </form>
+            </div>
+            <div th:if="${loginUser == null}" class="flex items-center gap-2">
+                <a href="/login" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2">
+                    로그인
+                </a>
+            </div>
         </div>
     </div>
 </header>
@@ -82,7 +90,22 @@
                     <p class="text-sm text-muted-foreground">새로운 게시글을 작성해보세요.</p>
                 </div>
                 <div class="p-6 pt-0">
-                    <form th:action="@{/boards/{slug}(slug=${slug})}" th:object="${postCreateRequest}" method="post" class="space-y-4">
+                    <!-- 회원 게시글 작성 폼 -->
+                    <form th:if="${loginUser != null}" th:action="@{/boards/{slug}/member(slug=${slug})}" th:object="${memberPostCreateRequest}" method="post" class="space-y-4">
+                        <!-- 글로벌 오류 메시지 표시 -->
+                        <div th:if="${#fields.hasGlobalErrors()}" class="p-3 rounded-md bg-destructive/10 border border-destructive/20">
+                            <div class="flex items-center mb-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 text-destructive mr-2">
+                                    <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path>
+                                    <path d="M12 9v4"></path>
+                                    <path d="m12 17 .01 0"></path>
+                                </svg>
+                                <span class="text-sm font-medium text-destructive">오류가 발생했습니다</span>
+                            </div>
+                            <ul class="list-disc list-inside space-y-1">
+                                <li th:each="err : ${#fields.globalErrors()}" th:text="${err}" class="text-sm text-destructive"></li>
+                            </ul>
+                        </div>
                         <!-- 제목 필드 -->
                         <div class="space-y-2">
                             <label for="title" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">제목</label>
@@ -101,6 +124,87 @@
                             <label for="content" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">내용</label>
                             <textarea
                                     id="content"
+                                    th:field="*{content}"
+                                    class="flex min-h-[200px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                    placeholder="내용을 입력하세요"
+                            ></textarea>
+                            <p th:if="${#fields.hasErrors('content')}" th:errors="*{content}" class="text-xs text-destructive"></p>
+                        </div>
+
+                        <div class="flex items-center justify-end gap-2 pt-4">
+                            <a th:href="@{/boards/{slug}(slug=${slug})}" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2">
+                                취소
+                            </a>
+                            <button
+                                    type="submit"
+                                    class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2"
+                            >
+                                작성하기
+                            </button>
+                        </div>
+                    </form>
+
+                    <!-- 게스트 게시글 작성 폼 -->
+                    <form th:if="${loginUser == null}" th:action="@{/boards/{slug}/guest(slug=${slug})}" th:object="${guestPostCreateRequest}" method="post" class="space-y-4">
+                        <!-- 글로벌 오류 메시지 표시 -->
+                        <div th:if="${#fields.hasGlobalErrors()}" class="p-3 rounded-md bg-destructive/10 border border-destructive/20">
+                            <div class="flex items-center mb-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 text-destructive mr-2">
+                                    <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path>
+                                    <path d="M12 9v4"></path>
+                                    <path d="m12 17 .01 0"></path>
+                                </svg>
+                                <span class="text-sm font-medium text-destructive">오류가 발생했습니다</span>
+                            </div>
+                            <ul class="list-disc list-inside space-y-1">
+                                <li th:each="err : ${#fields.globalErrors()}" th:text="${err}" class="text-sm text-destructive"></li>
+                            </ul>
+                        </div>
+                        <!-- 닉네임 필드 -->
+                        <div class="space-y-2">
+                            <label for="guestNickname" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">닉네임</label>
+                            <input
+                                    type="text"
+                                    id="guestNickname"
+                                    th:field="*{guestNickname}"
+                                    class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                    placeholder="닉네임을 입력하세요"
+                            />
+                            <p th:if="${#fields.hasErrors('guestNickname')}" th:errors="*{guestNickname}" class="text-xs text-destructive"></p>
+                        </div>
+
+                        <!-- 비밀번호 필드 -->
+                        <div class="space-y-2">
+                            <label for="guestPassword" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">비밀번호</label>
+                            <input
+                                    type="password"
+                                    id="guestPassword"
+                                    th:field="*{guestPassword}"
+                                    class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                    placeholder="비밀번호를 입력하세요"
+                            />
+                            <p class="text-xs text-muted-foreground">게시글 수정/삭제 시 필요합니다.</p>
+                            <p th:if="${#fields.hasErrors('guestPassword')}" th:errors="*{guestPassword}" class="text-xs text-destructive"></p>
+                        </div>
+
+                        <!-- 제목 필드 -->
+                        <div class="space-y-2">
+                            <label for="guestTitle" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">제목</label>
+                            <input
+                                    type="text"
+                                    id="guestTitle"
+                                    th:field="*{title}"
+                                    class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                    placeholder="제목을 입력하세요"
+                            />
+                            <p th:if="${#fields.hasErrors('title')}" th:errors="*{title}" class="text-xs text-destructive"></p>
+                        </div>
+
+                        <!-- 내용 필드 -->
+                        <div class="space-y-2">
+                            <label for="guestContent" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">내용</label>
+                            <textarea
+                                    id="guestContent"
                                     th:field="*{content}"
                                     class="flex min-h-[200px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                                     placeholder="내용을 입력하세요"

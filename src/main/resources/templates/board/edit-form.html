@@ -154,5 +154,24 @@
         </div>
     </div>
 </footer>
+
+<script th:inline="javascript">
+    document.addEventListener('DOMContentLoaded', function () {
+        // Thymeleaf 데이터를 JavaScript 변수로 받아오기
+        const boardName = /*[[${form.name}]]*/ '';
+        const boardDescription = /*[[${form.description}]]*/ '';
+
+        // 입력 필드에 값 넣기
+        const nameInput = document.getElementById('name');
+        const descriptionTextarea = document.getElementById('description');
+
+        if (nameInput) {
+            nameInput.value = boardName;
+        }
+        if (descriptionTextarea) {
+            descriptionTextarea.value = boardDescription;
+        }
+    });
+</script>
 </body>
 </html>

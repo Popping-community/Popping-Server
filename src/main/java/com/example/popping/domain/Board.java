@@ -33,4 +33,9 @@ public class Board extends BaseEntity {
         this.name = name;
         this.description = description;
     }
+
+    public boolean isCreatedBy(User user) {
+        return createdBy != null && user != null && createdBy.getId().equals(user.getId());
+    }
+
 }

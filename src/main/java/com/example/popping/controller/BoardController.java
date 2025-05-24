@@ -4,7 +4,9 @@ import java.util.List;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 import com.example.popping.constant.SessionConst;
@@ -50,8 +52,12 @@ public class BoardController {
     }
 
     @PostMapping
-    public String createBoard(@ModelAttribute BoardCreateRequest dto,
+    public String createBoard(@Valid @ModelAttribute BoardCreateRequest dto,
+                              BindingResult bindingResult,
                               @SessionAttribute(name = SessionConst.LOGIN_USER, required = true) User loginUser) {
+        if(bindingResult.hasErrors()){
+            return "board/form";
+        }
         String slug = boardService.createBoard(dto, loginUser);
         return REDIRECT_BOARDS + "/" + slug;
     }
@@ -68,7 +74,14 @@ public class BoardController {
     @PostMapping("/{slug}/edit")
     public String updateBoard(@PathVariable String slug,
                               @SessionAttribute(name = SessionConst.LOGIN_USER, required = true) User loginUser,
-                              @ModelAttribute BoardUpdateRequest dto) {
+                              @Valid @ModelAttribute BoardUpdateRequest dto,
+                              BindingResult bindingResult,
+                              Model model) {
+        if(bindingResult.hasErrors()){
+            BoardResponse boardResponse = boardService.getBoardForEdit(slug, loginUser);
+            model.addAttribute("form", boardResponse);
+            return "board/edit-form";
+        }
         boardService.updateBoard(slug, dto, loginUser);
         return REDIRECT_BOARDS;
     }
