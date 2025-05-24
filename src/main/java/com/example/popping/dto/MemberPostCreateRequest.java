@@ -12,7 +12,7 @@ import com.example.popping.domain.User;
 @Getter
 @Setter
 @NoArgsConstructor
-public class PostCreateRequest {
+public class MemberPostCreateRequest {
 
     @NotBlank(message = "제목은 필수입니다.")
     private String title;
@@ -29,4 +29,3 @@ public class PostCreateRequest {
                 .build();
     }
 }
-
