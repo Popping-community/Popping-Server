@@ -1,5 +1,6 @@
 package com.example.popping.dto;
 
+import jakarta.persistence.Lob;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -16,6 +17,7 @@ public class BoardCreateRequest {
     @NotBlank(message = "게시판 이름은 필수입니다.")
     private String name;
 
+    @Lob
     @NotBlank(message = "설명은 필수입니다.")
     private String description;
 
