@@ -1,12 +1,13 @@
 package com.example.popping.dto;
 
-import com.example.popping.domain.Board;
-import com.example.popping.domain.Post;
-import com.example.popping.domain.User;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
+import com.example.popping.domain.Board;
+import com.example.popping.domain.Post;
+import com.example.popping.domain.User;
 
 @Getter
 @Setter

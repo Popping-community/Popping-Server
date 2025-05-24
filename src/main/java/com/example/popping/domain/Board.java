@@ -4,11 +4,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import jakarta.persistence.*;
-
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
 
 @Entity
 @Builder
@@ -26,9 +25,6 @@ public class Board extends BaseEntity {
 
     @Column(unique = true)
     private String slug;
-
-    @OneToMany(mappedBy = "board")
-    private List<Post> posts = new ArrayList<>();
 
     @ManyToOne(optional = false)
     private User createdBy;

@@ -1,8 +1,9 @@
 package com.example.popping.dto;
 
-import com.example.popping.domain.Post;
 import lombok.Builder;
 import lombok.Getter;
+
+import com.example.popping.domain.Post;
 
 @Getter
 @Builder

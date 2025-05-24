@@ -4,14 +4,13 @@ import java.util.Optional;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 
 import com.example.popping.domain.User;
 import com.example.popping.dto.JoinRequest;
 import com.example.popping.dto.LoginRequest;
 import com.example.popping.repository.UserRepository;
-
-import jakarta.transaction.Transactional;
-import lombok.RequiredArgsConstructor;
 
 @Service
 @Transactional

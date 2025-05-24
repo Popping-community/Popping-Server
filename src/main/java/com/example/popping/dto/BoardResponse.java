@@ -2,6 +2,7 @@ package com.example.popping.dto;
 
 import lombok.Builder;
 import lombok.Getter;
+
 import com.example.popping.domain.Board;
 
 @Getter
