@@ -15,7 +15,7 @@ import com.example.popping.repository.UserRepository;
 @Service
 @Transactional
 @RequiredArgsConstructor
-public class LoginService {
+public class UserService {
 
     private final UserRepository userRepository;
 
@@ -31,22 +31,6 @@ public class LoginService {
 
     public void join(JoinRequest req) {
         userRepository.save(req.toEntity(passwordEncoder.encode(req.getPassword())));
-    }
-
-    public User login(LoginRequest req) {
-        Optional<User> optionalUser = userRepository.findByLoginId(req.getLoginId());
-
-        if (optionalUser.isEmpty()) {
-            return null;
-        }
-
-        User user = optionalUser.get();
-
-        if (!passwordEncoder.matches(req.getPassword(), user.getPasswordHash())) {
-            return null;
-        }
-
-        return user;
     }
 
     public User getLoginUserById(Long userId) {
