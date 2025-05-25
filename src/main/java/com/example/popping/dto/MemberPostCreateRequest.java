@@ -1,5 +1,6 @@
 package com.example.popping.dto;
 
+import jakarta.persistence.Lob;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -12,11 +13,12 @@ import com.example.popping.domain.User;
 @Getter
 @Setter
 @NoArgsConstructor
-public class PostCreateRequest {
+public class MemberPostCreateRequest {
 
     @NotBlank(message = "제목은 필수입니다.")
     private String title;
 
+    @Lob
     @NotBlank(message = "내용은 필수입니다.")
     private String content;
 
@@ -29,4 +31,3 @@ public class PostCreateRequest {
                 .build();
     }
 }
-

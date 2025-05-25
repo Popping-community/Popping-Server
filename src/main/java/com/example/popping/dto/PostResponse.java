@@ -15,15 +15,17 @@ public class PostResponse {
     private String authorName;
     private String boardName;
     private Long authorId;
+    private String guestNickname;
 
     public static PostResponse from(Post post) {
         return PostResponse.builder()
                 .id(post.getId())
                 .title(post.getTitle())
                 .content(post.getContent())
-                .authorName(post.getAuthor().getNickname())
+                .authorName(post.isGuest() ? post.getGuestNickname() : post.getAuthor().getNickname())
                 .boardName(post.getBoard().getName())
-                .authorId(post.getAuthor().getId())
+                .authorId(post.isGuest() ? null : post.getAuthor().getId())
+                .guestNickname(post.isGuest() ? post.getGuestNickname() : null)
                 .build();
     }
 }
