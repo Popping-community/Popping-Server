@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="ko">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -64,11 +64,22 @@
             </nav>
         </div>
         <div class="ml-auto flex items-center gap-2">
-            <form action="/logout" method="post">
-                <button type="submit" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2">
-                    로그아웃
-                </button>
-            </form>
+            <div sec:authorize="isAuthenticated()" class="flex items-center gap-2">
+                <span class="text-sm font-medium" sec:authentication="principal.nickname">사용자님</span>님
+                <form action="/logout" method="post">
+                    <button type="submit" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2">
+                        로그아웃
+                    </button>
+                </form>
+            </div>
+            <div sec:authorize="!isAuthenticated()" class="flex items-center gap-2">
+                <a href="/login" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2">
+                    로그인
+                </a>
+                <a href="/users/join" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-4 py-2">
+                    회원가입
+                </a>
+            </div>
         </div>
     </div>
 </header>
@@ -255,30 +266,33 @@
     </div>
 </footer>
 
-<script th:inline="javascript">
+<script>
+    // 수정 폼에서 기존 데이터 설정
     document.addEventListener('DOMContentLoaded', function() {
+        // 회원 게시글 수정 시 기존 데이터 설정
         const memberTitleInput = document.getElementById('title');
         const memberContentTextarea = document.getElementById('content');
 
-        if (memberTitleInput) {
-            memberTitleInput.value = [[${form.title}]];
+        if (memberTitleInput && '[[${form.title}]]') {
+            memberTitleInput.value = '[[${form.title}]]';
         }
-        if (memberContentTextarea) {
-            memberContentTextarea.value = [[${form.content}]];
+        if (memberContentTextarea && '[[${form.content}]]') {
+            memberContentTextarea.value = '[[${form.content}]]';
         }
 
+        // 게스트 게시글 수정 시 기존 데이터 설정
         const guestNicknameInput = document.getElementById('guestNickname');
         const guestTitleInput = document.getElementById('guestTitle');
         const guestContentTextarea = document.getElementById('guestContent');
 
-        if (guestNicknameInput) {
-            guestNicknameInput.value = [[${form.guestNickname}]];
+        if (guestNicknameInput && '[[${form.guestNickname}]]') {
+            guestNicknameInput.value = '[[${form.guestNickname}]]';
         }
-        if (guestTitleInput) {
-            guestTitleInput.value = [[${form.title}]];
+        if (guestTitleInput && '[[${form.title}]]') {
+            guestTitleInput.value = '[[${form.title}]]';
         }
-        if (guestContentTextarea) {
-            guestContentTextarea.value = [[${form.content}]];
+        if (guestContentTextarea && '[[${form.content}]]') {
+            guestContentTextarea.value = '[[${form.content}]]';
         }
     });
 </script>

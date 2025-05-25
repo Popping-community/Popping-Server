@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="ko">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -64,17 +64,20 @@
             </nav>
         </div>
         <div class="ml-auto flex items-center gap-2">
-            <div th:if="${loginUser != null}" class="flex items-center gap-2">
-                <span class="text-sm font-medium" th:text="${loginUser.nickname} + '님'">사용자님</span>
+            <div sec:authorize="isAuthenticated()" class="flex items-center gap-2">
+                <span class="text-sm font-medium" sec:authentication="principal.nickname">사용자님</span>님
                 <form action="/logout" method="post">
                     <button type="submit" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2">
                         로그아웃
                     </button>
                 </form>
             </div>
-            <div th:if="${loginUser == null}" class="flex items-center gap-2">
+            <div sec:authorize="!isAuthenticated()" class="flex items-center gap-2">
                 <a href="/login" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2">
                     로그인
+                </a>
+                <a href="/users/join" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-4 py-2">
+                    회원가입
                 </a>
             </div>
         </div>
@@ -102,7 +105,7 @@
                     </p>
                 </div>
                 <!-- 게시판 수정/삭제 버튼 - 로그인한 사용자이면서 게시판 작성자인 경우에만 표시 -->
-                <div th:if="${loginUser != null and loginUser.id == board.createdById}" class="flex gap-2">
+                <div sec:authorize="isAuthenticated()" th:if="${#authentication.principal.id == board.createdById}" class="flex gap-2">
                     <a th:href="@{/boards/{slug}/edit(slug=${board.slug})}" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2">
                         수정
                     </a>
@@ -118,13 +121,13 @@
                 <div class="flex justify-between items-center mb-6">
                     <h2 class="text-xl font-semibold">게시글 목록</h2>
                     <!-- 로그인한 사용자용 글쓰기 버튼 -->
-                    <a th:if="${loginUser != null}"
+                    <a sec:authorize="isAuthenticated()"
                        th:href="@{/boards/{slug}/new(slug=${board.slug})}"
                        class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-4 py-2">
                         글쓰기
                     </a>
                     <!-- 비로그인 사용자용 글쓰기 버튼 -->
-                    <a th:if="${loginUser == null}"
+                    <a sec:authorize="!isAuthenticated()"
                        th:href="@{/boards/{slug}/new-guest(slug=${board.slug})}"
                        class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-4 py-2">
                         글쓰기

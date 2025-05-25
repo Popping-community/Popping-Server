@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="ko">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -64,17 +64,20 @@
             </nav>
         </div>
         <div class="ml-auto flex items-center gap-2">
-            <div th:if="${loginUser != null}" class="flex items-center gap-2">
-                <span class="text-sm font-medium" th:text="${loginUser.nickname} + '님'">사용자님</span>
+            <div sec:authorize="isAuthenticated()" class="flex items-center gap-2">
+                <span class="text-sm font-medium" sec:authentication="principal.nickname">사용자님</span>님
                 <form action="/logout" method="post">
                     <button type="submit" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2">
                         로그아웃
                     </button>
                 </form>
             </div>
-            <div th:if="${loginUser == null}" class="flex items-center gap-2">
+            <div sec:authorize="!isAuthenticated()" class="flex items-center gap-2">
                 <a href="/login" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2">
                     로그인
+                </a>
+                <a href="/users/join" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-4 py-2">
+                    회원가입
                 </a>
             </div>
         </div>
@@ -91,7 +94,7 @@
                 </div>
                 <div class="p-6 pt-0">
                     <!-- 회원 게시글 작성 폼 -->
-                    <form th:if="${loginUser != null}" th:action="@{/boards/{slug}/member(slug=${slug})}" th:object="${memberPostCreateRequest}" method="post" class="space-y-4">
+                    <form sec:authorize="isAuthenticated()" th:action="@{/boards/{slug}/member(slug=${slug})}" th:object="${memberPostCreateRequest}" method="post" class="space-y-4">
                         <!-- 글로벌 오류 메시지 표시 -->
                         <div th:if="${#fields.hasGlobalErrors()}" class="p-3 rounded-md bg-destructive/10 border border-destructive/20">
                             <div class="flex items-center mb-2">
@@ -145,7 +148,7 @@
                     </form>
 
                     <!-- 게스트 게시글 작성 폼 -->
-                    <form th:if="${loginUser == null}" th:action="@{/boards/{slug}/guest(slug=${slug})}" th:object="${guestPostCreateRequest}" method="post" class="space-y-4">
+                    <form sec:authorize="!isAuthenticated()" th:action="@{/boards/{slug}/guest(slug=${slug})}" th:object="${guestPostCreateRequest}" method="post" class="space-y-4">
                         <!-- 글로벌 오류 메시지 표시 -->
                         <div th:if="${#fields.hasGlobalErrors()}" class="p-3 rounded-md bg-destructive/10 border border-destructive/20">
                             <div class="flex items-center mb-2">
