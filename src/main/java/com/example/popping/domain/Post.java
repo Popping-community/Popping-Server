@@ -22,11 +22,30 @@ public class Post extends BaseEntity {
     @ManyToOne
     private User author;
 
+    private String guestNickname;
+
+    private String guestPasswordHash;
+
     @ManyToOne
     private Board board;
 
-    public void update(String title, String content) {
+    public void memberUpdate(String title, String content) {
         this.title = title;
         this.content = content;
+    }
+
+    public void guestUpdate(String title, String content, String guestNickname, String guestPasswordHash) {
+        this.title = title;
+        this.content = content;
+        this.guestNickname = guestNickname;
+        this.guestPasswordHash = guestPasswordHash;
+    }
+
+    public boolean isAuthor(User user) {
+        return author != null && user != null && author.getId().equals(user.getId());
+    }
+
+    public boolean isGuest() {
+        return author == null;
     }
 }

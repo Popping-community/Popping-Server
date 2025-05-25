@@ -64,11 +64,19 @@
             </nav>
         </div>
         <div class="ml-auto flex items-center gap-2">
-            <form action="/logout" method="post">
-                <button type="submit" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2">
-                    로그아웃
-                </button>
-            </form>
+            <div th:if="${loginUser != null}" class="flex items-center gap-2">
+                <span class="text-sm font-medium" th:text="${loginUser.nickname} + '님'">사용자님</span>
+                <form action="/logout" method="post">
+                    <button type="submit" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2">
+                        로그아웃
+                    </button>
+                </form>
+            </div>
+            <div th:if="${loginUser == null}" class="flex items-center gap-2">
+                <a href="/login" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2">
+                    로그인
+                </a>
+            </div>
         </div>
     </div>
 </header>
@@ -93,17 +101,13 @@
                         개설자: <span th:text="${board.createdBy}">사용자</span>
                     </p>
                 </div>
-                <div class="flex gap-2"
-                     th:if="${loginUser != null and loginUser.id == board.createdById}">
-                    <a th:href="@{/boards/{slug}/edit(slug=${board.slug})}"
-                       class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2">
+                <!-- 게시판 수정/삭제 버튼 - 로그인한 사용자이면서 게시판 작성자인 경우에만 표시 -->
+                <div th:if="${loginUser != null and loginUser.id == board.createdById}" class="flex gap-2">
+                    <a th:href="@{/boards/{slug}/edit(slug=${board.slug})}" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2">
                         수정
                     </a>
-                    <form th:action="@{/boards/{slug}/delete(slug=${board.slug})}"
-                          method="post"
-                          onsubmit="return confirm('정말 삭제하시겠습니까?');">
-                        <button type="submit"
-                                class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-destructive text-destructive-foreground hover:bg-destructive/90 h-9 px-4 py-2">
+                    <form th:action="@{/boards/{slug}/delete(slug=${board.slug})}" method="post" onsubmit="return confirm('정말 삭제하시겠습니까?');">
+                        <button type="submit" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-destructive text-destructive-foreground hover:bg-destructive/90 h-9 px-4 py-2">
                             삭제
                         </button>
                     </form>
@@ -113,7 +117,16 @@
             <div class="bg-muted p-6 rounded-lg">
                 <div class="flex justify-between items-center mb-6">
                     <h2 class="text-xl font-semibold">게시글 목록</h2>
-                    <a th:href="@{/boards/{slug}/new(slug=${board.slug})}" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-4 py-2">
+                    <!-- 로그인한 사용자용 글쓰기 버튼 -->
+                    <a th:if="${loginUser != null}"
+                       th:href="@{/boards/{slug}/new(slug=${board.slug})}"
+                       class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-4 py-2">
+                        글쓰기
+                    </a>
+                    <!-- 비로그인 사용자용 글쓰기 버튼 -->
+                    <a th:if="${loginUser == null}"
+                       th:href="@{/boards/{slug}/new-guest(slug=${board.slug})}"
+                       class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-4 py-2">
                         글쓰기
                     </a>
                 </div>
@@ -131,11 +144,6 @@
                                 <h3 class="font-medium" th:text="${post.title}">게시글 제목</h3>
                                 <div class="flex items-center gap-2 text-sm text-muted-foreground">
                                     <span th:text="${post.authorName}">작성자</span>
-                                    <div class="flex items-center gap-1">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
-                                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-                                        </svg>
-                                    </div>
                                 </div>
                             </div>
                             <div class="mt-2 text-sm text-muted-foreground line-clamp-2" th:text="${post.content}">
