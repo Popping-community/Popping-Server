@@ -11,11 +11,18 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http.csrf(AbstractHttpConfigurer::disable) // ✅ 새 방식: lambda 사용
+        http.csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(authz -> authz
+                        .requestMatchers("/boards/new", "/boards/*/edit", "/boards/*/delete").authenticated()
                         .anyRequest().permitAll()
                 )
-                .formLogin(AbstractHttpConfigurer::disable)
+                .formLogin(form -> form
+                        .loginPage("/login")
+                        .permitAll()
+                )
+                .logout(logout -> logout
+                        .logoutSuccessUrl("/")
+                )
                 .httpBasic(AbstractHttpConfigurer::disable);
         return http.build();
     }
