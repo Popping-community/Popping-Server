@@ -1,5 +1,6 @@
 package com.example.popping.controller;
 
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -10,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 
 import com.example.popping.constant.SessionConst;
 import com.example.popping.domain.User;
+import com.example.popping.domain.UserPrincipal;
 import com.example.popping.dto.*;
 import com.example.popping.service.PostService;
 
@@ -21,24 +23,20 @@ public class PostController {
     private final PostService postService;
 
     @GetMapping("/{postId}")
-    public String getPost(@SessionAttribute(name = SessionConst.LOGIN_USER, required = false) User loginUser,
-                          @PathVariable String slug, @PathVariable Long postId,
+    public String getPost(@PathVariable String slug, @PathVariable Long postId,
                           Model model) {
         System.out.println(postId);
         PostResponse dto = postService.getPost(postId);
         model.addAttribute("post", dto);
         model.addAttribute("slug", slug);
-        model.addAttribute("loginUser", loginUser);
         return "post/detail";
     }
 
     @GetMapping("/new")
     public String newPostForm(@ModelAttribute MemberPostCreateRequest memberPostCreateRequest,
                               @PathVariable String slug,
-                              Model model,
-                              @SessionAttribute(name = SessionConst.LOGIN_USER, required = true) User loginUser) {
+                              Model model) {
         model.addAttribute("slug", slug);
-        model.addAttribute("loginUser", loginUser);
         return "post/form";
     }
 
@@ -54,11 +52,10 @@ public class PostController {
     public String createPostAsMember(@PathVariable String slug,
                                      @Valid @ModelAttribute MemberPostCreateRequest dto,
                                      BindingResult bindingResult,
-                                     @SessionAttribute(name = SessionConst.LOGIN_USER, required = true) User loginUser,
+                                     @AuthenticationPrincipal UserPrincipal loginUser,
                                      Model model) {
         if (bindingResult.hasErrors()) {
             model.addAttribute("slug", slug);
-            model.addAttribute("loginUser", loginUser);
             return "post/form";
         }
         Long postId = postService.createMemberPost(slug, dto, loginUser);
@@ -107,7 +104,7 @@ public class PostController {
     public String editPostForm(@ModelAttribute MemberPostUpdateRequest memberPostUpdateRequest,
                                @PathVariable String slug,
                                @PathVariable Long postId,
-                               @SessionAttribute(name = SessionConst.LOGIN_USER, required = false) User loginUser,
+                               @AuthenticationPrincipal UserPrincipal loginUser,
                                Model model) {
         PostResponse dto = postService.getMemberPostForEdit(postId, loginUser);
         model.addAttribute("form", dto);
@@ -132,7 +129,7 @@ public class PostController {
     }
 
     @PostMapping("/{postId}/edit")
-    public String updatePostAsMember(@SessionAttribute(name = SessionConst.LOGIN_USER, required = true) User loginUser,
+    public String updatePostAsMember(@AuthenticationPrincipal UserPrincipal loginUser,
                                      @PathVariable String slug,
                                      @PathVariable Long postId,
                                      @Valid @ModelAttribute MemberPostUpdateRequest dto,
@@ -194,7 +191,7 @@ public class PostController {
     }
 
     @PostMapping("/{postId}/delete")
-    public String deletePostByMember(@SessionAttribute(name = SessionConst.LOGIN_USER) User loginUser,
+    public String deletePostByMember(@AuthenticationPrincipal UserPrincipal loginUser,
                                      @PathVariable String slug,
                                      @PathVariable Long postId) {
         postService.deletePost(postId, loginUser);

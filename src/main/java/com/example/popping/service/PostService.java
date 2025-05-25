@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import com.example.popping.domain.Board;
 import com.example.popping.domain.Post;
 import com.example.popping.domain.User;
+import com.example.popping.domain.UserPrincipal;
 import com.example.popping.dto.*;
 import com.example.popping.repository.BoardRepository;
 import com.example.popping.repository.PostRepository;
@@ -25,11 +26,11 @@ public class PostService {
     private final BoardRepository boardRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public Long createMemberPost(String slug, MemberPostCreateRequest dto, User user) {
+    public Long createMemberPost(String slug, MemberPostCreateRequest dto, UserPrincipal user) {
         Board board = boardRepository.findBySlug(slug)
                 .orElseThrow(() -> new EntityNotFoundException("해당 게시판이 존재하지 않습니다."));
 
-        Post post = dto.toEntity(user, board);
+        Post post = dto.toEntity(user.getUser(), board);
         postRepository.save(post);
 
         return post.getId();
@@ -45,11 +46,11 @@ public class PostService {
         return post.getId();
     }
 
-    public void updatePost(Long postId, MemberPostUpdateRequest dto, User user) {
+    public void updatePost(Long postId, MemberPostUpdateRequest dto, UserPrincipal user) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new EntityNotFoundException("해당 게시글이 존재하지 않습니다."));
 
-        validateAuthor(post, user);
+        validateAuthor(post, user.getUser());
 
         post.memberUpdate(dto.getTitle(), dto.getContent());
     }
@@ -61,11 +62,11 @@ public class PostService {
         post.guestUpdate(dto.getTitle(), dto.getContent(), dto.getGuestNickname(), passwordEncoder.encode(dto.getGuestPassword()));
     }
 
-    public void deletePost(Long postId, User user) {
+    public void deletePost(Long postId, UserPrincipal user) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new EntityNotFoundException("해당 게시글이 존재하지 않습니다."));
 
-        validateAuthor(post, user);
+        validateAuthor(post, user.getUser());
 
         postRepository.delete(post);
     }
@@ -86,11 +87,11 @@ public class PostService {
     }
 
     @Transactional(readOnly = true)
-    public PostResponse getMemberPostForEdit(Long postId, User user) {
+    public PostResponse getMemberPostForEdit(Long postId, UserPrincipal user) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new EntityNotFoundException("해당 게시글이 존재하지 않습니다."));
 
-        validateAuthor(post, user);
+        validateAuthor(post, user.getUser());
 
         return PostResponse.from(post);
     }

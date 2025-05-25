@@ -10,14 +10,14 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 import com.example.popping.dto.JoinRequest;
-import com.example.popping.service.LoginService;
+import com.example.popping.service.UserService;
 
 @Controller
 @RequiredArgsConstructor
 @RequestMapping("/users")
 public class UserController {
 
-    private final LoginService loginService;
+    private final UserService userService;
 
     @GetMapping("/join")
     public String addForm(@ModelAttribute JoinRequest joinRequest) {
@@ -29,7 +29,7 @@ public class UserController {
         if (result.hasErrors()) {
             return "users/joinForm";
         }
-        loginService.join(joinRequest);
-        return "redirect:/";
+        userService.join(joinRequest);
+        return "redirect:/login";
     }
 }
