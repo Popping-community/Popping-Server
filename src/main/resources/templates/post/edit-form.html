@@ -266,34 +266,30 @@
     </div>
 </footer>
 
-<script>
-    // 수정 폼에서 기존 데이터 설정
+<script th:inline="javascript">
     document.addEventListener('DOMContentLoaded', function() {
-        // 회원 게시글 수정 시 기존 데이터 설정
+        // 회원 게시글 수정용 요소들
         const memberTitleInput = document.getElementById('title');
         const memberContentTextarea = document.getElementById('content');
 
-        if (memberTitleInput && '[[${form.title}]]') {
-            memberTitleInput.value = '[[${form.title}]]';
-        }
-        if (memberContentTextarea && '[[${form.content}]]') {
-            memberContentTextarea.value = '[[${form.content}]]';
-        }
-
-        // 게스트 게시글 수정 시 기존 데이터 설정
+        // 게스트 게시글 수정용 요소들
         const guestNicknameInput = document.getElementById('guestNickname');
         const guestTitleInput = document.getElementById('guestTitle');
         const guestContentTextarea = document.getElementById('guestContent');
 
-        if (guestNicknameInput && '[[${form.guestNickname}]]') {
-            guestNicknameInput.value = '[[${form.guestNickname}]]';
-        }
-        if (guestTitleInput && '[[${form.title}]]') {
-            guestTitleInput.value = '[[${form.title}]]';
-        }
-        if (guestContentTextarea && '[[${form.content}]]') {
-            guestContentTextarea.value = '[[${form.content}]]';
-        }
+        // Thymeleaf에서 안전하게 JS 문자열로 렌더링
+        const formTitle = /*[[${form.title}]]*/ '';
+        const formContent = /*[[${form.content}]]*/ '';
+        const formGuestNickname = /*[[${form.guestNickname}]]*/ '';
+
+        // 회원 게시글 수정 폼 데이터 설정
+        if (memberTitleInput) memberTitleInput.value = formTitle;
+        if (memberContentTextarea) memberContentTextarea.value = formContent;
+
+        // 게스트 게시글 수정 폼 데이터 설정
+        if (guestNicknameInput) guestNicknameInput.value = formGuestNickname;
+        if (guestTitleInput) guestTitleInput.value = formTitle;
+        if (guestContentTextarea) guestContentTextarea.value = formContent;
     });
 </script>
 </body>
