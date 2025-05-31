@@ -1,5 +1,7 @@
 package com.example.popping.controller;
 
+import java.util.List;
+
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -13,6 +15,7 @@ import com.example.popping.constant.SessionConst;
 import com.example.popping.domain.User;
 import com.example.popping.domain.UserPrincipal;
 import com.example.popping.dto.*;
+import com.example.popping.service.CommentService;
 import com.example.popping.service.PostService;
 
 @Controller
@@ -21,13 +24,16 @@ import com.example.popping.service.PostService;
 public class PostController {
 
     private final PostService postService;
+    private final CommentService commentService;
 
     @GetMapping("/{postId}")
     public String getPost(@PathVariable String slug, @PathVariable Long postId,
                           Model model) {
         System.out.println(postId);
-        PostResponse dto = postService.getPost(postId);
-        model.addAttribute("post", dto);
+        PostResponse postResponse = postService.getPost(postId);
+        List<CommentResponse> commentResponses = commentService.getCommentsByPostId(postId);
+        model.addAttribute("post", postResponse);
+        model.addAttribute("comments", commentResponses);
         model.addAttribute("slug", slug);
         return "post/detail";
     }

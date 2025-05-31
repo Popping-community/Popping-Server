@@ -26,7 +26,8 @@ public class Board extends BaseEntity {
     @Column(unique = true)
     private String slug;
 
-    @ManyToOne(optional = false)
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
     private User createdBy;
 
     public void update(String name, String description) {

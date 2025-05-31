@@ -87,6 +87,12 @@ public class PostService {
     }
 
     @Transactional(readOnly = true)
+    public Post getPostEntity(Long postId) {
+        return postRepository.findById(postId)
+                .orElseThrow(() -> new EntityNotFoundException("해당 게시글이 존재하지 않습니다."));
+    }
+
+    @Transactional(readOnly = true)
     public PostResponse getMemberPostForEdit(Long postId, UserPrincipal user) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new EntityNotFoundException("해당 게시글이 존재하지 않습니다."));

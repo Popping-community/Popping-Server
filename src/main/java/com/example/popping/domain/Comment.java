@@ -1,5 +1,8 @@
 package com.example.popping.domain;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -11,12 +14,12 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class Post extends BaseEntity {
+public class Comment extends BaseEntity {
 
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String title;
     private String content;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -28,20 +31,15 @@ public class Post extends BaseEntity {
     private String guestPasswordHash;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "board_id")
-    private Board board;
+    @JoinColumn(name = "post_id")
+    private Post post;
 
-    public void memberUpdate(String title, String content) {
-        this.title = title;
-        this.content = content;
-    }
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "parent_id")
+    private Comment parent;
 
-    public void guestUpdate(String title, String content, String guestNickname, String guestPasswordHash) {
-        this.title = title;
-        this.content = content;
-        this.guestNickname = guestNickname;
-        this.guestPasswordHash = guestPasswordHash;
-    }
+    @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Comment> children = new ArrayList<>();
 
     public boolean isAuthor(User user) {
         return author != null && user != null && author.getId().equals(user.getId());
@@ -49,5 +47,9 @@ public class Post extends BaseEntity {
 
     public boolean isGuest() {
         return author == null;
+    }
+
+    public boolean isReply() {
+        return parent != null;
     }
 }

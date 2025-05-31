@@ -39,10 +39,10 @@ public class BoardController {
 
     @GetMapping("/{slug}")
     public String getBoard(@PathVariable String slug, Model model) {
-        BoardResponse dto = boardService.getBoard(slug);
-        List<PostResponse> posts = postService.getPostsByBoardSlug(slug);
-        model.addAttribute("board", dto);
-        model.addAttribute("posts", posts);
+        BoardResponse boardResponse = boardService.getBoard(slug);
+        List<PostResponse> postResponses = postService.getPostsByBoardSlug(slug);
+        model.addAttribute("board", boardResponse);
+        model.addAttribute("posts", postResponses);
         return "board/detail";
     }
 
@@ -83,7 +83,7 @@ public class BoardController {
             return "board/edit-form";
         }
         boardService.updateBoard(slug, dto, loginUser);
-        return REDIRECT_BOARDS;
+        return REDIRECT_BOARDS + "/" + slug;
     }
 
     @PostMapping("/{slug}/delete")

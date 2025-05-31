@@ -163,21 +163,17 @@
         </div>
     </div>
 </footer>
-<script>
-    // 페이지 로드 시 기존 데이터로 폼 필드 채우기
+<script th:inline="javascript">
     document.addEventListener('DOMContentLoaded', function() {
         const nameInput = document.getElementById('name');
         const descriptionTextarea = document.getElementById('description');
 
-        // 기존 게시판 이름 설정
-        if (nameInput && '[[${form.name}]]') {
-            nameInput.value = '[[${form.name}]]';
-        }
+        // [[...]] 안에서 Thymeleaf가 JS 문자열로 안전하게 렌더링되도록 함
+        const formName = /*[[${form.name}]]*/ '';
+        const formDescription = /*[[${form.description}]]*/ '';
 
-        // 기존 게시판 설명 설정
-        if (descriptionTextarea && '[[${form.description}]]') {
-            descriptionTextarea.value = '[[${form.description}]]';
-        }
+        if (nameInput) nameInput.value = formName;
+        if (descriptionTextarea) descriptionTextarea.value = formDescription;
     });
 </script>
 </body>
