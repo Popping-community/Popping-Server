@@ -50,7 +50,82 @@
             padding-right: 1rem;
         }
         .post-content {
-            white-space: pre-line;
+            line-height: 1.6;
+        }
+        .post-content img {
+            max-width: 100%;
+            height: auto;
+            margin: 15px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            display: block;
+        }
+        /* Toast UI Editor 콘텐츠 스타일링 */
+        .post-content h1, .post-content h2, .post-content h3, .post-content h4, .post-content h5, .post-content h6 {
+            margin: 1.5em 0 0.5em 0;
+            font-weight: bold;
+        }
+        .post-content h1 { font-size: 2em; }
+        .post-content h2 { font-size: 1.5em; }
+        .post-content h3 { font-size: 1.25em; }
+        .post-content p {
+            margin: 1em 0;
+        }
+        .post-content ul, .post-content ol {
+            margin: 1em 0;
+            padding-left: 2em;
+        }
+        .post-content ul li {
+            list-style-type: disc;
+            margin: 0.5em 0;
+        }
+        .post-content ol li {
+            list-style-type: decimal;
+            margin: 0.5em 0;
+        }
+        .post-content blockquote {
+            border-left: 4px solid hsl(214.3 31.8% 91.4%);
+            margin: 1em 0;
+            padding: 0.5em 1em;
+            background-color: hsl(210 40% 98%);
+            font-style: italic;
+        }
+        .post-content hr {
+            border: none;
+            border-top: 1px solid hsl(214.3 31.8% 91.4%);
+            margin: 2em 0;
+        }
+        .post-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1em 0;
+        }
+        .post-content table th, .post-content table td {
+            border: 1px solid hsl(214.3 31.8% 91.4%);
+            padding: 0.5em;
+            text-align: left;
+        }
+        .post-content table th {
+            background-color: hsl(210 40% 96.1%);
+            font-weight: bold;
+        }
+        .post-content code {
+            background-color: hsl(210 40% 96.1%);
+            padding: 0.2em 0.4em;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+        .post-content pre {
+            background-color: hsl(210 40% 96.1%);
+            padding: 1em;
+            border-radius: 6px;
+            overflow-x: auto;
+            margin: 1em 0;
+        }
+        .post-content pre code {
+            background: none;
+            padding: 0;
         }
         .comment-content {
             white-space: pre-line;
@@ -66,6 +141,8 @@
             100% { background-color: transparent; }
         }
     </style>
+    <!-- Toast UI Editor Viewer CSS -->
+    <link rel="stylesheet" href="https://uicdn.toast.com/editor/latest/toastui-editor-viewer.min.css" />
 </head>
 <body>
 <header class="sticky top-0 z-40 w-full border-b bg-background">
@@ -147,7 +224,8 @@
 
                     <h1 class="text-2xl font-bold mb-4" th:text="${post.title}">게시글 제목</h1>
 
-                    <div class="post-content mt-6 text-foreground" th:text="${post.content}">
+                    <!-- 게시글 내용 - 이미지 포함 HTML 렌더링 -->
+                    <div class="post-content mt-6 text-foreground toastui-editor-contents" th:utext="${post.content}">
                         게시글 내용...
                     </div>
                 </div>
@@ -512,7 +590,7 @@
             // 에러가 있는 경우에만 하이라이트 적용
             showDeleteForm(errorCommentId);
             showError(errorCommentId);
-            scrollToElement('comment-' + errorCommentId);
+            highlightElement('comment-' + errorCommentId);
 
             // URL에서 파라미터 제거
             const url = new URL(window.location);
