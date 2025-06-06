@@ -147,10 +147,8 @@
                                 <h3 class="font-medium" th:text="${post.title}">게시글 제목</h3>
                                 <div class="flex items-center gap-2 text-sm text-muted-foreground">
                                     <span th:text="${post.authorName}">작성자</span>
+                                    <span th:if="${post.authorId == null}" class="text-xs bg-muted px-2 py-0.5 rounded-full">게스트</span>
                                 </div>
-                            </div>
-                            <div class="mt-2 text-sm text-muted-foreground line-clamp-2" th:text="${post.content}">
-                                게시글 내용 미리보기...
                             </div>
                         </a>
                     </div>
