@@ -3,7 +3,6 @@ package com.example.popping.controller;
 import java.util.List;
 
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -11,8 +10,6 @@ import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
-import com.example.popping.constant.SessionConst;
-import com.example.popping.domain.User;
 import com.example.popping.domain.UserPrincipal;
 import com.example.popping.dto.BoardCreateRequest;
 import com.example.popping.dto.BoardResponse;
@@ -39,7 +36,7 @@ public class BoardController {
 
     @GetMapping("/{slug}")
     public String getBoard(@PathVariable String slug, Model model) {
-        BoardResponse boardResponse = boardService.getBoard(slug);
+        BoardResponse boardResponse = boardService.getBoardResponse(slug);
         List<PostResponse> postResponses = postService.getPostsByBoardSlug(slug);
         model.addAttribute("board", boardResponse);
         model.addAttribute("posts", postResponses);

@@ -10,6 +10,8 @@ import lombok.RequiredArgsConstructor;
 import com.example.popping.domain.User;
 import com.example.popping.dto.JoinRequest;
 import com.example.popping.dto.LoginRequest;
+import com.example.popping.exception.CustomAppException;
+import com.example.popping.exception.ErrorType;
 import com.example.popping.repository.UserRepository;
 
 @Service
@@ -36,18 +38,9 @@ public class UserService {
     public User getLoginUserById(Long userId) {
         if (userId == null) {
             return null;
-        }
-
-        Optional<User> optionalUser = userRepository.findById(userId);
-        return optionalUser.orElse(null);
-    }
-
-    public User getLoginUserByLoginId(String loginId) {
-        if (loginId == null) {
-            return null;
-        }
-
-        Optional<User> optionalUser = userRepository.findByLoginId(loginId);
-        return optionalUser.orElse(null);
+        };
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new CustomAppException(ErrorType.USER_NOT_FOUND,
+                        "사용자를 찾을 수 없습니다: " + userId));
     }
 }
