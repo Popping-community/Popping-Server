@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>게시글 작성 - 커뮤니티</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Toast UI Editor CSS -->
+    <link rel="stylesheet" href="https://uicdn.toast.com/editor/latest/toastui-editor.min.css" />
     <script>
         tailwind.config = {
             theme: {
@@ -49,6 +51,13 @@
             padding-left: 1rem;
             padding-right: 1rem;
         }
+        .toastui-editor-defaultUI {
+            border: 1px solid hsl(214.3 31.8% 91.4%);
+            border-radius: 6px;
+        }
+        .toastui-editor-defaultUI-toolbar {
+            border-bottom: 1px solid hsl(214.3 31.8% 91.4%);
+        }
     </style>
 </head>
 <body>
@@ -86,7 +95,7 @@
 
 <main class="flex-1 flex items-center justify-center">
     <div class="center-content py-8 md:py-12">
-        <div class="max-w-2xl mx-auto w-full">
+        <div class="max-w-4xl mx-auto w-full">
             <div class="rounded-lg border bg-card text-card-foreground shadow-sm">
                 <div class="p-6 space-y-1.5">
                     <h3 class="text-2xl font-semibold leading-none tracking-tight">게시글 작성</h3>
@@ -94,7 +103,7 @@
                 </div>
                 <div class="p-6 pt-0">
                     <!-- 회원 게시글 작성 폼 -->
-                    <form sec:authorize="isAuthenticated()" th:action="@{/boards/{slug}/member(slug=${slug})}" th:object="${memberPostCreateRequest}" method="post" class="space-y-4">
+                    <form sec:authorize="isAuthenticated()" th:action="@{/boards/{slug}/member(slug=${slug})}" th:object="${memberPostCreateRequest}" method="post" class="space-y-4" id="memberForm">
                         <!-- 글로벌 오류 메시지 표시 -->
                         <div th:if="${#fields.hasGlobalErrors()}" class="p-3 rounded-md bg-destructive/10 border border-destructive/20">
                             <div class="flex items-center mb-2">
@@ -109,6 +118,7 @@
                                 <li th:each="err : ${#fields.globalErrors()}" th:text="${err}" class="text-sm text-destructive"></li>
                             </ul>
                         </div>
+
                         <!-- 제목 필드 -->
                         <div class="space-y-2">
                             <label for="title" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">제목</label>
@@ -124,13 +134,9 @@
 
                         <!-- 내용 필드 -->
                         <div class="space-y-2">
-                            <label for="content" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">내용</label>
-                            <textarea
-                                    id="content"
-                                    th:field="*{content}"
-                                    class="flex min-h-[200px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                    placeholder="내용을 입력하세요"
-                            ></textarea>
+                            <label for="memberEditor" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">내용</label>
+                            <div id="memberEditor"></div>
+                            <input type="hidden" name="content" id="memberContent" />
                             <p th:if="${#fields.hasErrors('content')}" th:errors="*{content}" class="text-xs text-destructive"></p>
                         </div>
 
@@ -148,7 +154,7 @@
                     </form>
 
                     <!-- 게스트 게시글 작성 폼 -->
-                    <form sec:authorize="!isAuthenticated()" th:action="@{/boards/{slug}/guest(slug=${slug})}" th:object="${guestPostCreateRequest}" method="post" class="space-y-4">
+                    <form sec:authorize="!isAuthenticated()" th:action="@{/boards/{slug}/guest(slug=${slug})}" th:object="${guestPostCreateRequest}" method="post" class="space-y-4" id="guestForm">
                         <!-- 글로벌 오류 메시지 표시 -->
                         <div th:if="${#fields.hasGlobalErrors()}" class="p-3 rounded-md bg-destructive/10 border border-destructive/20">
                             <div class="flex items-center mb-2">
@@ -163,6 +169,7 @@
                                 <li th:each="err : ${#fields.globalErrors()}" th:text="${err}" class="text-sm text-destructive"></li>
                             </ul>
                         </div>
+
                         <!-- 닉네임 필드 -->
                         <div class="space-y-2">
                             <label for="guestNickname" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">닉네임</label>
@@ -205,13 +212,9 @@
 
                         <!-- 내용 필드 -->
                         <div class="space-y-2">
-                            <label for="guestContent" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">내용</label>
-                            <textarea
-                                    id="guestContent"
-                                    th:field="*{content}"
-                                    class="flex min-h-[200px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                    placeholder="내용을 입력하세요"
-                            ></textarea>
+                            <label for="guestEditor" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">내용</label>
+                            <div id="guestEditor"></div>
+                            <input type="hidden" name="content" id="guestContent" />
                             <p th:if="${#fields.hasErrors('content')}" th:errors="*{content}" class="text-xs text-destructive"></p>
                         </div>
 
@@ -245,5 +248,95 @@
         </div>
     </div>
 </footer>
+
+<!-- Toast UI Editor JS -->
+<script src="https://uicdn.toast.com/editor/latest/toastui-editor-all.min.js"></script>
+
+<script>
+    let memberEditor, guestEditor;
+
+    // 이미지 업로드 함수
+    async function uploadImage(file) {
+        const formData = new FormData();
+        formData.append('image', file);
+
+        try {
+            const response = await fetch('/images/upload', {
+                method: 'POST',
+                body: formData
+            });
+
+            if (!response.ok) {
+                throw new Error('이미지 업로드에 실패했습니다.');
+            }
+
+            const data = await response.json();
+            return data.imageUrl;
+        } catch (error) {
+            console.error('이미지 업로드 오류:', error);
+            alert('이미지 업로드에 실패했습니다.');
+            throw error;
+        }
+    }
+
+    // 에디터 초기화
+    document.addEventListener('DOMContentLoaded', function() {
+        // 회원용 에디터
+        const memberEditorElement = document.getElementById('memberEditor');
+        if (memberEditorElement) {
+            memberEditor = new toastui.Editor({
+                el: memberEditorElement,
+                height: '400px',
+                initialEditType: 'wysiwyg',
+                previewStyle: 'vertical',
+                placeholder: '내용을 입력하세요. 이미지는 드래그 앤 드롭하거나 툴바의 이미지 버튼을 클릭하여 업로드할 수 있습니다.',
+                hooks: {
+                    addImageBlobHook: async (blob, callback) => {
+                        try {
+                            const imageUrl = await uploadImage(blob);
+                            callback(imageUrl, blob.name || 'image');
+                        } catch (error) {
+                            callback('', '');
+                        }
+                    }
+                }
+            });
+
+            // 폼 제출 시 에디터 내용을 hidden input에 설정
+            document.getElementById('memberForm').addEventListener('submit', function(e) {
+                const content = memberEditor.getHTML();
+                document.getElementById('memberContent').value = content;
+            });
+        }
+
+        // 게스트용 에디터
+        const guestEditorElement = document.getElementById('guestEditor');
+        if (guestEditorElement) {
+            guestEditor = new toastui.Editor({
+                el: guestEditorElement,
+                height: '400px',
+                initialEditType: 'wysiwyg',
+                previewStyle: 'vertical',
+                placeholder: '내용을 입력하세요. 이미지는 드래그 앤 드롭하거나 툴바의 이미지 버튼을 클릭하여 업로드할 수 있습니다.',
+                hooks: {
+                    addImageBlobHook: async (blob, callback) => {
+                        try {
+                            const imageUrl = await uploadImage(blob);
+                            callback(imageUrl, blob.name || 'image');
+                        } catch (error) {
+                            callback('', '');
+                        }
+                    }
+                }
+            });
+
+            // 폼 제출 시 에디터 내용을 hidden input에 설정
+            document.getElementById('guestForm').addEventListener('submit', function(e) {
+                const content = guestEditor.getHTML();
+                document.getElementById('guestContent').value = content;
+            });
+        }
+    });
+</script>
 </body>
 </html>

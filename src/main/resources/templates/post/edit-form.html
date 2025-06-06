@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>게시글 수정 - 커뮤니티</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Toast UI Editor CSS -->
+    <link rel="stylesheet" href="https://uicdn.toast.com/editor/latest/toastui-editor.min.css" />
     <script>
         tailwind.config = {
             theme: {
@@ -49,6 +51,13 @@
             padding-left: 1rem;
             padding-right: 1rem;
         }
+        .toastui-editor-defaultUI {
+            border: 1px solid hsl(214.3 31.8% 91.4%);
+            border-radius: 6px;
+        }
+        .toastui-editor-defaultUI-toolbar {
+            border-bottom: 1px solid hsl(214.3 31.8% 91.4%);
+        }
     </style>
 </head>
 <body>
@@ -86,7 +95,7 @@
 
 <main class="flex-1 flex items-center justify-center">
     <div class="center-content py-8 md:py-12">
-        <div class="max-w-2xl mx-auto w-full">
+        <div class="max-w-4xl mx-auto w-full">
             <div class="rounded-lg border bg-card text-card-foreground shadow-sm">
                 <div class="p-6 space-y-1.5">
                     <h3 class="text-2xl font-semibold leading-none tracking-tight">게시글 수정</h3>
@@ -94,7 +103,7 @@
                 </div>
                 <div class="p-6 pt-0">
                     <!-- 회원 게시글 수정 폼 -->
-                    <form th:if="${form.authorId != null}" th:action="@{/boards/{slug}/{postId}/edit(slug=${slug},postId=${form.id})}" th:object="${memberPostUpdateRequest}" method="post" class="space-y-4">
+                    <form th:if="${form.authorId != null}" th:action="@{/boards/{slug}/{postId}/edit(slug=${slug},postId=${form.id})}" th:object="${memberPostUpdateRequest}" method="post" class="space-y-4" id="memberEditForm">
                         <!-- 글로벌 오류 메시지 표시 -->
                         <div th:if="${#fields.hasGlobalErrors()}" class="p-3 rounded-md bg-destructive/10 border border-destructive/20">
                             <div class="flex items-center mb-2">
@@ -125,7 +134,8 @@
                             <input
                                     type="text"
                                     id="title"
-                                    th:field="*{title}"
+                                    name="title"
+                                    th:value="${form.title}"
                                     class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                                     placeholder="제목을 입력하세요"
                             />
@@ -134,13 +144,9 @@
 
                         <!-- 내용 필드 -->
                         <div class="space-y-2">
-                            <label for="content" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">내용</label>
-                            <textarea
-                                    id="content"
-                                    th:field="*{content}"
-                                    class="flex min-h-[200px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                    placeholder="내용을 입력하세요"
-                            ></textarea>
+                            <label for="memberEditEditor" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">내용</label>
+                            <div id="memberEditEditor"></div>
+                            <input type="hidden" name="content" id="memberEditContent" />
                             <p th:if="${#fields.hasErrors('content')}" th:errors="*{content}" class="text-xs text-destructive"></p>
                         </div>
 
@@ -158,7 +164,7 @@
                     </form>
 
                     <!-- 게스트 게시글 수정 폼 -->
-                    <form th:if="${form.authorId == null}" th:action="@{/boards/{slug}/{postId}/edit-guest(slug=${slug},postId=${form.id})}" th:object="${guestPostUpdateRequest}" method="post" class="space-y-4">
+                    <form th:if="${form.authorId == null}" th:action="@{/boards/{slug}/{postId}/edit-guest(slug=${slug},postId=${form.id})}" th:object="${guestPostUpdateRequest}" method="post" class="space-y-4" id="guestEditForm">
                         <!-- 글로벌 오류 메시지 표시 -->
                         <div th:if="${#fields.hasGlobalErrors()}" class="p-3 rounded-md bg-destructive/10 border border-destructive/20">
                             <div class="flex items-center mb-2">
@@ -189,7 +195,8 @@
                             <input
                                     type="text"
                                     id="guestNickname"
-                                    th:field="*{guestNickname}"
+                                    name="guestNickname"
+                                    th:value="${form.guestNickname}"
                                     class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                                     placeholder="닉네임을 입력하세요"
                             />
@@ -216,7 +223,8 @@
                             <input
                                     type="text"
                                     id="guestTitle"
-                                    th:field="*{title}"
+                                    name="title"
+                                    th:value="${form.title}"
                                     class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                                     placeholder="제목을 입력하세요"
                             />
@@ -225,13 +233,9 @@
 
                         <!-- 내용 필드 -->
                         <div class="space-y-2">
-                            <label for="guestContent" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">내용</label>
-                            <textarea
-                                    id="guestContent"
-                                    th:field="*{content}"
-                                    class="flex min-h-[200px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                    placeholder="내용을 입력하세요"
-                            ></textarea>
+                            <label for="guestEditEditor" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">내용</label>
+                            <div id="guestEditEditor"></div>
+                            <input type="hidden" name="content" id="guestEditContent" />
                             <p th:if="${#fields.hasErrors('content')}" th:errors="*{content}" class="text-xs text-destructive"></p>
                         </div>
 
@@ -266,30 +270,98 @@
     </div>
 </footer>
 
+<!-- Toast UI Editor JS -->
+<script src="https://uicdn.toast.com/editor/latest/toastui-editor-all.min.js"></script>
+
 <script th:inline="javascript">
+    let memberEditEditor, guestEditEditor;
+
+    // 서버에서 전달받은 기존 내용
+    const existingContent = /*[[${form.content}]]*/ '';
+
+    // 이미지 업로드 함수
+    async function uploadImage(file) {
+        const formData = new FormData();
+        formData.append('image', file);
+
+        try {
+            const response = await fetch('/images/upload', {
+                method: 'POST',
+                body: formData
+            });
+
+            if (!response.ok) {
+                throw new Error('이미지 업로드에 실패했습니다.');
+            }
+
+            const data = await response.json();
+            return data.imageUrl;
+        } catch (error) {
+            console.error('이미지 업로드 오류:', error);
+            alert('이미지 업로드에 실패했습니다.');
+            throw error;
+        }
+    }
+
+    // 에디터 초기화
     document.addEventListener('DOMContentLoaded', function() {
-        // 회원 게시글 수정용 요소들
-        const memberTitleInput = document.getElementById('title');
-        const memberContentTextarea = document.getElementById('content');
+        // 회원용 수정 에디터
+        const memberEditEditorElement = document.getElementById('memberEditEditor');
+        if (memberEditEditorElement) {
+            memberEditEditor = new toastui.Editor({
+                el: memberEditEditorElement,
+                height: '400px',
+                initialEditType: 'wysiwyg',
+                previewStyle: 'vertical',
+                initialValue: existingContent,
+                placeholder: '내용을 입력하세요. 이미지는 드래그 앤 드롭하거나 툴바의 이미지 버튼을 클릭하여 업로드할 수 있습니다.',
+                hooks: {
+                    addImageBlobHook: async (blob, callback) => {
+                        try {
+                            const imageUrl = await uploadImage(blob);
+                            callback(imageUrl, blob.name || 'image');
+                        } catch (error) {
+                            callback('', '');
+                        }
+                    }
+                }
+            });
 
-        // 게스트 게시글 수정용 요소들
-        const guestNicknameInput = document.getElementById('guestNickname');
-        const guestTitleInput = document.getElementById('guestTitle');
-        const guestContentTextarea = document.getElementById('guestContent');
+            // 폼 제출 시 에디터 내용을 hidden input에 설정
+            document.getElementById('memberEditForm').addEventListener('submit', function(e) {
+                const content = memberEditEditor.getHTML();
+                document.getElementById('memberEditContent').value = content;
+            });
+        }
 
-        // Thymeleaf에서 안전하게 JS 문자열로 렌더링
-        const formTitle = /*[[${form.title}]]*/ '';
-        const formContent = /*[[${form.content}]]*/ '';
-        const formGuestNickname = /*[[${form.guestNickname}]]*/ '';
+        // 게스트용 수정 에디터
+        const guestEditEditorElement = document.getElementById('guestEditEditor');
+        if (guestEditEditorElement) {
+            guestEditEditor = new toastui.Editor({
+                el: guestEditEditorElement,
+                height: '400px',
+                initialEditType: 'wysiwyg',
+                previewStyle: 'vertical',
+                initialValue: existingContent,
+                placeholder: '내용을 입력하세요. 이미지는 드래그 앤 드롭하거나 툴바의 이미지 버튼을 클릭하여 업로드할 수 있습니다.',
+                hooks: {
+                    addImageBlobHook: async (blob, callback) => {
+                        try {
+                            const imageUrl = await uploadImage(blob);
+                            callback(imageUrl, blob.name || 'image');
+                        } catch (error) {
+                            callback('', '');
+                        }
+                    }
+                }
+            });
 
-        // 회원 게시글 수정 폼 데이터 설정
-        if (memberTitleInput) memberTitleInput.value = formTitle;
-        if (memberContentTextarea) memberContentTextarea.value = formContent;
-
-        // 게스트 게시글 수정 폼 데이터 설정
-        if (guestNicknameInput) guestNicknameInput.value = formGuestNickname;
-        if (guestTitleInput) guestTitleInput.value = formTitle;
-        if (guestContentTextarea) guestContentTextarea.value = formContent;
+            // 폼 제출 시 에디터 내용을 hidden input에 설정
+            document.getElementById('guestEditForm').addEventListener('submit', function(e) {
+                const content = guestEditEditor.getHTML();
+                document.getElementById('guestEditContent').value = content;
+            });
+        }
     });
 </script>
 </body>
