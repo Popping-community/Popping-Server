@@ -11,8 +11,6 @@ import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
-import com.example.popping.constant.SessionConst;
-import com.example.popping.domain.User;
 import com.example.popping.domain.UserPrincipal;
 import com.example.popping.dto.*;
 import com.example.popping.service.CommentService;
@@ -29,8 +27,7 @@ public class PostController {
     @GetMapping("/{postId}")
     public String getPost(@PathVariable String slug, @PathVariable Long postId,
                           Model model) {
-        System.out.println(postId);
-        PostResponse postResponse = postService.getPost(postId);
+        PostResponse postResponse = postService.getPostResponse(postId);
         List<CommentResponse> commentResponses = commentService.getCommentsByPostId(postId);
         model.addAttribute("post", postResponse);
         model.addAttribute("comments", commentResponses);
@@ -128,7 +125,7 @@ public class PostController {
         if (verified == null || !verified) {
             return "redirect:/boards/" + slug + "/" + postId + "/edit-password";
         }
-        PostResponse dto = postService.getPost(postId);
+        PostResponse dto = postService.getPostResponse(postId);
         model.addAttribute("form", dto);
         model.addAttribute("slug", slug);
         return "post/edit-form";
@@ -159,7 +156,7 @@ public class PostController {
                                     Model model,
                                     HttpSession session) {
         if(bindingResult.hasErrors()){
-            PostResponse postResponse = postService.getPost(postId);
+            PostResponse postResponse = postService.getPostResponse(postId);
             model.addAttribute("form", postResponse);
             model.addAttribute("slug", slug);
             return "post/edit-form";

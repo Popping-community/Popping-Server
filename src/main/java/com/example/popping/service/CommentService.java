@@ -15,6 +15,8 @@ import com.example.popping.domain.UserPrincipal;
 import com.example.popping.dto.CommentResponse;
 import com.example.popping.dto.GuestCommentCreateRequest;
 import com.example.popping.dto.MemberCommentCreateRequest;
+import com.example.popping.exception.CustomAppException;
+import com.example.popping.exception.ErrorType;
 import com.example.popping.repository.CommentRepository;
 
 @Service
@@ -27,7 +29,7 @@ public class CommentService {
     private final PasswordEncoder passwordEncoder;
 
     public Long createMemberComment(Long postId, MemberCommentCreateRequest dto, UserPrincipal user, Long parentId) {
-        Post post = postService.getPostEntity(postId);
+        Post post = postService.getPost(postId);
         Comment parent = getParentComment(parentId);
 
         Comment comment = dto.toEntity(user.getUser(), post, parent);
@@ -36,7 +38,7 @@ public class CommentService {
     }
 
     public Long createGuestComment(Long postId, GuestCommentCreateRequest dto, Long parentId) {
-        Post post = postService.getPostEntity(postId);
+        Post post = postService.getPost(postId);
         Comment parent = getParentComment(parentId);
 
         String hashedPassword = passwordEncoder.encode(dto.getGuestPassword());
@@ -46,26 +48,27 @@ public class CommentService {
     }
 
     public void deleteComment(Long commentId, UserPrincipal user) {
-        Comment comment = commentRepository.findById(commentId)
-                .orElseThrow(() -> new EntityNotFoundException("댓글이 존재하지 않습니다."));
+        Comment comment = getComment(commentId);
 
         if (!comment.isAuthor(user.getUser())) {
-            throw new AccessDeniedException("작성자가 아닙니다.");
+            throw new CustomAppException(ErrorType.ACCESS_DENIED,
+                    "댓글 작성자가 아닙니다." + user.getUser().getLoginId());
         }
 
         commentRepository.delete(comment);
     }
 
     public void deleteCommentAsGuest(Long commentId, String password) {
-        Comment comment = commentRepository.findById(commentId)
-                .orElseThrow(() -> new EntityNotFoundException("댓글이 존재하지 않습니다."));
+        Comment comment = getComment(commentId);
 
         if (comment.getAuthor() != null) {
-            throw new AccessDeniedException("회원 댓글은 비회원이 삭제할 수 없습니다.");
+            throw new CustomAppException(ErrorType.ACCESS_DENIED,
+                    "회원이 작성한 댓글은 비밀번호로 삭제할 수 없습니다.");
         }
 
         if (!passwordEncoder.matches(password, comment.getGuestPasswordHash())) {
-            throw new AccessDeniedException("비밀번호가 일치하지 않습니다.");
+            throw new CustomAppException(ErrorType.ACCESS_DENIED,
+                    "비밀번호가 일치하지 않습니다.");
         }
 
         commentRepository.delete(comment);
@@ -73,7 +76,7 @@ public class CommentService {
 
     @Transactional(readOnly = true)
     public List<CommentResponse> getCommentsByPostId(Long postId) {
-        Post post = postService.getPostEntity(postId);
+        Post post = postService.getPost(postId);
 
         List<Comment> parentComments = commentRepository.findByPostAndParentIsNullOrderByIdAsc(post);
 
@@ -82,21 +85,24 @@ public class CommentService {
                 .toList();
     }
 
+    public Comment getComment(Long commentId) {
+        return commentRepository.findById(commentId)
+                .orElseThrow(() -> new CustomAppException(ErrorType.COMMENT_NOT_FOUND, "해당 댓글이 존재하지 않습니다: " + commentId));
+    }
+
     private Comment getParentComment(Long parentId) {
         if (parentId == null) return null;
-        return commentRepository.findById(parentId)
-                .orElseThrow(() -> new EntityNotFoundException("부모 댓글이 존재하지 않습니다."));
+        return getComment(parentId);
     }
 
     public Long getParentCommentId(Long commentId) {
-        Comment comment = commentRepository.findById(commentId)
-                .orElseThrow(() -> new EntityNotFoundException("댓글이 존재하지 않습니다."));
+        Comment comment = getComment(commentId);
 
         return comment.getParent() != null ? comment.getParent().getId() : null;
     }
 
     public Long getPreviousCommentId(Long postId, Long commentId) {
-        Post post = postService.getPostEntity(postId);
+        Post post = postService.getPost(postId);
 
         List<Comment> parentComments = commentRepository.findByPostAndParentIsNullOrderByIdAsc(post);
 
