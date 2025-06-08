@@ -34,6 +34,8 @@ public class CommentService {
 
         Comment comment = dto.toEntity(user.getUser(), post, parent);
         commentRepository.save(comment);
+
+        post.increaseCommentCount();
         return comment.getId();
     }
 
@@ -44,6 +46,8 @@ public class CommentService {
         String hashedPassword = passwordEncoder.encode(dto.getGuestPassword());
         Comment comment = dto.toEntity(post, parent, hashedPassword);
         commentRepository.save(comment);
+
+        post.increaseCommentCount();
         return comment.getId();
     }
 
@@ -55,6 +59,7 @@ public class CommentService {
                     "댓글 작성자가 아닙니다." + user.getUser().getLoginId());
         }
 
+        comment.getPost().decreaseCommentCount();
         commentRepository.delete(comment);
     }
 
@@ -71,6 +76,7 @@ public class CommentService {
                     "비밀번호가 일치하지 않습니다.");
         }
 
+        comment.getPost().decreaseCommentCount();
         commentRepository.delete(comment);
     }
 

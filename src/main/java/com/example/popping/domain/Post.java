@@ -33,6 +33,12 @@ public class Post extends BaseEntity {
     @JoinColumn(name = "board_id")
     private Board board;
 
+    @Column(nullable = false)
+    private Long viewCount = 0L;
+
+    @Column(nullable = false)
+    private int commentCount = 0;
+
     public void memberUpdate(String title, String content) {
         this.title = title;
         this.content = content;
@@ -43,6 +49,16 @@ public class Post extends BaseEntity {
         this.content = content;
         this.guestNickname = guestNickname;
         this.guestPasswordHash = guestPasswordHash;
+    }
+
+    public void increaseCommentCount() {
+        this.commentCount++;
+    }
+
+    public void decreaseCommentCount() {
+        if (this.commentCount > 0) {
+            this.commentCount--;
+        }
     }
 
     public boolean isAuthor(User user) {

@@ -16,6 +16,8 @@ public class PostResponse {
     private String boardName;
     private Long authorId;
     private String guestNickname;
+    private Long viewCount;
+    private int commentCount;
 
     public static PostResponse from(Post post) {
         return PostResponse.builder()
@@ -26,6 +28,8 @@ public class PostResponse {
                 .boardName(post.getBoard().getName())
                 .authorId(post.isGuest() ? null : post.getAuthor().getId())
                 .guestNickname(post.isGuest() ? post.getGuestNickname() : null)
+                .viewCount(post.getViewCount())
+                .commentCount(post.getCommentCount())
                 .build();
     }
 }
