@@ -21,6 +21,7 @@ public class PostService {
 
     private final BoardService boardService;
     private final ImageService imageService;
+    private final ViewCountService viewCountService;
     private final PasswordEncoder passwordEncoder;
     private final PostRepository postRepository;
 
@@ -84,6 +85,7 @@ public class PostService {
 
     @Transactional(readOnly = true)
     public PostResponse getPostResponse(Long postId) {
+        viewCountService.increaseView(postId);
         Post post = getPost(postId);
 
         return PostResponse.from(post);
