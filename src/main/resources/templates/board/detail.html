@@ -143,11 +143,27 @@
                 <div th:if="${not #lists.isEmpty(posts)}" class="space-y-2">
                     <div th:each="post : ${posts}" class="bg-background rounded-md p-4 hover:shadow transition-shadow">
                         <a th:href="@{/boards/{slug}/{postId}(slug=${board.slug},postId=${post.id})}" class="block">
-                            <div class="flex justify-between items-start">
+                            <div class="flex justify-between items-start mb-3">
                                 <h3 class="font-medium" th:text="${post.title}">게시글 제목</h3>
+                            </div>
+                            <div class="flex items-center justify-between">
                                 <div class="flex items-center gap-2 text-sm text-muted-foreground">
                                     <span th:text="${post.authorName}">작성자</span>
-                                    <span th:if="${post.authorId == null}" class="text-xs bg-muted px-2 py-0.5 rounded-full">게스트</span>
+                                    <!-- 조회수와 댓글 수 표시 (닉네임 옆) -->
+                                    <span>•</span>
+                                    <div class="flex items-center gap-1">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-3 w-3">
+                                            <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
+                                            <circle cx="12" cy="12" r="3"></circle>
+                                        </svg>
+                                        <span th:text="${post.viewCount}">0</span>
+                                    </div>
+                                    <div class="flex items-center gap-1">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-3 w-3">
+                                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                                        </svg>
+                                        <span th:text="${post.commentCount}">0</span>
+                                    </div>
                                 </div>
                             </div>
                         </a>

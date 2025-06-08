@@ -50,6 +50,7 @@
             padding-right: 1rem;
         }
         .post-content {
+            white-space: pre-line;
             line-height: 1.6;
         }
         .post-content img {
@@ -60,72 +61,8 @@
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
             display: block;
         }
-        /* Toast UI Editor 콘텐츠 스타일링 */
-        .post-content h1, .post-content h2, .post-content h3, .post-content h4, .post-content h5, .post-content h6 {
-            margin: 1.5em 0 0.5em 0;
-            font-weight: bold;
-        }
-        .post-content h1 { font-size: 2em; }
-        .post-content h2 { font-size: 1.5em; }
-        .post-content h3 { font-size: 1.25em; }
         .post-content p {
-            margin: 1em 0;
-        }
-        .post-content ul, .post-content ol {
-            margin: 1em 0;
-            padding-left: 2em;
-        }
-        .post-content ul li {
-            list-style-type: disc;
-            margin: 0.5em 0;
-        }
-        .post-content ol li {
-            list-style-type: decimal;
-            margin: 0.5em 0;
-        }
-        .post-content blockquote {
-            border-left: 4px solid hsl(214.3 31.8% 91.4%);
-            margin: 1em 0;
-            padding: 0.5em 1em;
-            background-color: hsl(210 40% 98%);
-            font-style: italic;
-        }
-        .post-content hr {
-            border: none;
-            border-top: 1px solid hsl(214.3 31.8% 91.4%);
-            margin: 2em 0;
-        }
-        .post-content table {
-            border-collapse: collapse;
-            width: 100%;
-            margin: 1em 0;
-        }
-        .post-content table th, .post-content table td {
-            border: 1px solid hsl(214.3 31.8% 91.4%);
-            padding: 0.5em;
-            text-align: left;
-        }
-        .post-content table th {
-            background-color: hsl(210 40% 96.1%);
-            font-weight: bold;
-        }
-        .post-content code {
-            background-color: hsl(210 40% 96.1%);
-            padding: 0.2em 0.4em;
-            border-radius: 3px;
-            font-family: 'Courier New', monospace;
-            font-size: 0.9em;
-        }
-        .post-content pre {
-            background-color: hsl(210 40% 96.1%);
-            padding: 1em;
-            border-radius: 6px;
-            overflow-x: auto;
-            margin: 1em 0;
-        }
-        .post-content pre code {
-            background: none;
-            padding: 0;
+            margin: 10px 0;
         }
         .comment-content {
             white-space: pre-line;
@@ -141,8 +78,6 @@
             100% { background-color: transparent; }
         }
     </style>
-    <!-- Toast UI Editor Viewer CSS -->
-    <link rel="stylesheet" href="https://uicdn.toast.com/editor/latest/toastui-editor-viewer.min.css" />
 </head>
 <body>
 <header class="sticky top-0 z-40 w-full border-b bg-background">
@@ -191,41 +126,60 @@
 
             <article class="rounded-lg border bg-card text-card-foreground shadow-sm overflow-hidden">
                 <div class="p-6">
-                    <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-start justify-between mb-4">
                         <div class="flex items-center gap-2 text-sm text-muted-foreground">
                             <span th:text="${post.boardName}" class="bg-muted px-2 py-1 rounded-md">게시판</span>
                             <span>•</span>
                             <span th:text="${post.authorName}">작성자</span>
                         </div>
-                        <div class="flex gap-2">
-                            <!-- 회원 게시글인 경우 - 작성자만 수정/삭제 가능 -->
-                            <div sec:authorize="isAuthenticated()" th:if="${post.authorId != null and #authentication.principal.id == post.authorId}">
-                                <a th:href="@{/boards/{slug}/{postId}/edit(slug=${slug},postId=${post.id})}" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2">
-                                    수정
-                                </a>
-                                <form th:action="@{/boards/{slug}/{postId}/delete(slug=${slug},postId=${post.id})}" method="post" onsubmit="return confirm('정말 삭제하시겠습니까?');" class="inline">
-                                    <button type="submit" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-destructive text-destructive-foreground hover:bg-destructive/90 h-9 px-4 py-2">
-                                        삭제
-                                    </button>
-                                </form>
+                        <div class="flex items-center gap-6">
+                            <!-- 조회수와 댓글 수 표시 (오른쪽 위) -->
+                            <div class="flex items-center gap-4 text-sm text-muted-foreground">
+                                <div class="flex items-center gap-1">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
+                                        <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
+                                        <circle cx="12" cy="12" r="3"></circle>
+                                    </svg>
+                                    <span th:text="${post.viewCount}">0</span>
+                                </div>
+                                <div class="flex items-center gap-1">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
+                                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                                    </svg>
+                                    <span th:text="${post.commentCount}">0</span>
+                                </div>
                             </div>
+                            <!-- 수정/삭제 버튼 -->
+                            <div class="flex gap-2">
+                                <!-- 회원 게시글인 경우 - 작성자만 수정/삭제 가능 -->
+                                <div sec:authorize="isAuthenticated()" th:if="${post.authorId != null and #authentication.principal.id == post.authorId}">
+                                    <a th:href="@{/boards/{slug}/{postId}/edit(slug=${slug},postId=${post.id})}" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2">
+                                        수정
+                                    </a>
+                                    <form th:action="@{/boards/{slug}/{postId}/delete(slug=${slug},postId=${post.id})}" method="post" onsubmit="return confirm('정말 삭제하시겠습니까?');" class="inline">
+                                        <button type="submit" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-destructive text-destructive-foreground hover:bg-destructive/90 h-9 px-4 py-2">
+                                            삭제
+                                        </button>
+                                    </form>
+                                </div>
 
-                            <!-- 게스트 게시글인 경우 - 모든 사용자에게 수정/삭제 버튼 노출 -->
-                            <div th:if="${post.authorId == null}">
-                                <a th:href="@{/boards/{slug}/{postId}/edit-password(slug=${slug},postId=${post.id})}" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2">
-                                    수정
-                                </a>
-                                <a th:href="@{/boards/{slug}/{postId}/delete-password(slug=${slug},postId=${post.id})}" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-destructive text-destructive-foreground hover:bg-destructive/90 h-9 px-4 py-2">
-                                    삭제
-                                </a>
+                                <!-- 게스트 게시글인 경우 - 모든 사용자에게 수정/삭제 버튼 노출 -->
+                                <div th:if="${post.authorId == null}">
+                                    <a th:href="@{/boards/{slug}/{postId}/edit-password(slug=${slug},postId=${post.id})}" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2">
+                                        수정
+                                    </a>
+                                    <a th:href="@{/boards/{slug}/{postId}/delete-password(slug=${slug},postId=${post.id})}" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-destructive text-destructive-foreground hover:bg-destructive/90 h-9 px-4 py-2">
+                                        삭제
+                                    </a>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <h1 class="text-2xl font-bold mb-4" th:text="${post.title}">게시글 제목</h1>
+                    <h1 class="text-2xl font-bold mb-6" th:text="${post.title}">게시글 제목</h1>
 
                     <!-- 게시글 내용 - 이미지 포함 HTML 렌더링 -->
-                    <div class="post-content mt-6 text-foreground toastui-editor-contents" th:utext="${post.content}">
+                    <div class="post-content mt-6 text-foreground" th:utext="${post.content}">
                         게시글 내용...
                     </div>
                 </div>
@@ -584,7 +538,6 @@
     // 페이지 로드 시 URL 파라미터 및 앵커 확인
     document.addEventListener('DOMContentLoaded', function() {
         const urlParams = new URLSearchParams(window.location.search);
-        const errorCommentId = urlParams.get('errorCommentId');
 
         if (errorCommentId) {
             // 에러가 있는 경우에만 하이라이트 적용
