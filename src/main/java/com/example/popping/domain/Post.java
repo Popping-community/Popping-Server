@@ -33,9 +33,11 @@ public class Post extends BaseEntity {
     @JoinColumn(name = "board_id")
     private Board board;
 
+    @Builder.Default
     @Column(nullable = false)
     private Long viewCount = 0L;
 
+    @Builder.Default
     @Column(nullable = false)
     private int commentCount = 0;
 
