@@ -41,6 +41,34 @@ public class Comment extends BaseEntity {
     @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Comment> children = new ArrayList<>();
 
+    @Builder.Default
+    @Column(nullable = false)
+    private int likeCount = 0;
+
+    @Builder.Default
+    @Column(nullable = false)
+    private int dislikeCount = 0;
+
+    public void increaseLikeCount() {
+        this.likeCount++;
+    }
+
+    public void decreaseLikeCount() {
+        if (this.likeCount > 0) {
+            this.likeCount--;
+        }
+    }
+
+    public void increaseDislikeCount() {
+        this.dislikeCount++;
+    }
+
+    public void decreaseDislikeCount() {
+        if (this.dislikeCount > 0) {
+            this.dislikeCount--;
+        }
+    }
+
     public boolean isAuthor(User user) {
         return author != null && user != null && author.getId().equals(user.getId());
     }
