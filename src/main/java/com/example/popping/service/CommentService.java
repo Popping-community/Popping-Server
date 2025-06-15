@@ -2,15 +2,14 @@ package com.example.popping.service;
 
 import java.util.List;
 
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 
 import com.example.popping.domain.Comment;
 import com.example.popping.domain.Post;
+import com.example.popping.domain.User;
 import com.example.popping.domain.UserPrincipal;
 import com.example.popping.dto.CommentResponse;
 import com.example.popping.dto.GuestCommentCreateRequest;
@@ -25,14 +24,16 @@ import com.example.popping.repository.CommentRepository;
 public class CommentService {
 
     private final PostService postService;
+    private final UserService userService;
     private final CommentRepository commentRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public Long createMemberComment(Long postId, MemberCommentCreateRequest dto, UserPrincipal user, Long parentId) {
+    public Long createMemberComment(Long postId, MemberCommentCreateRequest dto, UserPrincipal userPrincipal, Long parentId) {
         Post post = postService.getPost(postId);
         Comment parent = getParentComment(parentId);
 
-        Comment comment = dto.toEntity(user.getUser(), post, parent);
+        User user = userService.getLoginUserById(userPrincipal.getUserId());
+        Comment comment = dto.toEntity(user, post, parent);
         commentRepository.save(comment);
 
         post.increaseCommentCount();
@@ -51,12 +52,13 @@ public class CommentService {
         return comment.getId();
     }
 
-    public void deleteComment(Long commentId, UserPrincipal user) {
+    public void deleteComment(Long commentId, UserPrincipal userPrincipal) {
         Comment comment = getComment(commentId);
 
-        if (!comment.isAuthor(user.getUser())) {
+        User user = userService.getLoginUserById(userPrincipal.getUserId());
+        if (!comment.isAuthor(user)) {
             throw new CustomAppException(ErrorType.ACCESS_DENIED,
-                    "댓글 작성자가 아닙니다." + user.getUser().getLoginId());
+                    "댓글 작성자가 아닙니다." + user.getLoginId());
         }
 
         comment.getPost().decreaseCommentCount();
@@ -78,6 +80,14 @@ public class CommentService {
 
         comment.getPost().decreaseCommentCount();
         commentRepository.delete(comment);
+    }
+
+    public void updateLikeCount(Long targetId, int delta) {
+        commentRepository.updateLikeCount(targetId, delta);
+    }
+
+    public void updateDislikeCount(Long targetId, int delta) {
+        commentRepository.updateDislikeCount(targetId, delta);
     }
 
     @Transactional(readOnly = true)

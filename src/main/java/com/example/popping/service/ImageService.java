@@ -26,7 +26,7 @@ import java.util.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.jsoup.Jsoup;
@@ -35,8 +35,8 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 @Slf4j
+@Service
 @RequiredArgsConstructor
-@Component
 public class ImageService {
 
     private final AmazonS3 amazonS3;
