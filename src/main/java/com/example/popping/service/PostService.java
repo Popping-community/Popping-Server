@@ -2,7 +2,6 @@ package com.example.popping.service;
 
 import java.util.List;
 
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,14 +20,16 @@ public class PostService {
 
     private final BoardService boardService;
     private final ImageService imageService;
+    private final UserService userService;
     private final ViewCountService viewCountService;
     private final PasswordEncoder passwordEncoder;
     private final PostRepository postRepository;
 
-    public Long createMemberPost(String slug, MemberPostCreateRequest dto, UserPrincipal user) {
+    public Long createMemberPost(String slug, MemberPostCreateRequest dto, UserPrincipal userPrincipal) {
         Board board = boardService.getBoard(slug);
 
-        Post post = dto.toEntity(user.getUser(), board);
+        User user = userService.getLoginUserById(userPrincipal.getUserId());
+        Post post = dto.toEntity(user, board);
         postRepository.save(post);
 
         imageService.linkToPostAndMakePermanent(dto.getContent(), post);
@@ -47,10 +48,11 @@ public class PostService {
         return post.getId();
     }
 
-    public void updatePost(Long postId, MemberPostUpdateRequest dto, UserPrincipal user) {
+    public void updatePost(Long postId, MemberPostUpdateRequest dto, UserPrincipal userPrincipal) {
         Post post = getPost(postId);
 
-        validateAuthor(post, user.getUser());
+        User user = userService.getLoginUserById(userPrincipal.getUserId());
+        validateAuthor(post, user);
 
         post.memberUpdate(dto.getTitle(), dto.getContent());
 
@@ -65,10 +67,11 @@ public class PostService {
         imageService.linkToPostAndMakePermanent(dto.getContent(), post);
     }
 
-    public void deletePost(Long postId, UserPrincipal user) {
+    public void deletePost(Long postId, UserPrincipal userPrincipal) {
         Post post = getPost(postId);
 
-        validateAuthor(post, user.getUser());
+        User user = userService.getLoginUserById(userPrincipal.getUserId());
+        validateAuthor(post, user);
 
         imageService.deleteImages(post);
 
@@ -81,6 +84,14 @@ public class PostService {
         imageService.deleteImages(post);
 
         postRepository.delete(post);
+    }
+
+    public void updateLikeCount(Long targetId, int delta) {
+        postRepository.updateLikeCount(targetId, delta);
+    }
+
+    public void updateDislikeCount(Long targetId, int delta) {
+        postRepository.updateDislikeCount(targetId, delta);
     }
 
     @Transactional(readOnly = true)
@@ -99,10 +110,11 @@ public class PostService {
     }
 
     @Transactional(readOnly = true)
-    public PostResponse getMemberPostForEdit(Long postId, UserPrincipal user) {
+    public PostResponse getMemberPostForEdit(Long postId, UserPrincipal userPrincipal) {
         Post post = getPost(postId);
 
-        validateAuthor(post, user.getUser());
+        User user = userService.getLoginUserById(userPrincipal.getUserId());
+        validateAuthor(post, user);
 
         return PostResponse.from(post);
     }
