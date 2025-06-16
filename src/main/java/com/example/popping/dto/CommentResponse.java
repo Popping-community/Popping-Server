@@ -17,6 +17,8 @@ public class CommentResponse {
     private String authorName;
     private Long authorId;
     private String guestNickname;
+    private int likeCount;
+    private int dislikeCount;
     private Long parentId;
     private List<CommentResponse> children;
 
@@ -27,6 +29,8 @@ public class CommentResponse {
                 .authorName(comment.isGuest() ? comment.getGuestNickname() : comment.getAuthor().getNickname())
                 .authorId(comment.isGuest() ? null : comment.getAuthor().getId())
                 .guestNickname(comment.isGuest() ? comment.getGuestNickname() : null)
+                .likeCount(comment.getLikeCount())
+                .dislikeCount(comment.getDislikeCount())
                 .parentId(comment.isReply() ? comment.getParent().getId() : null)
                 .children(comment.getChildren().stream()
                         .map(CommentResponse::from)

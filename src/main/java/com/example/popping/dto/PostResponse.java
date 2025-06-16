@@ -18,6 +18,8 @@ public class PostResponse {
     private String guestNickname;
     private Long viewCount;
     private int commentCount;
+    private int likeCount;
+    private int dislikeCount;
 
     public static PostResponse from(Post post) {
         return PostResponse.builder()
@@ -30,6 +32,8 @@ public class PostResponse {
                 .guestNickname(post.isGuest() ? post.getGuestNickname() : null)
                 .viewCount(post.getViewCount())
                 .commentCount(post.getCommentCount())
+                .likeCount(post.getLikeCount())
+                .dislikeCount(post.getDislikeCount())
                 .build();
     }
 }

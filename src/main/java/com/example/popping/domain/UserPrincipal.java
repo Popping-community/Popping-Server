@@ -4,41 +4,44 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.Collections;
 
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Getter
-public class UserPrincipal implements UserDetails {
+@NoArgsConstructor
+public class UserPrincipal implements UserDetails, Serializable {
 
-    private final User user;
+    private Long userId;
+    private String loginId;
+    private String nickname;
+    private String passwordHash;
+    private UserRole role;
 
     public UserPrincipal(User user) {
-        this.user = user;
-    }
-
-    public Long getId() {
-        return user.getId();
-    }
-
-    public String getNickname() {
-        return user.getNickname();
+        this.userId = user.getId();
+        this.loginId = user.getLoginId();
+        this.nickname = user.getNickname();
+        this.passwordHash = user.getPasswordHash();
+        this.role = user.getRole();
     }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return Collections.singletonList(new SimpleGrantedAuthority(user.getRole().name()));
+        return Collections.singletonList(new SimpleGrantedAuthority(role.name()));
     }
 
     @Override
     public String getPassword() {
-        return user.getPasswordHash();
+        return passwordHash;
     }
 
     @Override
     public String getUsername() {
-        return user.getLoginId();
+        return nickname;
     }
 
     @Override

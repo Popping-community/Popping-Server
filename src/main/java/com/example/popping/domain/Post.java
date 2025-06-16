@@ -41,6 +41,14 @@ public class Post extends BaseEntity {
     @Column(nullable = false)
     private int commentCount = 0;
 
+    @Builder.Default
+    @Column(nullable = false)
+    private int likeCount = 0;
+
+    @Builder.Default
+    @Column(nullable = false)
+    private int dislikeCount = 0;
+
     public void memberUpdate(String title, String content) {
         this.title = title;
         this.content = content;
@@ -60,6 +68,26 @@ public class Post extends BaseEntity {
     public void decreaseCommentCount() {
         if (this.commentCount > 0) {
             this.commentCount--;
+        }
+    }
+
+    public void increaseLikeCount() {
+        this.likeCount++;
+    }
+
+    public void decreaseLikeCount() {
+        if (this.likeCount > 0) {
+            this.likeCount--;
+        }
+    }
+
+    public void increaseDislikeCount() {
+        this.dislikeCount++;
+    }
+
+    public void decreaseDislikeCount() {
+        if (this.dislikeCount > 0) {
+            this.dislikeCount--;
         }
     }
 

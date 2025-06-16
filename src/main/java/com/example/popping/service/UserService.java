@@ -36,9 +36,6 @@ public class UserService {
     }
 
     public User getLoginUserById(Long userId) {
-        if (userId == null) {
-            return null;
-        };
         return userRepository.findById(userId)
                 .orElseThrow(() -> new CustomAppException(ErrorType.USER_NOT_FOUND,
                         "사용자를 찾을 수 없습니다: " + userId));

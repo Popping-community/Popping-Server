@@ -2,10 +2,8 @@ package com.example.popping.service;
 
 import java.util.List;
 
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 
 import com.example.popping.domain.Board;
@@ -24,25 +22,29 @@ import com.example.popping.repository.BoardRepository;
 public class BoardService {
 
     private final BoardRepository boardRepository;
+    private final UserService userService;
 
-    public String createBoard(BoardCreateRequest dto, UserPrincipal user) {
-        Board board = dto.toEntity(user.getUser());
+    public String createBoard(BoardCreateRequest dto, UserPrincipal userPrincipal) {
+        User user = userService.getLoginUserById(userPrincipal.getUserId());
+        Board board = dto.toEntity(user);
         boardRepository.save(board);
         return board.getSlug();
     }
 
-    public void updateBoard(String slug, BoardUpdateRequest dto, UserPrincipal user) {
+    public void updateBoard(String slug, BoardUpdateRequest dto, UserPrincipal userPrincipal) {
         Board board = getBoard(slug);
 
-        validateCreatedBy(board, user.getUser());
+        User user = userService.getLoginUserById(userPrincipal.getUserId());
+        validateCreatedBy(board, user);
 
         board.update(dto.getName(), dto.getDescription());
     }
 
-    public void deleteBoard(String slug, UserPrincipal user) {
+    public void deleteBoard(String slug, UserPrincipal userPrincipal) {
         Board board = getBoard(slug);
 
-        validateCreatedBy(board, user.getUser());
+        User user = userService.getLoginUserById(userPrincipal.getUserId());
+        validateCreatedBy(board, user);
 
         boardRepository.delete(board);
     }
@@ -61,10 +63,11 @@ public class BoardService {
     }
 
     @Transactional(readOnly = true)
-    public BoardResponse getBoardForEdit(String slug, UserPrincipal user) {
+    public BoardResponse getBoardForEdit(String slug, UserPrincipal userPrincipal) {
         Board board = getBoard(slug);
 
-        validateCreatedBy(board, user.getUser());
+        User user = userService.getLoginUserById(userPrincipal.getUserId());
+        validateCreatedBy(board, user);
 
         return BoardResponse.from(board);
     }

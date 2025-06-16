@@ -23,6 +23,7 @@ public enum ErrorType {
     EMPTY_IMAGE_FILE(HttpStatus.NOT_FOUND, "이미지 파일이 비어있습니다."),
     NO_FILE_EXTENTION(HttpStatus.NOT_FOUND, "파일 확장자가 없습니다. 올바른 이미지 파일을 업로드해주세요."),
     INVALID_FILE_EXTENTION(HttpStatus.NOT_FOUND, "올바른 이미지 파일이 아닙니다. 지원하는 확장자는 jpg, jpeg, png입니다."),
+    INVALID_TARGET_TYPE(HttpStatus.NOT_FOUND, "잘못된 대상 타입입니다. 지원하는 타입은 POST, COMMENT입니다."),
 
 
     //500
