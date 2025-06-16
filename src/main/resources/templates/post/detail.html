@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title th:text="${post.title} + ' - 커뮤니티'">게시글 제목 - 커뮤니티</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
     <script>
         tailwind.config = {
             theme: {
@@ -23,6 +25,10 @@
                         border: 'hsl(214.3 31.8% 91.4%)',
                         destructive: {
                             DEFAULT: 'hsl(0 84.2% 60.2%)',
+                            foreground: 'hsl(210 40% 98%)',
+                        },
+                        success: {
+                            DEFAULT: 'hsl(142.1 76.2% 36.3%)',
                             foreground: 'hsl(210 40% 98%)',
                         },
                     }
@@ -76,6 +82,24 @@
         @keyframes highlight {
             0% { background-color: rgba(59, 130, 246, 0.1); }
             100% { background-color: transparent; }
+        }
+        .like-button.active {
+            background-color: hsl(142.1 76.2% 36.3%);
+            color: white;
+            border-color: hsl(142.1 76.2% 36.3%);
+        }
+        .dislike-button.active {
+            background-color: hsl(0 84.2% 60.2%);
+            color: white;
+            border-color: hsl(0 84.2% 60.2%);
+        }
+        .like-button:hover:not(.active) {
+            background-color: hsl(142.1 76.2% 96%);
+            border-color: hsl(142.1 76.2% 36.3%);
+        }
+        .dislike-button:hover:not(.active) {
+            background-color: hsl(0 84.2% 96%);
+            border-color: hsl(0 84.2% 60.2%);
         }
     </style>
 </head>
@@ -152,7 +176,7 @@
                             <!-- 수정/삭제 버튼 -->
                             <div class="flex gap-2">
                                 <!-- 회원 게시글인 경우 - 작성자만 수정/삭제 가능 -->
-                                <div sec:authorize="isAuthenticated()" th:if="${post.authorId != null and #authentication.principal.id == post.authorId}">
+                                <div sec:authorize="isAuthenticated()" th:if="${post.authorId != null and #authentication.principal.userId == post.authorId}">
                                     <a th:href="@{/boards/{slug}/{postId}/edit(slug=${slug},postId=${post.id})}" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2">
                                         수정
                                     </a>
@@ -183,6 +207,33 @@
                         게시글 내용...
                     </div>
                 </div>
+
+                <!-- 게시글 좋아요/싫어요 버튼 -->
+                <div class="px-6 py-4 border-t bg-muted/30">
+                    <div class="flex items-center justify-center gap-4">
+                        <button
+                                th:onclick="'sendLike(' + ${post.id} + ', \'POST\', \'LIKE\')'"
+                                class="like-button inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 gap-2"
+                                th:id="'like-btn-post-' + ${post.id}">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M7 10v12"></path>
+                                <path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2h0a3.13 3.13 0 0 1 3 3.88Z"></path>
+                            </svg>
+                            <span>좋아요 <span th:id="'like-count-post-' + ${post.id}" th:text="${post.likeCount}">0</span></span>
+                        </button>
+
+                        <button
+                                th:onclick="'sendLike(' + ${post.id} + ', \'POST\', \'DISLIKE\')'"
+                                class="dislike-button inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 gap-2"
+                                th:id="'dislike-btn-post-' + ${post.id}">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M17 14V2"></path>
+                                <path d="M9 18.12 10 14H4.17a2 2 0 0 1-1.92-2.56l2.33-8A2 2 0 0 1 6.5 2H20a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2.76a2 2 0 0 0-1.79 1.11L12 22h0a3.13 3.13 0 0 1-3-3.88Z"></path>
+                            </svg>
+                            <span>싫어요 <span th:id="'dislike-count-post-' + ${post.id}" th:text="${post.dislikeCount}">0</span></span>
+                        </button>
+                    </div>
+                </div>
             </article>
 
             <div class="mt-8" id="comments-section">
@@ -202,6 +253,29 @@
                                 <span th:if="${comment.guestNickname != null}" class="text-xs bg-muted px-2 py-0.5 rounded-full">게스트</span>
                             </div>
                             <div class="flex items-center gap-2">
+                                <!-- 좋아요/싫어요 버튼을 답글/삭제 버튼 왼쪽에 배치 -->
+                                <button
+                                        th:onclick="'sendLike(' + ${comment.id} + ', \'COMMENT\', \'LIKE\')'"
+                                        class="like-button inline-flex items-center justify-center rounded-md text-xs font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border-0 bg-transparent hover:bg-accent hover:text-accent-foreground h-8 px-2"
+                                        th:id="'like-btn-comment-' + ${comment.id}">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1">
+                                        <path d="M7 10v12"></path>
+                                        <path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2h0a3.13 3.13 0 0 1 3 3.88Z"></path>
+                                    </svg>
+                                    <span th:id="'like-count-comment-' + ${comment.id}" th:text="${comment.likeCount}">0</span>
+                                </button>
+
+                                <button
+                                        th:onclick="'sendLike(' + ${comment.id} + ', \'COMMENT\', \'DISLIKE\')'"
+                                        class="dislike-button inline-flex items-center justify-center rounded-md text-xs font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border-0 bg-transparent hover:bg-accent hover:text-accent-foreground h-8 px-2"
+                                        th:id="'dislike-btn-comment-' + ${comment.id}">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1">
+                                        <path d="M17 14V2"></path>
+                                        <path d="M9 18.12 10 14H4.17a2 2 0 0 1-1.92-2.56l2.33-8A2 2 0 0 1 6.5 2H20a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2.76a2 2 0 0 0-1.79 1.11L12 22h0a3.13 3.13 0 0 1-3-3.88Z"></path>
+                                    </svg>
+                                    <span th:id="'dislike-count-comment-' + ${comment.id}" th:text="${comment.dislikeCount}">0</span>
+                                </button>
+
                                 <!-- 답글 버튼 -->
                                 <button
                                         th:onclick="'toggleReplyForm(' + ${comment.id} + ')'"
@@ -211,7 +285,7 @@
                                 </button>
 
                                 <!-- 회원 댓글 삭제 -->
-                                <form sec:authorize="isAuthenticated()" th:if="${comment.authorId != null and #authentication.principal.id == comment.authorId}"
+                                <form sec:authorize="isAuthenticated()" th:if="${comment.authorId != null and #authentication.principal.userId == comment.authorId}"
                                       th:action="@{/boards/{slug}/{postId}/comments/{commentId}/delete(slug=${slug},postId=${post.id},commentId=${comment.id})}"
                                       method="post"
                                       onsubmit="return confirm('정말 삭제하시겠습니까?');"
@@ -233,6 +307,9 @@
                         <div class="comment-content text-sm mb-3" th:text="${comment.content}">
                             댓글 내용...
                         </div>
+
+                        <!-- 댓글 좋아요/싫어요 버튼 -->
+
 
                         <!-- 게스트 댓글 삭제 폼 -->
                         <div th:if="${comment.authorId == null}" th:id="'delete-form-' + ${comment.id}" class="hidden mt-3 p-3 bg-muted rounded-md">
@@ -332,8 +409,31 @@
                                         <span class="text-xs text-muted-foreground">↳ 답글</span>
                                     </div>
                                     <div class="flex items-center gap-2">
+                                        <!-- 대댓글 좋아요/싫어요 버튼을 삭제 버튼 왼쪽에 배치 -->
+                                        <button
+                                                th:onclick="'sendLike(' + ${reply.id} + ', \'COMMENT\', \'LIKE\')'"
+                                                class="like-button inline-flex items-center justify-center rounded-md text-xs font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border-0 bg-transparent hover:bg-accent hover:text-accent-foreground h-6 px-1"
+                                                th:id="'like-btn-comment-' + ${reply.id}">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1">
+                                                <path d="M7 10v12"></path>
+                                                <path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2h0a3.13 3.13 0 0 1 3 3.88Z"></path>
+                                            </svg>
+                                            <span class="text-xs" th:id="'like-count-comment-' + ${reply.id}" th:text="${reply.likeCount}">0</span>
+                                        </button>
+
+                                        <button
+                                                th:onclick="'sendLike(' + ${reply.id} + ', \'COMMENT\', \'DISLIKE\')'"
+                                                class="dislike-button inline-flex items-center justify-center rounded-md text-xs font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border-0 bg-transparent hover:bg-accent hover:text-accent-foreground h-6 px-1"
+                                                th:id="'dislike-btn-comment-' + ${reply.id}">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1">
+                                                <path d="M17 14V2"></path>
+                                                <path d="M9 18.12 10 14H4.17a2 2 0 0 1-1.92-2.56l2.33-8A2 2 0 0 1 6.5 2H20a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2.76a2 2 0 0 0-1.79 1.11L12 22h0a3.13 3.13 0 0 1-3-3.88Z"></path>
+                                            </svg>
+                                            <span class="text-xs" th:id="'dislike-count-comment-' + ${reply.id}" th:text="${reply.dislikeCount}">0</span>
+                                        </button>
+
                                         <!-- 회원 대댓글 삭제 -->
-                                        <form sec:authorize="isAuthenticated()" th:if="${reply.authorId != null and #authentication.principal.id == reply.authorId}"
+                                        <form sec:authorize="isAuthenticated()" th:if="${reply.authorId != null and #authentication.principal.userId == reply.authorId}"
                                               th:action="@{/boards/{slug}/{postId}/comments/{commentId}/delete(slug=${slug},postId=${post.id},commentId=${reply.id})}"
                                               method="post"
                                               onsubmit="return confirm('정말 삭제하시겠습니까?');"
@@ -352,9 +452,12 @@
                                     </div>
                                 </div>
 
-                                <div class="comment-content text-sm" th:text="${reply.content}">
+                                <div class="comment-content text-sm mb-2" th:text="${reply.content}">
                                     대댓글 내용...
                                 </div>
+
+                                <!-- 대댓글 좋아요/싫어요 버튼 -->
+
 
                                 <!-- 게스트 대댓글 삭제 폼 -->
                                 <div th:if="${reply.authorId == null}" th:id="'delete-form-' + ${reply.id}" class="hidden mt-3 p-3 bg-background rounded-md">
@@ -473,7 +576,110 @@
     </div>
 </footer>
 
-<script>
+<script th:inline="javascript">
+    let stompClient = null;
+    let isLoggedIn = /*[[${#authentication.principal != 'anonymousUser'}]]*/ false;
+
+    function connect() {
+        // SockJS 연결 시 세션/쿠키 유지 설정
+        const socket = new SockJS('/ws', null, {
+            transports: ['websocket', 'xhr-streaming', 'xhr-polling'],
+            sessionId: function() {
+                return Math.random().toString(36).substring(2, 15);
+            }
+        });
+
+        stompClient = Stomp.over(socket);
+
+        // STOMP 연결 시 헤더에 인증 정보 포함
+        const connectHeaders = {};
+
+        // CSRF 토큰이 있다면 헤더에 추가
+        const csrfToken = document.querySelector('meta[name="_csrf"]');
+        const csrfHeader = document.querySelector('meta[name="_csrf_header"]');
+        if (csrfToken && csrfHeader) {
+            connectHeaders[csrfHeader.getAttribute('content')] = csrfToken.getAttribute('content');
+        }
+
+        stompClient.connect(connectHeaders, function (frame) {
+            console.log('Connected: ' + frame);
+
+            // 좋아요 업데이트 구독
+            stompClient.subscribe('/topic/like-updates', function (response) {
+                const parsedResponse = JSON.parse(response.body);
+                updateLikeCounts(parsedResponse);
+            });
+
+            console.log('WebSocket connected successfully');
+        }, function(error) {
+            console.error("WebSocket connection error:", error);
+            // 연결 실패 시 재시도
+            setTimeout(connect, 5000);
+        });
+    }
+
+    function disconnect() {
+        if (stompClient !== null) {
+            stompClient.disconnect();
+        }
+        console.log("Disconnected");
+    }
+
+    function sendLike(targetId, targetType, type) {
+        if (!stompClient || !stompClient.connected) {
+            console.error('WebSocket connection not established');
+            return;
+        }
+
+        const request = {
+            targetId: targetId,
+            targetType: targetType,
+            type: type
+        };
+
+        // 로그인하지 않은 경우에만 guestIdentifier 추가
+        if (!isLoggedIn) {
+            request.guestIdentifier = getGuestIdentifier();
+        }
+
+        // CSRF 토큰을 헤더에 포함
+        const headers = {};
+        const csrfToken = document.querySelector('meta[name="_csrf"]');
+        const csrfHeader = document.querySelector('meta[name="_csrf_header"]');
+        if (csrfToken && csrfHeader) {
+            headers[csrfHeader.getAttribute('content')] = csrfToken.getAttribute('content');
+        }
+
+        console.log('Sending like request:', request);
+        stompClient.send('/app/like', headers, JSON.stringify(request));
+    }
+
+    function updateLikeCounts(response) {
+        console.log('Received like update:', response);
+
+        const targetType = response.targetType.toLowerCase();
+        const likeCountElement = document.getElementById(`like-count-${targetType}-${response.targetId}`);
+        const dislikeCountElement = document.getElementById(`dislike-count-${targetType}-${response.targetId}`);
+
+        if (likeCountElement) {
+            likeCountElement.textContent = response.likeCount;
+        }
+        if (dislikeCountElement) {
+            dislikeCountElement.textContent = response.dislikeCount;
+        }
+    }
+
+    function getGuestIdentifier() {
+        // 로컬 스토리지에서 게스트 식별자 가져오기 또는 생성
+        let guestId = localStorage.getItem('guestIdentifier');
+        if (!guestId) {
+            guestId = 'guest-' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+            localStorage.setItem('guestIdentifier', guestId);
+        }
+        return guestId;
+    }
+
+    // 기존 댓글 관련 함수들
     function toggleReplyForm(commentId) {
         const replyForm = document.getElementById('reply-form-' + commentId);
         if (replyForm.style.display === 'none' || replyForm.style.display === '') {
@@ -535,9 +741,13 @@
         }
     }
 
-    // 페이지 로드 시 URL 파라미터 및 앵커 확인
+    // 페이지 로드 시 WebSocket 연결 및 기존 로직
     document.addEventListener('DOMContentLoaded', function() {
+        // WebSocket 연결
+        connect();
+
         const urlParams = new URLSearchParams(window.location.search);
+        const errorCommentId = urlParams.get('errorCommentId');
 
         if (errorCommentId) {
             // 에러가 있는 경우에만 하이라이트 적용
@@ -557,6 +767,17 @@
             }, 100);
         }
     });
+
+    // 페이지 언로드 시 WebSocket 연결 해제
+    window.addEventListener('beforeunload', disconnect);
+
+    // 연결 상태 모니터링
+    setInterval(function() {
+        if (!stompClient || !stompClient.connected) {
+            console.log('WebSocket disconnected, attempting to reconnect...');
+            connect();
+        }
+    }, 30000); // 30초마다 연결 상태 확인
 </script>
 </body>
 </html>
