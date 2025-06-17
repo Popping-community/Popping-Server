@@ -84,8 +84,10 @@
                                 th:field="*{loginId}"
                                 class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                                 placeholder="아이디를 입력하세요"
+                                onblur="checkLoginIdDuplicate()"
                         />
                         <p th:if="${#fields.hasErrors('loginId')}" th:errors="*{loginId}" class="text-xs text-destructive"></p>
+                        <p id="loginIdCheckMsg" class="text-xs"></p>
                     </div>
 
                     <!-- 비밀번호 필드 -->
@@ -110,13 +112,16 @@
                                 th:field="*{nickname}"
                                 class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                                 placeholder="닉네임을 입력하세요"
+                                onblur="checkNicknameDuplicate()"
                         />
                         <p th:if="${#fields.hasErrors('nickname')}" th:errors="*{nickname}" class="text-xs text-destructive"></p>
+                        <p id="nicknameCheckMsg" class="text-xs"></p>
                     </div>
 
                     <div class="flex items-center pt-4">
                         <button
                                 type="submit"
+                                id="submitButton"
                                 class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 w-full"
                         >
                             가입하기
@@ -145,5 +150,78 @@
         </div>
     </div>
 </footer>
+
+<script>
+    let isLoginIdValid = false;
+    let isNicknameValid = false;
+    function checkLoginIdDuplicate() {
+        const loginId = document.getElementById("loginId").value;
+        const msg = document.getElementById("loginIdCheckMsg");
+
+        if (!loginId) {
+            msg.textContent = "";
+            isLoginIdValid = false;
+            updateSubmitButtonState();
+            return;
+        }
+
+        fetch(`/api/users/check-login-id?loginId=${encodeURIComponent(loginId)}`)
+            .then(res => res.json())
+            .then(isDuplicate => {
+                if (isDuplicate) {
+                    msg.textContent = "이미 사용 중인 아이디입니다.";
+                    msg.classList.add("text-destructive");
+                    msg.classList.remove("text-green-600");
+                    isLoginIdValid = false;
+                } else {
+                    msg.textContent = "사용 가능한 아이디입니다.";
+                    msg.classList.remove("text-destructive");
+                    msg.classList.add("text-green-600");
+                    isLoginIdValid = true;
+                }
+                updateSubmitButtonState();
+            });
+    }
+
+    function checkNicknameDuplicate() {
+        const nickname = document.getElementById("nickname").value;
+        const msg = document.getElementById("nicknameCheckMsg");
+
+        if (!nickname) {
+            msg.textContent = "";
+            isNicknameValid = false;
+            updateSubmitButtonState();
+            return;
+        }
+
+        fetch(`/api/users/check-nickname?nickname=${encodeURIComponent(nickname)}`)
+            .then(res => res.json())
+            .then(isDuplicate => {
+                if (isDuplicate) {
+                    msg.textContent = "이미 사용 중인 닉네임입니다.";
+                    msg.classList.add("text-destructive");
+                    msg.classList.remove("text-green-600");
+                    isNicknameValid = false;
+                } else {
+                    msg.textContent = "사용 가능한 닉네임입니다.";
+                    msg.classList.remove("text-destructive");
+                    msg.classList.add("text-green-600");
+                    isNicknameValid = true;
+                }
+                updateSubmitButtonState();
+            });
+    }
+
+    function updateSubmitButtonState() {
+        const submitButton = document.getElementById("submitButton");
+        if (isLoginIdValid && isNicknameValid) {
+            submitButton.disabled = false;
+            submitButton.classList.remove("opacity-50", "pointer-events-none");
+        } else {
+            submitButton.disabled = true;
+            submitButton.classList.add("opacity-50", "pointer-events-none");
+        }
+    }
+</script>
 </body>
 </html>
