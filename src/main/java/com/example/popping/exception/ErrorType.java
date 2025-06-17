@@ -24,8 +24,8 @@ public enum ErrorType {
     NO_FILE_EXTENTION(HttpStatus.NOT_FOUND, "파일 확장자가 없습니다. 올바른 이미지 파일을 업로드해주세요."),
     INVALID_FILE_EXTENTION(HttpStatus.NOT_FOUND, "올바른 이미지 파일이 아닙니다. 지원하는 확장자는 jpg, jpeg, png입니다."),
     INVALID_TARGET_TYPE(HttpStatus.NOT_FOUND, "잘못된 대상 타입입니다. 지원하는 타입은 POST, COMMENT입니다."),
-
-
+    DUPLICATE_LOGIN_ID(HttpStatus.NOT_FOUND, "이미 사용 중인 아이디입니다."),
+    DUPLICATE_NICKNAME(HttpStatus.NOT_FOUND, "이미 사용 중인 닉네임입니다."),
     //500
     IO_EXCEPTION_ON_IMAGE_UPLOAD(HttpStatus.INTERNAL_SERVER_ERROR, "이미지 업로드 중 IO 예외가 발생했습니다."),
     PUT_OBJECT_EXCEPTION(HttpStatus.INTERNAL_SERVER_ERROR, "S3에 이미지를 업로드하는 중 문제가 발생했습니다."),
