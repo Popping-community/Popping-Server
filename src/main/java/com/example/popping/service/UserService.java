@@ -32,6 +32,14 @@ public class UserService {
     }
 
     public void join(JoinRequest req) {
+        if (checkLoginIdDuplicate(req.getLoginId())) {
+            throw new CustomAppException(ErrorType.DUPLICATE_LOGIN_ID, "이미 사용 중인 아이디입니다: " + req.getLoginId());
+        }
+
+        if (checkNicknameDuplicate(req.getNickname())) {
+            throw new CustomAppException(ErrorType.DUPLICATE_NICKNAME, "이미 사용 중인 닉네임입니다: " + req.getNickname());
+        }
+
         userRepository.save(req.toEntity(passwordEncoder.encode(req.getPassword())));
     }
 
