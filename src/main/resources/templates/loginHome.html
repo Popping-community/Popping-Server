@@ -112,33 +112,11 @@
             <div class="max-w-4xl mx-auto">
                 <div class="text-center mb-8">
                     <h2 class="text-2xl font-bold mb-2">게시판 둘러보기</h2>
-                    <p class="text-muted-foreground">다양한 주제의 게시판에서 대화를 나눠보세요.</p>
+                    <p class="text-muted-foreground">다양한 주제의 게시판을 확인해보세요.</p>
                 </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
-                    <a href="/boards" class="flex items-center p-4 rounded-lg border bg-card text-card-foreground hover:shadow transition-shadow">
-                        <div class="inline-flex items-center justify-center rounded-md bg-muted p-2 h-10 w-10 mr-3">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5">
-                                <rect width="18" height="18" x="3" y="3" rx="2" ry="2"></rect>
-                                <line x1="3" x2="21" y1="9" y2="9"></line>
-                                <path d="M9 16h6"></path>
-                            </svg>
-                        </div>
-                        <div>
-                            <h3 class="font-medium">게시판 목록</h3>
-                            <p class="text-sm text-muted-foreground">모든 게시판 목록 보기</p>
-                        </div>
-                    </a>
-                    <a href="/posts/new" class="flex items-center p-4 rounded-lg border bg-card text-card-foreground hover:shadow transition-shadow">
-                        <div class="inline-flex items-center justify-center rounded-md bg-muted p-2 h-10 w-10 mr-3">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5">
-                                <path d="M12 5v14"></path>
-                                <path d="M5 12h14"></path>
-                            </svg>
-                        </div>
-                        <div>
-                            <h3 class="font-medium">새 글 작성</h3>
-                            <p class="text-sm text-muted-foreground">새로운 게시글 작성하기</p>
-                        </div>
+                <div class="flex justify-center">
+                    <a href="/boards" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-8 py-2">
+                        게시판 목록 보기
                     </a>
                 </div>
             </div>
@@ -148,96 +126,49 @@
     <section class="w-full py-12 md:py-24 lg:py-32 flex items-center justify-center">
         <div class="center-content">
             <div class="max-w-4xl mx-auto">
-                <div class="mb-10 text-center">
-                    <h2 class="text-2xl font-bold tracking-tight">최근 인기글</h2>
-                    <p class="text-muted-foreground">지금 가장 인기 있는 게시글을 확인해보세요.</p>
-                </div>
-
-                <div class="grid gap-6 max-w-3xl mx-auto">
-                    <!-- 인기글 목록 -->
-                    <div class="rounded-lg border bg-card text-card-foreground shadow-sm">
-                        <div class="p-4 flex flex-row items-start gap-4">
-                            <div class="flex-1">
-                                <div class="flex items-center gap-2">
-                                    <span class="text-xs font-medium px-2 py-0.5 rounded-full bg-blue-100 text-blue-800">유머</span>
-                                    <span class="text-sm text-muted-foreground">익명</span>
-                                    <span class="text-xs text-muted-foreground">3시간 전</span>
-                                </div>
-                                <h3 class="text-lg font-medium mt-1">오늘 아침에 있었던 웃긴 일</h3>
-                            </div>
+                <div class="grid gap-8 md:grid-cols-3">
+                    <div class="space-y-4 text-center">
+                        <div class="inline-flex items-center justify-center rounded-md bg-muted p-2 h-12 w-12 mx-auto">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-6 w-6">
+                                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                            </svg>
                         </div>
-                        <div class="p-4 pt-0">
-                            <p class="text-sm">오늘 아침에 출근하다가 정말 웃긴 일이 있었어요. 버스에서 내리려는데 갑자기...</p>
-                        </div>
-                        <div class="p-4 flex items-center text-xs text-muted-foreground border-t">
-                            <div class="flex items-center gap-4">
-                                <div class="flex items-center gap-1">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
-                                        <path d="m18 15-6-6-6 6"></path>
-                                    </svg>
-                                    <span>128</span>
-                                </div>
-                                <div class="flex items-center gap-1">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
-                                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-                                    </svg>
-                                    <span>32</span>
-                                </div>
-                            </div>
-                            <div class="ml-auto flex items-center gap-1">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-3 w-3">
-                                    <circle cx="12" cy="12" r="10"></circle>
-                                    <polyline points="12 6 12 12 16 14"></polyline>
-                                </svg>
-                                <span>조회 1,024</span>
-                            </div>
-                        </div>
+                        <h3 class="text-xl font-bold">다양한 주제의 게시판</h3>
+                        <p class="text-muted-foreground">
+                            유머, 이슈/뉴스, 게임, 스포츠, 연예 등 다양한 주제의 게시판에서 관심사를 나눠보세요.
+                        </p>
+                        <a href="/boards" class="text-primary hover:underline inline-flex items-center">
+                            게시판 바로가기
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 ml-1">
+                                <path d="M5 12h14"></path>
+                                <path d="m12 5 7 7-7 7"></path>
+                            </svg>
+                        </a>
                     </div>
-
-                    <div class="rounded-lg border bg-card text-card-foreground shadow-sm">
-                        <div class="p-4 flex flex-row items-start gap-4">
-                            <div class="flex-1">
-                                <div class="flex items-center gap-2">
-                                    <span class="text-xs font-medium px-2 py-0.5 rounded-full bg-red-100 text-red-800">이슈</span>
-                                    <span class="text-sm text-muted-foreground">뉴스맨</span>
-                                    <span class="text-xs text-muted-foreground">5시간 전</span>
-                                </div>
-                                <h3 class="text-lg font-medium mt-1">오늘 발표된 새로운 정책 내용 정리</h3>
-                            </div>
+                    <div class="space-y-4 text-center">
+                        <div class="inline-flex items-center justify-center rounded-md bg-muted p-2 h-12 w-12 mx-auto">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-6 w-6">
+                                <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="12" cy="7" r="4"></circle>
+                            </svg>
                         </div>
-                        <div class="p-4 pt-0">
-                            <p class="text-sm">오늘 정부에서 발표한 새로운 정책 내용을 정리해봤습니다. 주요 내용은...</p>
-                        </div>
-                        <div class="p-4 flex items-center text-xs text-muted-foreground border-t">
-                            <div class="flex items-center gap-4">
-                                <div class="flex items-center gap-1">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
-                                        <path d="m18 15-6-6-6 6"></path>
-                                    </svg>
-                                    <span>95</span>
-                                </div>
-                                <div class="flex items-center gap-1">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
-                                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-                                    </svg>
-                                    <span>47</span>
-                                </div>
-                            </div>
-                            <div class="ml-auto flex items-center gap-1">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-3 w-3">
-                                    <circle cx="12" cy="12" r="10"></circle>
-                                    <polyline points="12 6 12 12 16 14"></polyline>
-                                </svg>
-                                <span>조회 876</span>
-                            </div>
-                        </div>
+                        <h3 class="text-xl font-bold">회원 전용 기능</h3>
+                        <p class="text-muted-foreground">
+                            회원가입 후 글 작성, 댓글 달기, 좋아요 등 다양한 기능을 이용할 수 있습니다.
+                        </p>
                     </div>
-                </div>
-
-                <div class="mt-8 text-center">
-                    <a href="/boards" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-8 py-2">
-                        모든 게시판 보기
-                    </a>
+                    <div class="space-y-4 text-center">
+                        <div class="inline-flex items-center justify-center rounded-md bg-muted p-2 h-12 w-12 mx-auto">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-6 w-6">
+                                <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
+                                <polyline points="17 6 23 6 23 12"></polyline>
+                            </svg>
+                        </div>
+                        <h3 class="text-xl font-bold">실시간 인기 콘텐츠</h3>
+                        <p class="text-muted-foreground">
+                            실시간으로 업데이트되는 인기 게시글과 댓글을 확인해보세요.
+                        </p>
+                    </div>
                 </div>
             </div>
         </div>
