@@ -409,7 +409,7 @@
                                         <span class="text-xs text-muted-foreground">↳ 답글</span>
                                     </div>
                                     <div class="flex items-center gap-2">
-                                        <!-- 대댓글 좋아요/싫어요 버튼을 삭제 버튼 왼쪽에 배치 -->
+                                        <!-- 대댓글 좋아요/싫어요 버튼을 답글/삭제 버튼 왼쪽에 배치 -->
                                         <button
                                                 th:onclick="'sendLike(' + ${reply.id} + ', \'COMMENT\', \'LIKE\')'"
                                                 class="like-button inline-flex items-center justify-center rounded-md text-xs font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border-0 bg-transparent hover:bg-accent hover:text-accent-foreground h-6 px-1"
@@ -430,6 +430,14 @@
                                                 <path d="M9 18.12 10 14H4.17a2 2 0 0 1-1.92-2.56l2.33-8A2 2 0 0 1 6.5 2H20a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2.76a2 2 0 0 0-1.79 1.11L12 22h0a3.13 3.13 0 0 1-3-3.88Z"></path>
                                             </svg>
                                             <span class="text-xs" th:id="'dislike-count-comment-' + ${reply.id}" th:text="${reply.dislikeCount}">0</span>
+                                        </button>
+
+                                        <!-- 답글 버튼 (2depth에만 표시) -->
+                                        <button
+                                                th:onclick="'toggleReplyForm(' + ${reply.id} + ')'"
+                                                class="text-xs text-muted-foreground hover:text-foreground"
+                                        >
+                                            답글
                                         </button>
 
                                         <!-- 회원 대댓글 삭제 -->
@@ -455,9 +463,6 @@
                                 <div class="comment-content text-sm mb-2" th:text="${reply.content}">
                                     대댓글 내용...
                                 </div>
-
-                                <!-- 대댓글 좋아요/싫어요 버튼 -->
-
 
                                 <!-- 게스트 대댓글 삭제 폼 -->
                                 <div th:if="${reply.authorId == null}" th:id="'delete-form-' + ${reply.id}" class="hidden mt-3 p-3 bg-background rounded-md">
@@ -489,24 +494,173 @@
                                         </button>
                                     </form>
                                 </div>
+
+                                <!-- 2depth 답글 작성 폼 -->
+                                <div th:id="'reply-form-' + ${reply.id}" class="reply-form mt-3 p-3 bg-background rounded-md">
+                                    <!-- 회원 답글 작성 -->
+                                    <form sec:authorize="isAuthenticated()" th:action="@{/boards/{slug}/{postId}/comments/member(slug=${slug},postId=${post.id})}" method="post" class="space-y-3">
+                                        <input type="hidden" name="parentId" th:value="${reply.id}" />
+                                        <textarea
+                                                name="content"
+                                                placeholder="답글을 작성하세요"
+                                                class="flex min-h-[60px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                                required
+                                        ></textarea>
+                                        <div class="flex justify-end gap-2">
+                                            <button type="button" th:onclick="'toggleReplyForm(' + ${reply.id} + ')'" class="inline-flex items-center justify-center rounded-md text-xs font-medium border border-input bg-background hover:bg-accent h-8 px-3 py-2">
+                                                취소
+                                            </button>
+                                            <button type="submit" class="inline-flex items-center justify-center rounded-md text-xs font-medium bg-primary text-primary-foreground hover:bg-primary/90 h-8 px-3 py-2">
+                                                답글 작성
+                                            </button>
+                                        </div>
+                                    </form>
+
+                                    <!-- 게스트 답글 작성 -->
+                                    <form sec:authorize="!isAuthenticated()" th:action="@{/boards/{slug}/{postId}/comments/guest(slug=${slug},postId=${post.id})}" method="post" class="space-y-3">
+                                        <input type="hidden" name="parentId" th:value="${reply.id}" />
+                                        <div class="grid grid-cols-2 gap-2">
+                                            <input
+                                                    type="text"
+                                                    name="guestNickname"
+                                                    placeholder="닉네임"
+                                                    class="flex h-8 w-full rounded-md border border-input bg-background px-3 py-2 text-xs"
+                                                    required
+                                            />
+                                            <input
+                                                    type="password"
+                                                    name="guestPassword"
+                                                    placeholder="비밀번호"
+                                                    class="flex h-8 w-full rounded-md border border-input bg-background px-3 py-2 text-xs"
+                                                    required
+                                            />
+                                        </div>
+                                        <textarea
+                                                name="content"
+                                                placeholder="답글을 작성하세요"
+                                                class="flex min-h-[60px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                                required
+                                        ></textarea>
+                                        <div class="flex justify-end gap-2">
+                                            <button type="button" th:onclick="'toggleReplyForm(' + ${reply.id} + ')'" class="inline-flex items-center justify-center rounded-md text-xs font-medium border border-input bg-background hover:bg-accent h-8 px-3 py-2">
+                                                취소
+                                            </button>
+                                            <button type="submit" class="inline-flex items-center justify-center rounded-md text-xs font-medium bg-primary text-primary-foreground hover:bg-primary/90 h-8 px-3 py-2">
+                                                답글 작성
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+
+                                <!-- 3depth 답글 목록 (답글에 대한 답글) -->
+                                <div th:if="${not #lists.isEmpty(reply.children)}" class="mt-4 ml-6 space-y-3">
+                                    <div th:each="subReply : ${reply.children}" th:id="'comment-' + ${subReply.id}" class="rounded-lg border bg-background p-3">
+                                        <div class="flex items-start justify-between mb-2">
+                                            <div class="flex items-center gap-2">
+                                                <span class="font-medium text-sm" th:text="${subReply.authorName}">작성자</span>
+                                                <span th:if="${subReply.guestNickname != null}" class="text-xs bg-muted px-2 py-0.5 rounded-full">게스트</span>
+                                                <span class="text-xs text-muted-foreground">↳ 답글</span>
+                                            </div>
+                                            <div class="flex items-center gap-2">
+                                                <!-- 3depth 답글 좋아요/싫어요 버튼 -->
+                                                <button
+                                                        th:onclick="'sendLike(' + ${subReply.id} + ', \'COMMENT\', \'LIKE\')'"
+                                                        class="like-button inline-flex items-center justify-center rounded-md text-xs font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border-0 bg-transparent hover:bg-accent hover:text-accent-foreground h-6 px-1"
+                                                        th:id="'like-btn-comment-' + ${subReply.id}">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1">
+                                                        <path d="M7 10v12"></path>
+                                                        <path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2h0a3.13 3.13 0 0 1 3 3.88Z"></path>
+                                                    </svg>
+                                                    <span class="text-xs" th:id="'like-count-comment-' + ${subReply.id}" th:text="${subReply.likeCount}">0</span>
+                                                </button>
+
+                                                <button
+                                                        th:onclick="'sendLike(' + ${subReply.id} + ', \'COMMENT\', \'DISLIKE\')'"
+                                                        class="dislike-button inline-flex items-center justify-center rounded-md text-xs font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border-0 bg-transparent hover:bg-accent hover:text-accent-foreground h-6 px-1"
+                                                        th:id="'dislike-btn-comment-' + ${subReply.id}">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1">
+                                                        <path d="M17 14V2"></path>
+                                                        <path d="M9 18.12 10 14H4.17a2 2 0 0 1-1.92-2.56l2.33-8A2 2 0 0 1 6.5 2H20a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2.76a2 2 0 0 0-1.79 1.11L12 22h0a3.13 3.13 0 0 1-3-3.88Z"></path>
+                                                    </svg>
+                                                    <span class="text-xs" th:id="'dislike-count-comment-' + ${subReply.id}" th:text="${subReply.dislikeCount}">0</span>
+                                                </button>
+
+                                                <!-- 3depth에는 답글 버튼 없음 (더 이상 답글 불가) -->
+
+                                                <!-- 회원 3depth 답글 삭제 -->
+                                                <form sec:authorize="isAuthenticated()" th:if="${subReply.authorId != null and #authentication.principal.userId == subReply.authorId}"
+                                                      th:action="@{/boards/{slug}/{postId}/comments/{commentId}/delete(slug=${slug},postId=${post.id},commentId=${subReply.id})}"
+                                                      method="post"
+                                                      onsubmit="return confirm('정말 삭제하시겠습니까?');"
+                                                      class="inline">
+                                                    <button type="submit" class="text-xs text-destructive hover:text-destructive/80">
+                                                        삭제
+                                                    </button>
+                                                </form>
+
+                                                <!-- 게스트 3depth 답글 삭제 -->
+                                                <button th:if="${subReply.authorId == null}"
+                                                        th:onclick="'showDeleteForm(' + ${subReply.id} + ')'"
+                                                        class="text-xs text-destructive hover:text-destructive/80">
+                                                    삭제
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <div class="comment-content text-sm mb-2" th:text="${subReply.content}">
+                                            3depth 답글 내용...
+                                        </div>
+
+                                        <!-- 게스트 3depth 답글 삭제 폼 -->
+                                        <div th:if="${subReply.authorId == null}" th:id="'delete-form-' + ${subReply.id}" class="hidden mt-3 p-3 bg-muted rounded-md">
+                                            <!-- 개별 3depth 답글 에러 메시지 -->
+                                            <div th:id="'error-' + ${subReply.id}" class="hidden p-2 rounded-md bg-destructive/10 border border-destructive/20 mb-3">
+                                                <div class="flex items-center">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 text-destructive mr-2">
+                                                        <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path>
+                                                        <path d="M12 9v4"></path>
+                                                        <path d="m12 17 .01 0"></path>
+                                                    </svg>
+                                                    <p class="text-sm text-destructive font-medium">비밀번호가 일치하지 않습니다.</p>
+                                                </div>
+                                            </div>
+
+                                            <form th:action="@{/boards/{slug}/{postId}/comments/{commentId}/delete-guest(slug=${slug},postId=${post.id},commentId=${subReply.id})}" method="post" class="flex gap-2">
+                                                <input
+                                                        type="password"
+                                                        name="password"
+                                                        placeholder="비밀번호 입력"
+                                                        class="flex h-8 flex-1 rounded-md border border-input bg-background px-3 py-2 text-xs"
+                                                        required
+                                                />
+                                                <button type="submit" class="inline-flex items-center justify-center rounded-md text-xs font-medium bg-destructive text-destructive-foreground hover:bg-destructive/90 h-8 px-3 py-2">
+                                                    삭제
+                                                </button>
+                                                <button type="button" th:onclick="'hideDeleteForm(' + ${subReply.id} + ')'" class="inline-flex items-center justify-center rounded-md text-xs font-medium border border-input bg-background hover:bg-accent h-8 px-3 py-2">
+                                                    취소
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- 댓글 작성 폼 (댓글 목록 아래로 이동) -->
+                <!-- 댓글 작성 폼 (댓글 목록 밖으로 이동) -->
                 <div class="rounded-lg border bg-card text-card-foreground shadow-sm p-4" id="comment-form">
                     <h3 class="text-lg font-medium mb-4">댓글 작성</h3>
 
                     <!-- 회원 댓글 작성 폼 -->
                     <form sec:authorize="isAuthenticated()" th:action="@{/boards/{slug}/{postId}/comments/member(slug=${slug},postId=${post.id})}" method="post" class="space-y-4">
                         <div>
-                                <textarea
-                                        name="content"
-                                        placeholder="댓글을 작성하세요"
-                                        class="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                        required
-                                ></textarea>
+                            <textarea
+                                    name="content"
+                                    placeholder="댓글을 작성하세요"
+                                    class="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                    required
+                            ></textarea>
                         </div>
                         <div class="flex justify-end">
                             <button
@@ -541,12 +695,12 @@
                             </div>
                         </div>
                         <div>
-                                <textarea
-                                        name="content"
-                                        placeholder="댓글을 작성하세요"
-                                        class="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                        required
-                                ></textarea>
+                            <textarea
+                                    name="content"
+                                    placeholder="댓글을 작성하세요"
+                                    class="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                    required
+                            ></textarea>
                         </div>
                         <div class="flex justify-end">
                             <button
@@ -559,8 +713,6 @@
                     </form>
                 </div>
             </div>
-        </div>
-    </div>
 </main>
 
 <footer class="border-t py-6 md:py-0">
@@ -681,6 +833,7 @@
 
     // 기존 댓글 관련 함수들
     function toggleReplyForm(commentId) {
+        // 답글은 최상위 댓글에만 작성 가능 (3depth 제한)
         const replyForm = document.getElementById('reply-form-' + commentId);
         if (replyForm.style.display === 'none' || replyForm.style.display === '') {
             replyForm.style.display = 'block';
