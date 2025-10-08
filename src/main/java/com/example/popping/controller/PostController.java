@@ -28,9 +28,9 @@ public class PostController {
     public String getPost(@PathVariable String slug, @PathVariable Long postId,
                           Model model) {
         PostResponse postResponse = postService.getPostResponse(postId);
-        List<CommentResponse> commentResponses = commentService.getCommentsByPostId(postId);
+        CommentPageResponse commentPageResponses = commentService.getCommentPage(postId, 0);
         model.addAttribute("post", postResponse);
-        model.addAttribute("comments", commentResponses);
+        model.addAttribute("comments", commentPageResponses);
         model.addAttribute("slug", slug);
         return "post/detail";
     }
