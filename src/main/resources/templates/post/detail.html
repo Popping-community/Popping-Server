@@ -101,6 +101,228 @@
             background-color: hsl(0 84.2% 96%);
             border-color: hsl(0 84.2% 60.2%);
         }
+        .loading {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        /* 댓글 스타일링 */
+        .comment-thread {
+            margin-bottom: 1rem;
+            border-radius: 0.5rem;
+            overflow: hidden;
+            border: 1px solid hsl(214.3 31.8% 91.4%);
+            background-color: hsl(0 0% 100%);
+        }
+
+        .comment-item {
+            position: relative;
+            border-bottom: 1px solid hsl(214.3 31.8% 95%);
+        }
+
+        .comment-item:last-child {
+            border-bottom: none;
+        }
+
+        /* Depth별 스타일링 */
+        .comment-depth-0 {
+            background-color: hsl(0 0% 100%);
+            padding: 1rem;
+        }
+
+        .comment-depth-1 {
+            background-color: hsl(210 40% 98%);
+            padding: 0.875rem 1rem;
+            margin-left: 1.5rem;
+            border-left: 3px solid hsl(59 100% 85%);
+            position: relative;
+        }
+
+        .comment-depth-1::before {
+            content: '';
+            position: absolute;
+            left: -1.5rem;
+            top: 0;
+            width: 1.5rem;
+            height: 1px;
+            background-color: hsl(214.3 31.8% 91.4%);
+            top: 50%;
+        }
+
+        .comment-depth-2 {
+            background-color: hsl(210 40% 96%);
+            padding: 0.75rem 1rem;
+            margin-left: 3rem;
+            border-left: 3px solid hsl(200 100% 85%);
+            position: relative;
+        }
+
+        .comment-depth-2::before {
+            content: '';
+            position: absolute;
+            left: -3rem;
+            top: 0;
+            width: 3rem;
+            height: 1px;
+            background-color: hsl(214.3 31.8% 91.4%);
+            top: 50%;
+        }
+
+        .comment-line {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .comment-meta {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex-shrink: 0;
+            min-width: 120px;
+        }
+
+        .comment-author {
+            font-weight: 600;
+            font-size: 0.875rem;
+            color: hsl(222.2 84% 4.9%);
+        }
+
+        .guest-badge {
+            font-size: 0.625rem;
+            background-color: hsl(45 100% 85%);
+            color: hsl(45 100% 25%);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-weight: 500;
+        }
+
+        .reply-indicator {
+            font-size: 0.75rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .reply-indicator-depth-1 {
+            color: hsl(45 100% 40%);
+        }
+
+        .reply-indicator-depth-2 {
+            color: hsl(200 100% 40%);
+        }
+
+        .comment-content {
+            flex: 1;
+            min-width: 0;
+            font-size: 0.875rem;
+            line-height: 1.5;
+            white-space: pre-line;
+            word-break: break-word;
+            margin: 0.25rem 0;
+        }
+
+        .comment-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex-shrink: 0;
+            margin-top: 0.5rem;
+        }
+
+        .action-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+            border: 1px solid transparent;
+            background: hsl(210 40% 96%);
+            color: hsl(215.4 16.3% 46.9%);
+            cursor: pointer;
+            border-radius: 0.375rem;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+
+        .action-button:hover {
+            background-color: hsl(210 40% 92%);
+            color: hsl(222.2 84% 4.9%);
+            border-color: hsl(214.3 31.8% 91.4%);
+        }
+
+        .like-button.active {
+            background-color: hsl(142.1 76.2% 36.3%);
+            color: white;
+            border-color: hsl(142.1 76.2% 36.3%);
+        }
+
+        .dislike-button.active {
+            background-color: hsl(0 84.2% 60.2%);
+            color: white;
+            border-color: hsl(0 84.2% 60.2%);
+        }
+
+        .delete-button {
+            background-color: hsl(0 84.2% 96%);
+            color: hsl(0 84.2% 60.2%);
+        }
+
+        .delete-button:hover {
+            background-color: hsl(0 84.2% 92%);
+            border-color: hsl(0 84.2% 60.2%);
+        }
+
+        .reply-form {
+            display: none;
+            margin-top: 0.75rem;
+            padding: 0.75rem;
+            background-color: hsl(210 40% 94%);
+            border-radius: 0.375rem;
+            border: 1px solid hsl(214.3 31.8% 91.4%);
+        }
+
+        .delete-form {
+            margin-top: 0.75rem;
+            padding: 0.75rem;
+            background-color: hsl(0 84.2% 96%);
+            border-radius: 0.375rem;
+            border: 1px solid hsl(0 84.2% 85%);
+        }
+
+        /* 댓글 번호 스타일 */
+        .comment-number {
+            font-size: 0.75rem;
+            color: hsl(215.4 16.3% 46.9%);
+            font-weight: 500;
+            min-width: 2rem;
+        }
+
+        /* 반응형 */
+        @media (max-width: 768px) {
+            .comment-depth-1 {
+                margin-left: 1rem;
+            }
+
+            .comment-depth-2 {
+                margin-left: 2rem;
+            }
+
+            .comment-line {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .comment-meta {
+                min-width: auto;
+            }
+
+            .comment-actions {
+                margin-top: 0.25rem;
+            }
+        }
     </style>
 </head>
 <body>
@@ -170,32 +392,34 @@
                                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
                                         <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
                                     </svg>
-                                    <span th:text="${post.commentCount}">0</span>
+                                    <span id="comment-count" th:text="${post.commentCount}">0</span>
                                 </div>
                             </div>
                             <!-- 수정/삭제 버튼 -->
                             <div class="flex gap-2">
                                 <!-- 회원 게시글인 경우 - 작성자만 수정/삭제 가능 -->
-                                <div sec:authorize="isAuthenticated()" th:if="${post.authorId != null and #authentication.principal.userId == post.authorId}">
-                                    <a th:href="@{/boards/{slug}/{postId}/edit(slug=${slug},postId=${post.id})}" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2">
-                                        수정
-                                    </a>
-                                    <form th:action="@{/boards/{slug}/{postId}/delete(slug=${slug},postId=${post.id})}" method="post" onsubmit="return confirm('정말 삭제하시겠습니까?');" class="inline">
-                                        <button type="submit" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-destructive text-destructive-foreground hover:bg-destructive/90 h-9 px-4 py-2">
-                                            삭제
-                                        </button>
-                                    </form>
-                                </div>
+                                <th:block sec:authorize="isAuthenticated()" th:if="${post.authorId != null}">
+                                    <th:block th:if="${post.authorId == #authentication.principal.userId}">
+                                        <a th:href="@{/boards/{slug}/{postId}/edit(slug=${slug},postId=${post.id})}" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2">
+                                            수정
+                                        </a>
+                                        <form th:action="@{/boards/{slug}/{postId}/delete(slug=${slug},postId=${post.id})}" method="post" onsubmit="return confirm('정말 삭제하시겠습니까?');" class="inline">
+                                            <button type="submit" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-destructive text-destructive-foreground hover:bg-destructive/90 h-9 px-4 py-2">
+                                                삭제
+                                            </button>
+                                        </form>
+                                    </th:block>
+                                </th:block>
 
                                 <!-- 게스트 게시글인 경우 - 모든 사용자에게 수정/삭제 버튼 노출 -->
-                                <div th:if="${post.authorId == null}">
+                                <th:block th:if="${post.authorId == null}">
                                     <a th:href="@{/boards/{slug}/{postId}/edit-password(slug=${slug},postId=${post.id})}" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2">
                                         수정
                                     </a>
                                     <a th:href="@{/boards/{slug}/{postId}/delete-password(slug=${slug},postId=${post.id})}" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-destructive text-destructive-foreground hover:bg-destructive/90 h-9 px-4 py-2">
                                         삭제
                                     </a>
-                                </div>
+                                </th:block>
                             </div>
                         </div>
                     </div>
@@ -240,422 +464,24 @@
                 <h2 class="text-xl font-semibold mb-4">댓글</h2>
 
                 <!-- 댓글 목록 -->
-                <div th:if="${#lists.isEmpty(comments)}" class="text-center py-8 text-muted-foreground mb-4">
-                    아직 댓글이 없습니다. 첫 번째 댓글을 작성해보세요!
+                <div id="comments-container">
+                    <!-- 댓글이 여기에 동적으로 로드됩니다 -->
                 </div>
 
-                <div th:if="${not #lists.isEmpty(comments)}" class="space-y-4 mb-6">
-                    <!-- 댓글 템플릿 -->
-                    <div th:each="comment : ${comments}" th:fragment="comment-item" th:id="'comment-' + ${comment.id}" class="rounded-lg border bg-card text-card-foreground shadow-sm p-4">
-                        <div class="flex items-start justify-between mb-2">
-                            <div class="flex items-center gap-2">
-                                <span class="font-medium text-sm" th:text="${comment.authorName}">작성자</span>
-                                <span th:if="${comment.guestNickname != null}" class="text-xs bg-muted px-2 py-0.5 rounded-full">게스트</span>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <!-- 좋아요/싫어요 버튼을 답글/삭제 버튼 왼쪽에 배치 -->
-                                <button
-                                        th:onclick="'sendLike(' + ${comment.id} + ', \'COMMENT\', \'LIKE\')'"
-                                        class="like-button inline-flex items-center justify-center rounded-md text-xs font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border-0 bg-transparent hover:bg-accent hover:text-accent-foreground h-8 px-2"
-                                        th:id="'like-btn-comment-' + ${comment.id}">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1">
-                                        <path d="M7 10v12"></path>
-                                        <path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2h0a3.13 3.13 0 0 1 3 3.88Z"></path>
-                                    </svg>
-                                    <span th:id="'like-count-comment-' + ${comment.id}" th:text="${comment.likeCount}">0</span>
-                                </button>
-
-                                <button
-                                        th:onclick="'sendLike(' + ${comment.id} + ', \'COMMENT\', \'DISLIKE\')'"
-                                        class="dislike-button inline-flex items-center justify-center rounded-md text-xs font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border-0 bg-transparent hover:bg-accent hover:text-accent-foreground h-8 px-2"
-                                        th:id="'dislike-btn-comment-' + ${comment.id}">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1">
-                                        <path d="M17 14V2"></path>
-                                        <path d="M9 18.12 10 14H4.17a2 2 0 0 1-1.92-2.56l2.33-8A2 2 0 0 1 6.5 2H20a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2.76a2 2 0 0 0-1.79 1.11L12 22h0a3.13 3.13 0 0 1-3-3.88Z"></path>
-                                    </svg>
-                                    <span th:id="'dislike-count-comment-' + ${comment.id}" th:text="${comment.dislikeCount}">0</span>
-                                </button>
-
-                                <!-- 답글 버튼 -->
-                                <button
-                                        th:onclick="'toggleReplyForm(' + ${comment.id} + ')'"
-                                        class="text-xs text-muted-foreground hover:text-foreground"
-                                >
-                                    답글
-                                </button>
-
-                                <!-- 회원 댓글 삭제 -->
-                                <form sec:authorize="isAuthenticated()" th:if="${comment.authorId != null and #authentication.principal.userId == comment.authorId}"
-                                      th:action="@{/boards/{slug}/{postId}/comments/{commentId}/delete(slug=${slug},postId=${post.id},commentId=${comment.id})}"
-                                      method="post"
-                                      onsubmit="return confirm('정말 삭제하시겠습니까?');"
-                                      class="inline">
-                                    <button type="submit" class="text-xs text-destructive hover:text-destructive/80">
-                                        삭제
-                                    </button>
-                                </form>
-
-                                <!-- 게스트 댓글 삭제 -->
-                                <button th:if="${comment.authorId == null}"
-                                        th:onclick="'showDeleteForm(' + ${comment.id} + ')'"
-                                        class="text-xs text-destructive hover:text-destructive/80">
-                                    삭제
-                                </button>
-                            </div>
-                        </div>
-
-                        <div class="comment-content text-sm mb-3" th:text="${comment.content}">
-                            댓글 내용...
-                        </div>
-
-                        <!-- 댓글 좋아요/싫어요 버튼 -->
-
-
-                        <!-- 게스트 댓글 삭제 폼 -->
-                        <div th:if="${comment.authorId == null}" th:id="'delete-form-' + ${comment.id}" class="hidden mt-3 p-3 bg-muted rounded-md">
-                            <!-- 개별 댓글 에러 메시지 -->
-                            <div th:id="'error-' + ${comment.id}" class="hidden p-2 rounded-md bg-destructive/10 border border-destructive/20 mb-3">
-                                <div class="flex items-center">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 text-destructive mr-2">
-                                        <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path>
-                                        <path d="M12 9v4"></path>
-                                        <path d="m12 17 .01 0"></path>
-                                    </svg>
-                                    <p class="text-sm text-destructive font-medium">비밀번호가 일치하지 않습니다.</p>
-                                </div>
-                            </div>
-
-                            <form th:action="@{/boards/{slug}/{postId}/comments/{commentId}/delete-guest(slug=${slug},postId=${post.id},commentId=${comment.id})}" method="post" class="flex gap-2">
-                                <input
-                                        type="password"
-                                        name="password"
-                                        placeholder="비밀번호 입력"
-                                        class="flex h-8 flex-1 rounded-md border border-input bg-background px-3 py-2 text-xs"
-                                        required
-                                />
-                                <button type="submit" class="inline-flex items-center justify-center rounded-md text-xs font-medium bg-destructive text-destructive-foreground hover:bg-destructive/90 h-8 px-3 py-2">
-                                    삭제
-                                </button>
-                                <button type="button" th:onclick="'hideDeleteForm(' + ${comment.id} + ')'" class="inline-flex items-center justify-center rounded-md text-xs font-medium border border-input bg-background hover:bg-accent h-8 px-3 py-2">
-                                    취소
-                                </button>
-                            </form>
-                        </div>
-
-                        <!-- 답글 작성 폼 -->
-                        <div th:id="'reply-form-' + ${comment.id}" class="reply-form mt-3 p-3 bg-muted rounded-md">
-                            <!-- 회원 답글 작성 -->
-                            <form sec:authorize="isAuthenticated()" th:action="@{/boards/{slug}/{postId}/comments/member(slug=${slug},postId=${post.id})}" method="post" class="space-y-3">
-                                <input type="hidden" name="parentId" th:value="${comment.id}" />
-                                <textarea
-                                        name="content"
-                                        placeholder="답글을 작성하세요"
-                                        class="flex min-h-[60px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                                        required
-                                ></textarea>
-                                <div class="flex justify-end gap-2">
-                                    <button type="button" th:onclick="'toggleReplyForm(' + ${comment.id} + ')'" class="inline-flex items-center justify-center rounded-md text-xs font-medium border border-input bg-background hover:bg-accent h-8 px-3 py-2">
-                                        취소
-                                    </button>
-                                    <button type="submit" class="inline-flex items-center justify-center rounded-md text-xs font-medium bg-primary text-primary-foreground hover:bg-primary/90 h-8 px-3 py-2">
-                                        답글 작성
-                                    </button>
-                                </div>
-                            </form>
-
-                            <!-- 게스트 답글 작성 -->
-                            <form sec:authorize="!isAuthenticated()" th:action="@{/boards/{slug}/{postId}/comments/guest(slug=${slug},postId=${post.id})}" method="post" class="space-y-3">
-                                <input type="hidden" name="parentId" th:value="${comment.id}" />
-                                <div class="grid grid-cols-2 gap-2">
-                                    <input
-                                            type="text"
-                                            name="guestNickname"
-                                            placeholder="닉네임"
-                                            class="flex h-8 w-full rounded-md border border-input bg-background px-3 py-2 text-xs"
-                                            required
-                                    />
-                                    <input
-                                            type="password"
-                                            name="guestPassword"
-                                            placeholder="비밀번호"
-                                            class="flex h-8 w-full rounded-md border border-input bg-background px-3 py-2 text-xs"
-                                            required
-                                    />
-                                </div>
-                                <textarea
-                                        name="content"
-                                        placeholder="답글을 작성하세요"
-                                        class="flex min-h-[60px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                                        required
-                                ></textarea>
-                                <div class="flex justify-end gap-2">
-                                    <button type="button" th:onclick="'toggleReplyForm(' + ${comment.id} + ')'" class="inline-flex items-center justify-center rounded-md text-xs font-medium border border-input bg-background hover:bg-accent h-8 px-3 py-2">
-                                        취소
-                                    </button>
-                                    <button type="submit" class="inline-flex items-center justify-center rounded-md text-xs font-medium bg-primary text-primary-foreground hover:bg-primary/90 h-8 px-3 py-2">
-                                        답글 작성
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-
-                        <!-- 대댓글 목록 -->
-                        <div th:if="${not #lists.isEmpty(comment.children)}" class="mt-4 ml-6 space-y-3">
-                            <div th:each="reply : ${comment.children}" th:id="'comment-' + ${reply.id}" class="rounded-lg border bg-muted/50 p-3">
-                                <div class="flex items-start justify-between mb-2">
-                                    <div class="flex items-center gap-2">
-                                        <span class="font-medium text-sm" th:text="${reply.authorName}">작성자</span>
-                                        <span th:if="${reply.guestNickname != null}" class="text-xs bg-background px-2 py-0.5 rounded-full">게스트</span>
-                                        <span class="text-xs text-muted-foreground">↳ 답글</span>
-                                    </div>
-                                    <div class="flex items-center gap-2">
-                                        <!-- 대댓글 좋아요/싫어요 버튼을 답글/삭제 버튼 왼쪽에 배치 -->
-                                        <button
-                                                th:onclick="'sendLike(' + ${reply.id} + ', \'COMMENT\', \'LIKE\')'"
-                                                class="like-button inline-flex items-center justify-center rounded-md text-xs font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border-0 bg-transparent hover:bg-accent hover:text-accent-foreground h-6 px-1"
-                                                th:id="'like-btn-comment-' + ${reply.id}">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1">
-                                                <path d="M7 10v12"></path>
-                                                <path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2h0a3.13 3.13 0 0 1 3 3.88Z"></path>
-                                            </svg>
-                                            <span class="text-xs" th:id="'like-count-comment-' + ${reply.id}" th:text="${reply.likeCount}">0</span>
-                                        </button>
-
-                                        <button
-                                                th:onclick="'sendLike(' + ${reply.id} + ', \'COMMENT\', \'DISLIKE\')'"
-                                                class="dislike-button inline-flex items-center justify-center rounded-md text-xs font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border-0 bg-transparent hover:bg-accent hover:text-accent-foreground h-6 px-1"
-                                                th:id="'dislike-btn-comment-' + ${reply.id}">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1">
-                                                <path d="M17 14V2"></path>
-                                                <path d="M9 18.12 10 14H4.17a2 2 0 0 1-1.92-2.56l2.33-8A2 2 0 0 1 6.5 2H20a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2.76a2 2 0 0 0-1.79 1.11L12 22h0a3.13 3.13 0 0 1-3-3.88Z"></path>
-                                            </svg>
-                                            <span class="text-xs" th:id="'dislike-count-comment-' + ${reply.id}" th:text="${reply.dislikeCount}">0</span>
-                                        </button>
-
-                                        <!-- 답글 버튼 (2depth에만 표시) -->
-                                        <button
-                                                th:onclick="'toggleReplyForm(' + ${reply.id} + ')'"
-                                                class="text-xs text-muted-foreground hover:text-foreground"
-                                        >
-                                            답글
-                                        </button>
-
-                                        <!-- 회원 대댓글 삭제 -->
-                                        <form sec:authorize="isAuthenticated()" th:if="${reply.authorId != null and #authentication.principal.userId == reply.authorId}"
-                                              th:action="@{/boards/{slug}/{postId}/comments/{commentId}/delete(slug=${slug},postId=${post.id},commentId=${reply.id})}"
-                                              method="post"
-                                              onsubmit="return confirm('정말 삭제하시겠습니까?');"
-                                              class="inline">
-                                            <button type="submit" class="text-xs text-destructive hover:text-destructive/80">
-                                                삭제
-                                            </button>
-                                        </form>
-
-                                        <!-- 게스트 대댓글 삭제 -->
-                                        <button th:if="${reply.authorId == null}"
-                                                th:onclick="'showDeleteForm(' + ${reply.id} + ')'"
-                                                class="text-xs text-destructive hover:text-destructive/80">
-                                            삭제
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <div class="comment-content text-sm mb-2" th:text="${reply.content}">
-                                    대댓글 내용...
-                                </div>
-
-                                <!-- 게스트 대댓글 삭제 폼 -->
-                                <div th:if="${reply.authorId == null}" th:id="'delete-form-' + ${reply.id}" class="hidden mt-3 p-3 bg-background rounded-md">
-                                    <!-- 개별 대댓글 에러 메시지 -->
-                                    <div th:id="'error-' + ${reply.id}" class="hidden p-2 rounded-md bg-destructive/10 border border-destructive/20 mb-3">
-                                        <div class="flex items-center">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 text-destructive mr-2">
-                                                <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path>
-                                                <path d="M12 9v4"></path>
-                                                <path d="m12 17 .01 0"></path>
-                                            </svg>
-                                            <p class="text-sm text-destructive font-medium">비밀번호가 일치하지 않습니다.</p>
-                                        </div>
-                                    </div>
-
-                                    <form th:action="@{/boards/{slug}/{postId}/comments/{commentId}/delete-guest(slug=${slug},postId=${post.id},commentId=${reply.id})}" method="post" class="flex gap-2">
-                                        <input
-                                                type="password"
-                                                name="password"
-                                                placeholder="비밀번호 입력"
-                                                class="flex h-8 flex-1 rounded-md border border-input bg-background px-3 py-2 text-xs"
-                                                required
-                                        />
-                                        <button type="submit" class="inline-flex items-center justify-center rounded-md text-xs font-medium bg-destructive text-destructive-foreground hover:bg-destructive/90 h-8 px-3 py-2">
-                                            삭제
-                                        </button>
-                                        <button type="button" th:onclick="'hideDeleteForm(' + ${reply.id} + ')'" class="inline-flex items-center justify-center rounded-md text-xs font-medium border border-input bg-background hover:bg-accent h-8 px-3 py-2">
-                                            취소
-                                        </button>
-                                    </form>
-                                </div>
-
-                                <!-- 2depth 답글 작성 폼 -->
-                                <div th:id="'reply-form-' + ${reply.id}" class="reply-form mt-3 p-3 bg-background rounded-md">
-                                    <!-- 회원 답글 작성 -->
-                                    <form sec:authorize="isAuthenticated()" th:action="@{/boards/{slug}/{postId}/comments/member(slug=${slug},postId=${post.id})}" method="post" class="space-y-3">
-                                        <input type="hidden" name="parentId" th:value="${reply.id}" />
-                                        <textarea
-                                                name="content"
-                                                placeholder="답글을 작성하세요"
-                                                class="flex min-h-[60px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                                                required
-                                        ></textarea>
-                                        <div class="flex justify-end gap-2">
-                                            <button type="button" th:onclick="'toggleReplyForm(' + ${reply.id} + ')'" class="inline-flex items-center justify-center rounded-md text-xs font-medium border border-input bg-background hover:bg-accent h-8 px-3 py-2">
-                                                취소
-                                            </button>
-                                            <button type="submit" class="inline-flex items-center justify-center rounded-md text-xs font-medium bg-primary text-primary-foreground hover:bg-primary/90 h-8 px-3 py-2">
-                                                답글 작성
-                                            </button>
-                                        </div>
-                                    </form>
-
-                                    <!-- 게스트 답글 작성 -->
-                                    <form sec:authorize="!isAuthenticated()" th:action="@{/boards/{slug}/{postId}/comments/guest(slug=${slug},postId=${post.id})}" method="post" class="space-y-3">
-                                        <input type="hidden" name="parentId" th:value="${reply.id}" />
-                                        <div class="grid grid-cols-2 gap-2">
-                                            <input
-                                                    type="text"
-                                                    name="guestNickname"
-                                                    placeholder="닉네임"
-                                                    class="flex h-8 w-full rounded-md border border-input bg-background px-3 py-2 text-xs"
-                                                    required
-                                            />
-                                            <input
-                                                    type="password"
-                                                    name="guestPassword"
-                                                    placeholder="비밀번호"
-                                                    class="flex h-8 w-full rounded-md border border-input bg-background px-3 py-2 text-xs"
-                                                    required
-                                            />
-                                        </div>
-                                        <textarea
-                                                name="content"
-                                                placeholder="답글을 작성하세요"
-                                                class="flex min-h-[60px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                                                required
-                                        ></textarea>
-                                        <div class="flex justify-end gap-2">
-                                            <button type="button" th:onclick="'toggleReplyForm(' + ${reply.id} + ')'" class="inline-flex items-center justify-center rounded-md text-xs font-medium border border-input bg-background hover:bg-accent h-8 px-3 py-2">
-                                                취소
-                                            </button>
-                                            <button type="submit" class="inline-flex items-center justify-center rounded-md text-xs font-medium bg-primary text-primary-foreground hover:bg-primary/90 h-8 px-3 py-2">
-                                                답글 작성
-                                            </button>
-                                        </div>
-                                    </form>
-                                </div>
-
-                                <!-- 3depth 답글 목록 (답글에 대한 답글) -->
-                                <div th:if="${not #lists.isEmpty(reply.children)}" class="mt-4 ml-6 space-y-3">
-                                    <div th:each="subReply : ${reply.children}" th:id="'comment-' + ${subReply.id}" class="rounded-lg border bg-background p-3">
-                                        <div class="flex items-start justify-between mb-2">
-                                            <div class="flex items-center gap-2">
-                                                <span class="font-medium text-sm" th:text="${subReply.authorName}">작성자</span>
-                                                <span th:if="${subReply.guestNickname != null}" class="text-xs bg-muted px-2 py-0.5 rounded-full">게스트</span>
-                                                <span class="text-xs text-muted-foreground">↳ 답글</span>
-                                            </div>
-                                            <div class="flex items-center gap-2">
-                                                <!-- 3depth 답글 좋아요/싫어요 버튼 -->
-                                                <button
-                                                        th:onclick="'sendLike(' + ${subReply.id} + ', \'COMMENT\', \'LIKE\')'"
-                                                        class="like-button inline-flex items-center justify-center rounded-md text-xs font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border-0 bg-transparent hover:bg-accent hover:text-accent-foreground h-6 px-1"
-                                                        th:id="'like-btn-comment-' + ${subReply.id}">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1">
-                                                        <path d="M7 10v12"></path>
-                                                        <path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2h0a3.13 3.13 0 0 1 3 3.88Z"></path>
-                                                    </svg>
-                                                    <span class="text-xs" th:id="'like-count-comment-' + ${subReply.id}" th:text="${subReply.likeCount}">0</span>
-                                                </button>
-
-                                                <button
-                                                        th:onclick="'sendLike(' + ${subReply.id} + ', \'COMMENT\', \'DISLIKE\')'"
-                                                        class="dislike-button inline-flex items-center justify-center rounded-md text-xs font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border-0 bg-transparent hover:bg-accent hover:text-accent-foreground h-6 px-1"
-                                                        th:id="'dislike-btn-comment-' + ${subReply.id}">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1">
-                                                        <path d="M17 14V2"></path>
-                                                        <path d="M9 18.12 10 14H4.17a2 2 0 0 1-1.92-2.56l2.33-8A2 2 0 0 1 6.5 2H20a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2.76a2 2 0 0 0-1.79 1.11L12 22h0a3.13 3.13 0 0 1-3-3.88Z"></path>
-                                                    </svg>
-                                                    <span class="text-xs" th:id="'dislike-count-comment-' + ${subReply.id}" th:text="${subReply.dislikeCount}">0</span>
-                                                </button>
-
-                                                <!-- 3depth에는 답글 버튼 없음 (더 이상 답글 불가) -->
-
-                                                <!-- 회원 3depth 답글 삭제 -->
-                                                <form sec:authorize="isAuthenticated()" th:if="${subReply.authorId != null and #authentication.principal.userId == subReply.authorId}"
-                                                      th:action="@{/boards/{slug}/{postId}/comments/{commentId}/delete(slug=${slug},postId=${post.id},commentId=${subReply.id})}"
-                                                      method="post"
-                                                      onsubmit="return confirm('정말 삭제하시겠습니까?');"
-                                                      class="inline">
-                                                    <button type="submit" class="text-xs text-destructive hover:text-destructive/80">
-                                                        삭제
-                                                    </button>
-                                                </form>
-
-                                                <!-- 게스트 3depth 답글 삭제 -->
-                                                <button th:if="${subReply.authorId == null}"
-                                                        th:onclick="'showDeleteForm(' + ${subReply.id} + ')'"
-                                                        class="text-xs text-destructive hover:text-destructive/80">
-                                                    삭제
-                                                </button>
-                                            </div>
-                                        </div>
-
-                                        <div class="comment-content text-sm mb-2" th:text="${subReply.content}">
-                                            3depth 답글 내용...
-                                        </div>
-
-                                        <!-- 게스트 3depth 답글 삭제 폼 -->
-                                        <div th:if="${subReply.authorId == null}" th:id="'delete-form-' + ${subReply.id}" class="hidden mt-3 p-3 bg-muted rounded-md">
-                                            <!-- 개별 3depth 답글 에러 메시지 -->
-                                            <div th:id="'error-' + ${subReply.id}" class="hidden p-2 rounded-md bg-destructive/10 border border-destructive/20 mb-3">
-                                                <div class="flex items-center">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 text-destructive mr-2">
-                                                        <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path>
-                                                        <path d="M12 9v4"></path>
-                                                        <path d="m12 17 .01 0"></path>
-                                                    </svg>
-                                                    <p class="text-sm text-destructive font-medium">비밀번호가 일치하지 않습니다.</p>
-                                                </div>
-                                            </div>
-
-                                            <form th:action="@{/boards/{slug}/{postId}/comments/{commentId}/delete-guest(slug=${slug},postId=${post.id},commentId=${subReply.id})}" method="post" class="flex gap-2">
-                                                <input
-                                                        type="password"
-                                                        name="password"
-                                                        placeholder="비밀번호 입력"
-                                                        class="flex h-8 flex-1 rounded-md border border-input bg-background px-3 py-2 text-xs"
-                                                        required
-                                                />
-                                                <button type="submit" class="inline-flex items-center justify-center rounded-md text-xs font-medium bg-destructive text-destructive-foreground hover:bg-destructive/90 h-8 px-3 py-2">
-                                                    삭제
-                                                </button>
-                                                <button type="button" th:onclick="'hideDeleteForm(' + ${subReply.id} + ')'" class="inline-flex items-center justify-center rounded-md text-xs font-medium border border-input bg-background hover:bg-accent h-8 px-3 py-2">
-                                                    취소
-                                                </button>
-                                            </form>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                <!-- 페이지네이션 -->
+                <div id="pagination-container" class="flex justify-center mt-6">
+                    <!-- 페이지네이션이 여기에 동적으로 로드됩니다 -->
                 </div>
 
-                <!-- 댓글 작성 폼 (댓글 목록 밖으로 이동) -->
-                <div class="rounded-lg border bg-card text-card-foreground shadow-sm p-4" id="comment-form">
+                <!-- 댓글 작성 폼 -->
+                <div class="rounded-lg border bg-card text-card-foreground shadow-sm p-4 mt-6" id="comment-form">
                     <h3 class="text-lg font-medium mb-4">댓글 작성</h3>
 
                     <!-- 회원 댓글 작성 폼 -->
-                    <form sec:authorize="isAuthenticated()" th:action="@{/boards/{slug}/{postId}/comments/member(slug=${slug},postId=${post.id})}" method="post" class="space-y-4">
+                    <form sec:authorize="isAuthenticated()" id="member-comment-form" class="space-y-4">
                         <div>
                             <textarea
+                                    id="member-comment-content"
                                     name="content"
                                     placeholder="댓글을 작성하세요"
                                     class="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
@@ -673,10 +499,11 @@
                     </form>
 
                     <!-- 게스트 댓글 작성 폼 -->
-                    <form sec:authorize="!isAuthenticated()" th:action="@{/boards/{slug}/{postId}/comments/guest(slug=${slug},postId=${post.id})}" method="post" class="space-y-4">
+                    <form sec:authorize="!isAuthenticated()" id="guest-comment-form" class="space-y-4">
                         <div class="grid grid-cols-2 gap-4">
                             <div>
                                 <input
+                                        id="guest-comment-nickname"
                                         type="text"
                                         name="guestNickname"
                                         placeholder="닉네임"
@@ -686,6 +513,7 @@
                             </div>
                             <div>
                                 <input
+                                        id="guest-comment-password"
                                         type="password"
                                         name="guestPassword"
                                         placeholder="비밀번호"
@@ -696,6 +524,7 @@
                         </div>
                         <div>
                             <textarea
+                                    id="guest-comment-content"
                                     name="content"
                                     placeholder="댓글을 작성하세요"
                                     class="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
@@ -713,6 +542,8 @@
                     </form>
                 </div>
             </div>
+        </div>
+    </div>
 </main>
 
 <footer class="border-t py-6 md:py-0">
@@ -730,10 +561,27 @@
 
 <script th:inline="javascript">
     let stompClient = null;
-    let isLoggedIn = /*[[${#authentication.principal != 'anonymousUser'}]]*/ false;
+    let isLoggedIn = /*[[${#authorization.expression('isAuthenticated()')}]]*/ false;
+    let currentUserId = null;
+    let postId = /*[[${post.id}]]*/ 0;
+    let slug = /*[[${slug}]]*/ '';
+    let commentCounter = 0;
 
+    // JavaScript 부분을 수정하여 서버에서 받은 페이지 정보를 사용하도록 합니다:
+
+    let currentPage = 0;
+    let totalComments = 0;
+    let totalPages = 0;
+    let hasNext = false;
+    let hasPrevious = false;
+
+    // 로그인한 사용자의 ID 설정
+    /*[# th:if="${#authorization.expression('isAuthenticated()')}"]*/
+    currentUserId = /*[[${#authentication.principal.userId}]]*/ null;
+    /*[/]*/
+
+    // WebSocket 관련 함수들
     function connect() {
-        // SockJS 연결 시 세션/쿠키 유지 설정
         const socket = new SockJS('/ws', null, {
             transports: ['websocket', 'xhr-streaming', 'xhr-polling'],
             sessionId: function() {
@@ -742,11 +590,8 @@
         });
 
         stompClient = Stomp.over(socket);
-
-        // STOMP 연결 시 헤더에 인증 정보 포함
         const connectHeaders = {};
 
-        // CSRF 토큰이 있다면 헤더에 추가
         const csrfToken = document.querySelector('meta[name="_csrf"]');
         const csrfHeader = document.querySelector('meta[name="_csrf_header"]');
         if (csrfToken && csrfHeader) {
@@ -755,17 +600,13 @@
 
         stompClient.connect(connectHeaders, function (frame) {
             console.log('Connected: ' + frame);
-
-            // 좋아요 업데이트 구독
             stompClient.subscribe('/topic/like-updates', function (response) {
                 const parsedResponse = JSON.parse(response.body);
                 updateLikeCounts(parsedResponse);
             });
-
             console.log('WebSocket connected successfully');
         }, function(error) {
             console.error("WebSocket connection error:", error);
-            // 연결 실패 시 재시도
             setTimeout(connect, 5000);
         });
     }
@@ -789,12 +630,10 @@
             type: type
         };
 
-        // 로그인하지 않은 경우에만 guestIdentifier 추가
         if (!isLoggedIn) {
             request.guestIdentifier = getGuestIdentifier();
         }
 
-        // CSRF 토큰을 헤더에 포함
         const headers = {};
         const csrfToken = document.querySelector('meta[name="_csrf"]');
         const csrfHeader = document.querySelector('meta[name="_csrf_header"]');
@@ -808,7 +647,6 @@
 
     function updateLikeCounts(response) {
         console.log('Received like update:', response);
-
         const targetType = response.targetType.toLowerCase();
         const likeCountElement = document.getElementById(`like-count-${targetType}-${response.targetId}`);
         const dislikeCountElement = document.getElementById(`dislike-count-${targetType}-${response.targetId}`);
@@ -822,7 +660,6 @@
     }
 
     function getGuestIdentifier() {
-        // 로컬 스토리지에서 게스트 식별자 가져오기 또는 생성
         let guestId = localStorage.getItem('guestIdentifier');
         if (!guestId) {
             guestId = 'guest-' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
@@ -831,10 +668,388 @@
         return guestId;
     }
 
-    // 기존 댓글 관련 함수들
+    // 댓글 관련 함수들
+    async function loadComments(page = 0) {
+        try {
+            const response = await fetch(`/boards/${slug}/${postId}/comments?page=${page}`);
+            const data = await response.json();
+
+            currentPage = data.currentPage;
+            totalComments = data.totalComments;
+            totalPages = data.totalPages;
+            hasNext = data.hasNext;
+            hasPrevious = data.hasPrevious;
+
+            renderComments(data.comments);
+            renderPagination();
+
+            // 댓글 수 업데이트
+            updateCommentCount();
+        } catch (error) {
+            console.error('댓글 로드 실패:', error);
+        }
+    }
+
+    function renderComments(comments) {
+        const container = document.getElementById('comments-container');
+
+        if (comments.length === 0) {
+            container.innerHTML = `
+                <div class="text-center py-8 text-muted-foreground">
+                    아직 댓글이 없습니다. 첫 번째 댓글을 작성해보세요!
+                </div>
+            `;
+            return;
+        }
+
+        commentCounter = 0;
+        // 각 최상위 댓글을 comment-thread로 감싸서 렌더링
+        container.innerHTML = comments.map(comment => `
+            <div class="comment-thread">
+                ${renderCommentWithChildren(comment)}
+            </div>
+        `).join('');
+    }
+
+    function renderCommentWithChildren(comment) {
+        let html = renderComment(comment);
+
+        // 자식 댓글들이 있으면 재귀적으로 렌더링
+        if (comment.children && comment.children.length > 0) {
+            html += comment.children.map(child => renderCommentWithChildren(child)).join('');
+        }
+
+        return html;
+    }
+
+    function renderComment(comment) {
+        commentCounter++;
+        const isGuest = comment.authorId === null;
+        const canDelete = isLoggedIn ?
+            (!isGuest && comment.authorId === currentUserId) :
+            false;
+
+        // 닉네임 표시 로직 개선
+        const displayName = comment.authorName || (isGuest ? comment.guestNickname : '알 수 없음');
+
+        // Depth별 스타일 클래스 결정
+        const depthClass = `comment-depth-${Math.min(comment.depth, 2)}`;
+
+        // 답글 표시 아이콘과 색상
+        const replyIndicators = {
+            1: { icon: '└', class: 'reply-indicator-depth-1', text: '답글' },
+            2: { icon: '└└', class: 'reply-indicator-depth-2', text: '답글' }
+        };
+
+        const replyInfo = replyIndicators[comment.depth];
+
+        let html = `
+            <div id="comment-${comment.id}" class="comment-item ${depthClass}">
+                <div class="comment-line">
+                    <div class="comment-meta">
+                        <span class="comment-number">#${commentCounter}</span>
+                        <span class="comment-author">${displayName}</span>
+                        ${isGuest ? '<span class="guest-badge">게스트</span>' : ''}
+                        ${replyInfo ? `<span class="reply-indicator ${replyInfo.class}">${replyInfo.icon} ${replyInfo.text}</span>` : ''}
+                    </div>
+                </div>
+                <div class="comment-content">${comment.content}</div>
+                <div class="comment-actions">
+                    <button onclick="sendLike(${comment.id}, 'COMMENT', 'LIKE')"
+                            class="action-button like-button"
+                            id="like-btn-comment-${comment.id}">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M7 10v12"></path>
+                            <path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2h0a3.13 3.13 0 0 1 3 3.88Z"></path>
+                        </svg>
+                        <span id="like-count-comment-${comment.id}">${comment.likeCount}</span>
+                    </button>
+                    <button onclick="sendLike(${comment.id}, 'COMMENT', 'DISLIKE')"
+                            class="action-button dislike-button"
+                            id="dislike-btn-comment-${comment.id}">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M17 14V2"></path>
+                            <path d="M9 18.12 10 14H4.17a2 2 0 0 1-1.92-2.56l2.33-8A2 2 0 0 1 6.5 2H20a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2.76a2 2 0 0 0-1.79 1.11L12 22h0a3.13 3.13 0 0 1-3-3.88Z"></path>
+                        </svg>
+                        <span id="dislike-count-comment-${comment.id}">${comment.dislikeCount}</span>
+                    </button>
+                    ${comment.depth < 2 ? `<button onclick="toggleReplyForm(${comment.id})" class="action-button">답글</button>` : ''}
+                    ${canDelete ? `<button onclick="deleteComment(${comment.id})" class="action-button delete-button">삭제</button>` : ''}
+                    ${isGuest ? `<button onclick="showDeleteForm(${comment.id})" class="action-button delete-button">삭제</button>` : ''}
+                </div>
+
+                ${isGuest ? `
+                <div id="delete-form-${comment.id}" class="delete-form hidden">
+                    <div id="error-${comment.id}" class="hidden p-2 rounded-md bg-destructive/10 border border-destructive/20 mb-3">
+                        <div class="flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-destructive mr-2">
+                                <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path>
+                                <path d="M12 9v4"></path>
+                                <path d="m12 17 .01 0"></path>
+                            </svg>
+                            <p class="text-sm text-destructive font-medium">비밀번호가 일치하지 않습니다.</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-2">
+                        <input type="password" id="delete-password-${comment.id}" placeholder="비밀번호 입력" class="flex h-8 flex-1 rounded-md border border-input bg-background px-3 py-2 text-xs" required />
+                        <button onclick="deleteGuestComment(${comment.id})" class="inline-flex items-center justify-center rounded-md text-xs font-medium bg-destructive text-destructive-foreground hover:bg-destructive/90 h-8 px-3 py-2">삭제</button>
+                        <button onclick="hideDeleteForm(${comment.id})" class="inline-flex items-center justify-center rounded-md text-xs font-medium border border-input bg-background hover:bg-accent h-8 px-3 py-2">취소</button>
+                    </div>
+                </div>
+                ` : ''}
+
+                ${comment.depth < 2 ? `
+                <div id="reply-form-${comment.id}" class="reply-form">
+                    ${isLoggedIn ? `
+                    <div class="space-y-3">
+                        <textarea id="reply-content-${comment.id}" placeholder="답글을 작성하세요" class="flex min-h-[60px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm" required></textarea>
+                        <div class="flex justify-end gap-2">
+                            <button onclick="toggleReplyForm(${comment.id})" class="inline-flex items-center justify-center rounded-md text-xs font-medium border border-input bg-background hover:bg-accent h-8 px-3 py-2">취소</button>
+                            <button onclick="createReply(${comment.id})" class="inline-flex items-center justify-center rounded-md text-xs font-medium bg-primary text-primary-foreground hover:bg-primary/90 h-8 px-3 py-2">답글 작성</button>
+                        </div>
+                    </div>
+                    ` : `
+                    <div class="space-y-3">
+                        <div class="grid grid-cols-2 gap-2">
+                            <input type="text" id="reply-nickname-${comment.id}" placeholder="닉네임" class="flex h-8 w-full rounded-md border border-input bg-background px-3 py-2 text-xs" required />
+                            <input type="password" id="reply-password-${comment.id}" placeholder="비밀번호" class="flex h-8 w-full rounded-md border border-input bg-background px-3 py-2 text-xs" required />
+                        </div>
+                        <textarea id="reply-content-${comment.id}" placeholder="답글을 작성하세요" class="flex min-h-[60px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm" required></textarea>
+                        <div class="flex justify-end gap-2">
+                            <button onclick="toggleReplyForm(${comment.id})" class="inline-flex items-center justify-center rounded-md text-xs font-medium border border-input bg-background hover:bg-accent h-8 px-3 py-2">취소</button>
+                            <button onclick="createGuestReply(${comment.id})" class="inline-flex items-center justify-center rounded-md text-xs font-medium bg-primary text-primary-foreground hover:bg-primary/90 h-8 px-3 py-2">답글 작성</button>
+                        </div>
+                    </div>
+                    `}
+                </div>
+                ` : ''}
+            </div>
+        `;
+
+        return html;
+    }
+
+    function renderPagination() {
+        const container = document.getElementById('pagination-container');
+
+        if (totalPages <= 1) {
+            container.innerHTML = '';
+            return;
+        }
+
+        let html = '<div class="flex items-center gap-2">';
+
+        // 이전 페이지
+        if (hasPrevious) {
+            html += `<button onclick="loadComments(${currentPage - 1})" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-3 py-2">이전</button>`;
+        }
+
+        // 페이지 번호들
+        const startPage = Math.max(0, currentPage - 2);
+        const endPage = Math.min(totalPages - 1, currentPage + 2);
+
+        for (let i = startPage; i <= endPage; i++) {
+            const isActive = i === currentPage;
+            html += `<button onclick="loadComments(${i})" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 h-9 px-3 py-2 ${isActive ? 'bg-primary text-primary-foreground' : 'border border-input bg-background hover:bg-accent hover:text-accent-foreground'}">${i + 1}</button>`;
+        }
+
+        // 다음 페이지
+        if (hasNext) {
+            html += `<button onclick="loadComments(${currentPage + 1})" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-3 py-2">다음</button>`;
+        }
+
+        html += '</div>';
+        container.innerHTML = html;
+    }
+
+    function updateCommentCount() {
+        document.getElementById('comment-count').textContent = totalComments;
+    }
+
+    // 댓글 작성
+    async function createComment(isGuest = false) {
+        const content = isGuest ?
+            document.getElementById('guest-comment-content').value :
+            document.getElementById('member-comment-content').value;
+
+        if (!content.trim()) {
+            alert('댓글 내용을 입력해주세요.');
+            return;
+        }
+
+        const data = { content };
+
+        if (isGuest) {
+            data.guestNickname = document.getElementById('guest-comment-nickname').value;
+            data.guestPassword = document.getElementById('guest-comment-password').value;
+
+            if (!data.guestNickname.trim() || !data.guestPassword.trim()) {
+                alert('닉네임과 비밀번호를 입력해주세요.');
+                return;
+            }
+        }
+
+        try {
+            const url = isGuest ?
+                `/boards/${slug}/${postId}/comments/guest` :
+                `/boards/${slug}/${postId}/comments/member`;
+
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            });
+
+            if (response.ok) {
+                // 폼 초기화
+                if (isGuest) {
+                    document.getElementById('guest-comment-form').reset();
+                } else {
+                    document.getElementById('member-comment-form').reset();
+                }
+
+                // 새 댓글이 추가되면 마지막 페이지로 이동할지 현재 페이지를 유지할지 결정
+                // 여기서는 현재 페이지를 유지하되, 댓글이 첫 페이지에 추가되는 경우 첫 페이지로 이동
+                const pageToLoad = currentPage === 0 ? 0 : currentPage;
+                await loadComments(pageToLoad);
+                alert('댓글이 작성되었습니다.');
+            } else {
+                alert('댓글 작성에 실패했습니다.');
+            }
+        } catch (error) {
+            console.error('댓글 작성 실패:', error);
+            alert('댓글 작성에 실패했습니다.');
+        }
+    }
+
+    // 답글 작성
+    async function createReply(parentId) {
+        const content = document.getElementById(`reply-content-${parentId}`).value;
+
+        if (!content.trim()) {
+            alert('답글 내용을 입력해주세요.');
+            return;
+        }
+
+        const data = { content };
+
+        try {
+            const response = await fetch(`/boards/${slug}/${postId}/comments/member?parentId=${parentId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            });
+
+            if (response.ok) {
+                toggleReplyForm(parentId);
+                await loadComments(currentPage);
+                alert('답글이 작성되었습니다.');
+            } else {
+                alert('답글 작성에 실패했습니다.');
+            }
+        } catch (error) {
+            console.error('답글 작성 실패:', error);
+            alert('답글 작성에 실패했습니다.');
+        }
+    }
+
+    // 게스트 답글 작성
+    async function createGuestReply(parentId) {
+        const content = document.getElementById(`reply-content-${parentId}`).value;
+        const guestNickname = document.getElementById(`reply-nickname-${parentId}`).value;
+        const guestPassword = document.getElementById(`reply-password-${parentId}`).value;
+
+        if (!content.trim() || !guestNickname.trim() || !guestPassword.trim()) {
+            alert('모든 필드를 입력해주세요.');
+            return;
+        }
+
+        const data = { content, guestNickname, guestPassword };
+
+        try {
+            const response = await fetch(`/boards/${slug}/${postId}/comments/guest?parentId=${parentId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            });
+
+            if (response.ok) {
+                toggleReplyForm(parentId);
+                await loadComments(currentPage);
+                alert('답글이 작성되었습니다.');
+            } else {
+                alert('답글 작성에 실패했습니다.');
+            }
+        } catch (error) {
+            console.error('답글 작성 실패:', error);
+            alert('답글 작성에 실패했습니다.');
+        }
+    }
+
+    // 댓글 삭제
+    async function deleteComment(commentId) {
+        if (!confirm('정말 삭제하시겠습니까?')) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/boards/${slug}/${postId}/comments/${commentId}`, {
+                method: 'DELETE'
+            });
+
+            if (response.ok) {
+                await loadComments(currentPage);
+                alert('댓글이 삭제되었습니다.');
+            } else {
+                alert('댓글 삭제에 실패했습니다.');
+            }
+        } catch (error) {
+            console.error('댓글 삭제 실패:', error);
+            alert('댓글 삭제에 실패했습니다.');
+        }
+    }
+
+    // 게스트 댓글 삭제
+    async function deleteGuestComment(commentId) {
+        const password = document.getElementById(`delete-password-${commentId}`).value;
+
+        if (!password.trim()) {
+            alert('비밀번호를 입력해주세요.');
+            return;
+        }
+
+        try {
+            const response = await fetch(`/boards/${slug}/${postId}/comments/${commentId}/guest`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'text/plain',
+                },
+                body: password
+            });
+
+            if (response.ok) {
+                hideDeleteForm(commentId);
+                await loadComments(currentPage);
+                alert('댓글이 삭제되었습니다.');
+            } else {
+                showError(commentId);
+                document.getElementById(`delete-password-${commentId}`).value = '';
+            }
+        } catch (error) {
+            console.error('댓글 삭제 실패:', error);
+            alert('댓글 삭제에 실패했습니다.');
+        }
+    }
+
+    // UI 조작 함수들
     function toggleReplyForm(commentId) {
-        // 답글은 최상위 댓글에만 작성 가능 (3depth 제한)
-        const replyForm = document.getElementById('reply-form-' + commentId);
+        const replyForm = document.getElementById(`reply-form-${commentId}`);
         if (replyForm.style.display === 'none' || replyForm.style.display === '') {
             replyForm.style.display = 'block';
         } else {
@@ -843,81 +1058,53 @@
     }
 
     function showDeleteForm(commentId) {
-        const deleteForm = document.getElementById('delete-form-' + commentId);
+        const deleteForm = document.getElementById(`delete-form-${commentId}`);
         deleteForm.classList.remove('hidden');
-
-        // URL에서 에러 파라미터 확인하여 해당 댓글에 에러 표시
-        const urlParams = new URLSearchParams(window.location.search);
-        const errorCommentId = urlParams.get('errorCommentId');
-        if (errorCommentId && errorCommentId == commentId) {
-            showError(commentId);
-        }
     }
 
     function hideDeleteForm(commentId) {
-        const deleteForm = document.getElementById('delete-form-' + commentId);
+        const deleteForm = document.getElementById(`delete-form-${commentId}`);
         deleteForm.classList.add('hidden');
         hideError(commentId);
     }
 
     function showError(commentId) {
-        const errorDiv = document.getElementById('error-' + commentId);
+        const errorDiv = document.getElementById(`error-${commentId}`);
         if (errorDiv) {
             errorDiv.classList.remove('hidden');
         }
     }
 
     function hideError(commentId) {
-        const errorDiv = document.getElementById('error-' + commentId);
+        const errorDiv = document.getElementById(`error-${commentId}`);
         if (errorDiv) {
             errorDiv.classList.add('hidden');
         }
     }
 
-    function scrollToElement(elementId) {
-        const element = document.getElementById(elementId);
-        if (element) {
-            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-    }
-
-    function highlightElement(elementId) {
-        const element = document.getElementById(elementId);
-        if (element) {
-            element.classList.add('highlight-comment');
-            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-
-            // 2초 후 하이라이트 제거
-            setTimeout(() => {
-                element.classList.remove('highlight-comment');
-            }, 2000);
-        }
-    }
-
-    // 페이지 로드 시 WebSocket 연결 및 기존 로직
+    // 이벤트 리스너 등록
     document.addEventListener('DOMContentLoaded', function() {
         // WebSocket 연결
         connect();
 
-        const urlParams = new URLSearchParams(window.location.search);
-        const errorCommentId = urlParams.get('errorCommentId');
+        // 초기 댓글 로드
+        loadComments(0);
 
-        if (errorCommentId) {
-            // 에러가 있는 경우에만 하이라이트 적용
-            showDeleteForm(errorCommentId);
-            showError(errorCommentId);
-            highlightElement('comment-' + errorCommentId);
+        // 댓글 작성 폼 이벤트
+        const memberForm = document.getElementById('member-comment-form');
+        if (memberForm) {
+            memberForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                createComment(false);
+            });
+        }
 
-            // URL에서 파라미터 제거
-            const url = new URL(window.location);
-            url.searchParams.delete('errorCommentId');
-            window.history.replaceState({}, document.title, url);
-        } else if (window.location.hash) {
-            // 일반적인 앵커 이동 시에는 하이라이트 없이 스크롤만
-            const anchorId = window.location.hash.substring(1);
-            setTimeout(() => {
-                scrollToElement(anchorId);
-            }, 100);
+        const guestForm = document.getElementById('guest-comment-form');
+        if (guestForm) {
+            guestForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                createComment(true);
+            });
         }
     });
 
@@ -930,7 +1117,7 @@
             console.log('WebSocket disconnected, attempting to reconnect...');
             connect();
         }
-    }, 30000); // 30초마다 연결 상태 확인
+    }, 30000);
 </script>
 </body>
 </html>
