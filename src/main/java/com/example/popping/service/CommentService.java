@@ -1,6 +1,8 @@
 package com.example.popping.service;
 
-import java.util.List;
+import java.math.BigInteger;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -11,6 +13,7 @@ import com.example.popping.domain.Comment;
 import com.example.popping.domain.Post;
 import com.example.popping.domain.User;
 import com.example.popping.domain.UserPrincipal;
+import com.example.popping.dto.CommentPageResponse;
 import com.example.popping.dto.CommentResponse;
 import com.example.popping.dto.GuestCommentCreateRequest;
 import com.example.popping.dto.MemberCommentCreateRequest;
@@ -18,11 +21,14 @@ import com.example.popping.exception.CustomAppException;
 import com.example.popping.exception.ErrorType;
 import com.example.popping.repository.CommentRepository;
 
+import static com.example.popping.dto.CommentResponse.mapToResponse;
+
 @Service
 @Transactional
 @RequiredArgsConstructor
 public class CommentService {
 
+    public static final int COMMENTS_SIZE = 100;
     private final PostService postService;
     private final UserService userService;
     private final CommentRepository commentRepository;
@@ -91,6 +97,28 @@ public class CommentService {
     }
 
     @Transactional(readOnly = true)
+    public CommentPageResponse getCommentPage(Long postId, int page) {
+        Post post = postService.getPost(postId);
+        int totalComments = post.getCommentCount();
+
+        int totalPages = (int) Math.ceil((double) totalComments / COMMENTS_SIZE);
+        boolean hasNext = page < totalPages - 1;
+        boolean hasPrevious = page > 0;
+
+        List<Object[]> pagedCommentTree = commentRepository.findPagedCommentTree(postId, COMMENTS_SIZE, page * COMMENTS_SIZE);
+        List<CommentResponse> commentResponses = buildCommentTree(pagedCommentTree);
+
+        return CommentPageResponse.builder()
+                .comments(commentResponses)
+                .totalComments(totalComments)
+                .currentPage(page)
+                .totalPages(totalPages)
+                .hasNext(hasNext)
+                .hasPrevious(hasPrevious)
+                .build();
+    }
+
+    @Transactional(readOnly = true)
     public List<CommentResponse> getCommentsByPostId(Long postId) {
         Post post = postService.getPost(postId);
 
@@ -131,5 +159,37 @@ public class CommentService {
         }
 
         return null;
+    }
+
+    public List<CommentResponse> buildCommentTree(List<Object[]> rows) {
+        Set<Long> userIds = rows.stream()
+                .map(row -> row[6])
+                .filter(Objects::nonNull)
+                .map(userId -> (Long) userId)
+                .collect(Collectors.toSet());
+
+        Map<Long, String> userIdToNickname = userService
+                .getUserIdToNicknameMap(userIds);
+
+        Map<Long, CommentResponse> map = new LinkedHashMap<>();
+        List<CommentResponse> result = new ArrayList<>();
+
+        for (Object[] row : rows) {
+            CommentResponse dto = mapToResponse(row, userIdToNickname);
+            map.put(dto.getId(), dto);
+
+            if (dto.getParentId() == null) {
+                result.add(dto);
+            } else {
+                CommentResponse parent = map.get(dto.getParentId());
+                if (parent != null) {
+                    parent.getChildren().add(dto);
+                } else {
+                    result.add(dto); // Orphaned reply, treat as top-level
+                }
+            }
+        }
+
+        return result;
     }
 }
