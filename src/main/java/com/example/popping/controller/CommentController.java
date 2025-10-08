@@ -1,5 +1,8 @@
 package com.example.popping.controller;
 
+import java.util.List;
+
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
@@ -10,105 +13,76 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 import com.example.popping.domain.UserPrincipal;
+import com.example.popping.dto.CommentPageResponse;
 import com.example.popping.dto.GuestCommentCreateRequest;
 import com.example.popping.dto.MemberCommentCreateRequest;
 import com.example.popping.service.CommentService;
 
-@Controller
+@RestController
 @RequiredArgsConstructor
 @RequestMapping("/boards/{slug}/{postId}/comments")
 public class CommentController {
 
     private final CommentService commentService;
 
+    @GetMapping
+    public CommentPageResponse getComments(
+            @PathVariable Long postId,
+            @RequestParam int page
+    ) {
+        return commentService.getCommentPage(postId, page);
+    }
+
     @PostMapping("/member")
-    public String createMemberComment(@PathVariable String slug,
-                                      @PathVariable Long postId,
-                                      @Valid @ModelAttribute MemberCommentCreateRequest dto,
-                                      BindingResult bindingResult,
-                                      @RequestParam(required = false) Long parentId,
-                                      @AuthenticationPrincipal UserPrincipal user) {
-        if (bindingResult.hasErrors()) {
-            return "redirect:/boards/" + slug + "/" + postId + "#comment-form";
-        }
-
-        Long newCommentId = commentService.createMemberComment(postId, dto, user, parentId);
-
-        if (parentId != null) {
-            return "redirect:/boards/" + slug + "/" + postId + "#comment-" + parentId;
-        } else {
-            return "redirect:/boards/" + slug + "/" + postId + "#comment-" + newCommentId;
+    public ResponseEntity<?> createMemberComment(@PathVariable String slug,
+                                                 @PathVariable Long postId,
+                                                 @Valid @RequestBody MemberCommentCreateRequest dto,
+                                                 @RequestParam(required = false) Long parentId,
+                                                 @AuthenticationPrincipal UserPrincipal user) {
+        try {
+            Long newCommentId = commentService.createMemberComment(postId, dto, user, parentId);
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
         }
     }
 
     @PostMapping("/guest")
-    public String createGuestComment(@PathVariable String slug,
-                                     @PathVariable Long postId,
-                                     @Valid @ModelAttribute GuestCommentCreateRequest dto,
-                                     BindingResult bindingResult,
-                                     @RequestParam(required = false) Long parentId) {
-        if (bindingResult.hasErrors()) {
-            return "redirect:/boards/" + slug + "/" + postId + "#comment-form";
-        }
-
-        Long newCommentId = commentService.createGuestComment(postId, dto, parentId);
-
-        if (parentId != null) {
-            return "redirect:/boards/" + slug + "/" + postId + "#comment-" + parentId;
-        } else {
-            return "redirect:/boards/" + slug + "/" + postId + "#comment-" + newCommentId;
-        }
-    }
-
-    @PostMapping("/{commentId}/delete")
-    public String deleteComment(@PathVariable String slug,
-                                @PathVariable Long postId,
-                                @PathVariable Long commentId,
-                                @AuthenticationPrincipal UserPrincipal user) {
-        Long parentCommentId = commentService.getParentCommentId(commentId);
-        Long previousCommentId = null;
-
-        if (parentCommentId == null) {
-            previousCommentId = commentService.getPreviousCommentId(postId, commentId);
-        }
-
-        commentService.deleteComment(commentId, user);
-
-        if (parentCommentId != null) {
-            return "redirect:/boards/" + slug + "/" + postId + "#comment-" + parentCommentId;
-        } else if (previousCommentId != null) {
-            return "redirect:/boards/" + slug + "/" + postId + "#comment-" + previousCommentId;
-        } else {
-            return "redirect:/boards/" + slug + "/" + postId + "#comments-section";
-        }
-    }
-
-    @PostMapping("/{commentId}/delete-guest")
-    public String deleteCommentAsGuest(@PathVariable String slug,
-                                       @PathVariable Long postId,
-                                       @PathVariable Long commentId,
-                                       @RequestParam String password,
-                                       RedirectAttributes redirectAttributes) {
+    public ResponseEntity<?> createGuestComment(@PathVariable String slug,
+                                                @PathVariable Long postId,
+                                                @Valid @RequestBody GuestCommentCreateRequest dto,
+                                                @RequestParam(required = false) Long parentId) {
         try {
-            Long parentCommentId = commentService.getParentCommentId(commentId);
-            Long previousCommentId = null;
+            Long newCommentId = commentService.createGuestComment(postId, dto, parentId);
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
 
-            if (parentCommentId == null) {
-                previousCommentId = commentService.getPreviousCommentId(postId, commentId);
-            }
+    @DeleteMapping("/{commentId}")
+    public ResponseEntity<?> deleteComment(@PathVariable String slug,
+                                           @PathVariable Long postId,
+                                           @PathVariable Long commentId,
+                                           @AuthenticationPrincipal UserPrincipal user) {
+        try {
+            commentService.deleteComment(commentId, user);
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
 
+    @DeleteMapping("/{commentId}/guest")
+    public ResponseEntity<?> deleteCommentAsGuest(@PathVariable String slug,
+                                                  @PathVariable Long postId,
+                                                  @PathVariable Long commentId,
+                                                  @RequestBody String password) {
+        try {
             commentService.deleteCommentAsGuest(commentId, password);
-
-            if (parentCommentId != null) {
-                return "redirect:/boards/" + slug + "/" + postId + "#comment-" + parentCommentId;
-            } else if (previousCommentId != null) {
-                return "redirect:/boards/" + slug + "/" + postId + "#comment-" + previousCommentId;
-            } else {
-                return "redirect:/boards/" + slug + "/" + postId + "#comments-section";
-            }
-        } catch (AccessDeniedException e) {
-            redirectAttributes.addAttribute("errorCommentId", commentId);
-            return "redirect:/boards/" + slug + "/" + postId + "#comment-" + commentId;
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
         }
     }
 }

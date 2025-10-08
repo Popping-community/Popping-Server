@@ -1,6 +1,6 @@
 package com.example.popping.service;
 
-import java.util.Optional;
+import java.util.*;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -47,5 +47,17 @@ public class UserService {
         return userRepository.findById(userId)
                 .orElseThrow(() -> new CustomAppException(ErrorType.USER_NOT_FOUND,
                         "사용자를 찾을 수 없습니다: " + userId));
+    }
+
+    public Map<Long, String> getUserIdToNicknameMap(Set<Long> userIds) {
+        List<Object[]> results = userRepository.findUserIdAndNicknameByIds(userIds);
+
+        Map<Long, String> userIdToNickname = new HashMap<>();
+        for (Object[] row : results) {
+            Long id = (Long) row[0];
+            String nickname = (String) row[1];
+            userIdToNickname.put(id, nickname);
+        }
+        return userIdToNickname;
     }
 }

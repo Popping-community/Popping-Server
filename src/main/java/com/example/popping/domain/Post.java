@@ -71,26 +71,6 @@ public class Post extends BaseEntity {
         }
     }
 
-    public void increaseLikeCount() {
-        this.likeCount++;
-    }
-
-    public void decreaseLikeCount() {
-        if (this.likeCount > 0) {
-            this.likeCount--;
-        }
-    }
-
-    public void increaseDislikeCount() {
-        this.dislikeCount++;
-    }
-
-    public void decreaseDislikeCount() {
-        if (this.dislikeCount > 0) {
-            this.dislikeCount--;
-        }
-    }
-
     public boolean isAuthor(User user) {
         return author != null && user != null && author.getId().equals(user.getId());
     }
