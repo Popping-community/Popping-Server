@@ -32,6 +32,7 @@ public class GuestCommentCreateRequest {
                 .guestPasswordHash(passwordHash)
                 .post(post)
                 .parent(parent)
+                .depth(parent != null ? parent.getDepth() + 1 : 0)
                 .build();
     }
 }

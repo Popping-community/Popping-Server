@@ -25,6 +25,7 @@ public class MemberCommentCreateRequest {
                 .author(author)
                 .post(post)
                 .parent(parent)
+                .depth(parent != null ? parent.getDepth() + 1 : 0)
                 .build();
     }
 }
