@@ -1,4 +1,4 @@
-package com.example.popping.config;
+package com.example.popping.config.aws;
 
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.AWSStaticCredentialsProvider;

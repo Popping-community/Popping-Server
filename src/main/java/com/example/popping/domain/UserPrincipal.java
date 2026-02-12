@@ -8,11 +8,12 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.Collections;
 
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Getter
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class UserPrincipal implements UserDetails, Serializable {
 
     private Long userId;
