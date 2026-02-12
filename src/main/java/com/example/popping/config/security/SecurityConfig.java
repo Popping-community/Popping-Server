@@ -1,4 +1,4 @@
-package com.example.popping.config;
+package com.example.popping.config.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

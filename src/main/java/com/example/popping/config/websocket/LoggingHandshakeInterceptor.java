@@ -1,4 +1,4 @@
-package com.example.popping.config;
+package com.example.popping.config.websocket;
 
 import java.util.Map;
 
