@@ -61,8 +61,15 @@ dependencies {
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	runtimeOnly 'com.mysql:mysql-connector-j'
+	testImplementation 'org.mockito:mockito-core:5.11.0'
+	testImplementation 'org.springframework.security:spring-security-test'
 }
 
+tasks.withType(Test).configureEach {
+	useJUnitPlatform()
+	// 직접적인 javaagent 지정 대신, JVM에게 동적 로딩을 허용하라고만 명시합니다.
+	jvmArgs("-XX:+EnableDynamicAgentLoading")
+}
 checkstyle {
 	configFile = file("${rootDir}/naver-checkstyle.xml")
 	configProperties = ["suppressionFile": "${rootDir}/naver-checkstyle-suppressions.xml"]
