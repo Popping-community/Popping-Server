@@ -2,16 +2,13 @@ package com.example.popping.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 import com.example.popping.domain.Comment;
 import com.example.popping.domain.Post;
 
 @Getter
-@Setter
 @NoArgsConstructor
 public class GuestCommentCreateRequest {
 

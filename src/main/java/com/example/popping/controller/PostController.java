@@ -1,12 +1,10 @@
 package com.example.popping.controller;
 
-import java.util.List;
-
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
 import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.*;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -117,10 +115,10 @@ public class PostController {
 
     @GetMapping("/{postId}/edit-guest")
     public String editGuestPostForm(@ModelAttribute GuestPostUpdateRequest guestPostUpdateRequest,
-                               @PathVariable String slug,
-                               @PathVariable Long postId,
-                               HttpSession session,
-                               Model model) {
+                                    @PathVariable String slug,
+                                    @PathVariable Long postId,
+                                    HttpSession session,
+                                    Model model) {
         Boolean verified = (Boolean) session.getAttribute("verifiedPost:" + postId);
         if (verified == null || !verified) {
             return "redirect:/boards/" + slug + "/" + postId + "/edit-password";
@@ -138,7 +136,7 @@ public class PostController {
                                      @Valid @ModelAttribute MemberPostUpdateRequest dto,
                                      BindingResult bindingResult,
                                      Model model) {
-        if(bindingResult.hasErrors()){
+        if (bindingResult.hasErrors()) {
             PostResponse postResponse = postService.getMemberPostForEdit(postId, loginUser);
             model.addAttribute("form", postResponse);
             model.addAttribute("slug", slug);
@@ -155,7 +153,7 @@ public class PostController {
                                     BindingResult bindingResult,
                                     Model model,
                                     HttpSession session) {
-        if(bindingResult.hasErrors()){
+        if (bindingResult.hasErrors()) {
             PostResponse postResponse = postService.getPostResponse(postId);
             model.addAttribute("form", postResponse);
             model.addAttribute("slug", slug);

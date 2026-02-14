@@ -4,14 +4,12 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 import com.example.popping.domain.Comment;
 import com.example.popping.domain.Post;
 import com.example.popping.domain.User;
 
 @Getter
-@Setter
 @NoArgsConstructor
 public class MemberCommentCreateRequest {
 

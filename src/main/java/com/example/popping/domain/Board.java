@@ -1,8 +1,5 @@
 package com.example.popping.domain;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -16,7 +13,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class Board extends BaseEntity {
 
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private String name;
@@ -38,5 +36,4 @@ public class Board extends BaseEntity {
     public boolean isCreatedBy(User user) {
         return createdBy != null && user != null && createdBy.getId().equals(user.getId());
     }
-
 }
