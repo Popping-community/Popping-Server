@@ -7,7 +7,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 
-import com.example.popping.domain.*;
+import com.example.popping.domain.Board;
+import com.example.popping.domain.Post;
+import com.example.popping.domain.User;
+import com.example.popping.domain.UserPrincipal;
 import com.example.popping.dto.*;
 import com.example.popping.exception.CustomAppException;
 import com.example.popping.exception.ErrorType;

@@ -1,13 +1,12 @@
 package com.example.popping.dto;
 
-import lombok.Builder;
-import lombok.Getter;
-
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+
+import lombok.Builder;
+import lombok.Getter;
 
 import com.example.popping.domain.Comment;
 

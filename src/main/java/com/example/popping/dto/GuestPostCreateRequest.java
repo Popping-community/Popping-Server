@@ -8,7 +8,6 @@ import lombok.Setter;
 
 import com.example.popping.domain.Board;
 import com.example.popping.domain.Post;
-import com.example.popping.domain.User;
 
 @Getter
 @Setter

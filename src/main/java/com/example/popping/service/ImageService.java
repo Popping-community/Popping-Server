@@ -1,5 +1,25 @@
 package com.example.popping.service;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLDecoder;
+import java.util.*;
+
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.CannedAccessControlList;
 import com.amazonaws.services.s3.model.DeleteObjectRequest;
@@ -13,26 +33,6 @@ import com.example.popping.dto.ImageResponse;
 import com.example.popping.exception.CustomAppException;
 import com.example.popping.exception.ErrorType;
 import com.example.popping.repository.ImageRepository;
-
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLDecoder;
-import java.util.*;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
 
 @Slf4j
 @Service
@@ -57,7 +57,7 @@ public class ImageService {
     }
 
     public String upload(MultipartFile image) {
-        if(image.isEmpty() || Objects.isNull(image.getOriginalFilename())){
+        if (image.isEmpty() || Objects.isNull(image.getOriginalFilename())) {
             throw new CustomAppException(ErrorType.EMPTY_IMAGE_FILE);
         }
         return this.uploadImage(image);
@@ -102,15 +102,15 @@ public class ImageService {
         metadata.setContentLength(bytes.length);
         ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(bytes);
 
-        try{
+        try {
             PutObjectRequest putObjectRequest =
                     new PutObjectRequest(bucketName, s3FileName, byteArrayInputStream, metadata)
                             .withCannedAcl(CannedAccessControlList.PublicRead);
             amazonS3.putObject(putObjectRequest);
-        }catch (Exception e){
+        } catch (Exception e) {
             throw new CustomAppException(ErrorType.PUT_OBJECT_EXCEPTION,
                     "S3에 이미지를 업로드하는 중 문제가 발생했습니다: " + originalFilename);
-        }finally {
+        } finally {
             byteArrayInputStream.close();
             is.close();
         }
@@ -127,22 +127,22 @@ public class ImageService {
         }
     }
 
-    public void deleteImageFromS3(String imageAddress){
+    public void deleteImageFromS3(String imageAddress) {
         String key = getKeyFromImageAddress(imageAddress);
-        try{
+        try {
             amazonS3.deleteObject(new DeleteObjectRequest(bucketName, key));
-        }catch (Exception e){
+        } catch (Exception e) {
             throw new CustomAppException(ErrorType.IO_EXCEPTION_ON_IMAGE_DELETE,
                     "이미지 삭제 중 문제가 발생했습니다: " + imageAddress);
         }
     }
 
-    private String getKeyFromImageAddress(String imageAddress){
-        try{
+    private String getKeyFromImageAddress(String imageAddress) {
+        try {
             URL url = new URL(imageAddress);
             String decodingKey = URLDecoder.decode(url.getPath(), "UTF-8");
             return decodingKey.substring(1);
-        }catch (MalformedURLException | UnsupportedEncodingException e){
+        } catch (MalformedURLException | UnsupportedEncodingException e) {
             throw new CustomAppException(ErrorType.IO_EXCEPTION_ON_IMAGE_DELETE,
                     "이미지 주소가 잘못되었습니다: " + imageAddress);
         }
