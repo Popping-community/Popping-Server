@@ -1,39 +1,39 @@
 package com.example.popping.dto;
 
-import lombok.Builder;
-import lombok.Getter;
-
 import com.example.popping.domain.Post;
 
-@Getter
-@Builder
-public class PostResponse {
+public record PostResponse(
 
-    private Long id;
-    private String title;
-    private String content;
-    private String authorName;
-    private String boardName;
-    private Long authorId;
-    private String guestNickname;
-    private Long viewCount;
-    private int commentCount;
-    private int likeCount;
-    private int dislikeCount;
+        Long id,
+        String title,
+        String content,
+        String authorName,
+        String boardName,
+        Long authorId,
+        String guestNickname,
+        Long viewCount,
+        int commentCount,
+        int likeCount,
+        int dislikeCount
 
+) {
     public static PostResponse from(Post post) {
-        return PostResponse.builder()
-                .id(post.getId())
-                .title(post.getTitle())
-                .content(post.getContent())
-                .authorName(post.isGuest() ? post.getGuestNickname() : post.getAuthor().getNickname())
-                .boardName(post.getBoard().getName())
-                .authorId(post.isGuest() ? null : post.getAuthor().getId())
-                .guestNickname(post.isGuest() ? post.getGuestNickname() : null)
-                .viewCount(post.getViewCount())
-                .commentCount(post.getCommentCount())
-                .likeCount(post.getLikeCount())
-                .dislikeCount(post.getDislikeCount())
-                .build();
+
+        boolean isGuest = post.isGuest();
+
+        return new PostResponse(
+                post.getId(),
+                post.getTitle(),
+                post.getContent(),
+                isGuest ? post.getGuestNickname() : post.getAuthor().getNickname(),
+                post.getBoard().getName(),
+                isGuest ? null : post.getAuthor().getId(),
+                isGuest ? post.getGuestNickname() : null,
+                post.getViewCount(),
+                post.getCommentCount(),
+                post.getLikeCount(),
+                post.getDislikeCount()
+        );
     }
 }
+

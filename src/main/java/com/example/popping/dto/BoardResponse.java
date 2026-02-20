@@ -1,27 +1,26 @@
 package com.example.popping.dto;
 
-import lombok.Builder;
-import lombok.Getter;
-
 import com.example.popping.domain.Board;
 
-@Getter
-@Builder
-public class BoardResponse {
+public record BoardResponse(
 
-    private String name;
-    private String description;
-    private String slug;
-    private String createdBy;
-    private Long createdById;
+        String name,
+        String description,
+        String slug,
+        String createdBy,
+        Long createdById
 
+) {
     public static BoardResponse from(Board board) {
-        return BoardResponse.builder()
-                .name(board.getName())
-                .description(board.getDescription())
-                .slug(board.getSlug())
-                .createdBy(board.getCreatedBy().getNickname())
-                .createdById(board.getCreatedBy().getId())
-                .build();
+        if (board == null) return null;
+
+        var user = board.getCreatedBy();
+        return new BoardResponse(
+                board.getName(),
+                board.getDescription(),
+                board.getSlug(),
+                user != null ? user.getNickname() : null,
+                user != null ? user.getId() : null
+        );
     }
 }
