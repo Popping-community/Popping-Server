@@ -75,7 +75,7 @@ public class ImageService {
     private void validateImageFileExtention(String filename) {
         int lastDotIndex = filename.lastIndexOf(".");
         if (lastDotIndex == -1) {
-            throw new CustomAppException(ErrorType.NO_FILE_EXTENTION,
+            throw new CustomAppException(ErrorType.NO_FILE_EXTENSION,
                     "파일 확장자가 없습니다. 올바른 이미지 파일을 업로드해주세요.");
         }
 
@@ -83,7 +83,7 @@ public class ImageService {
         List<String> allowedExtentionList = Arrays.asList("jpg", "jpeg", "png", "gif");
 
         if (!allowedExtentionList.contains(extention)) {
-            throw new CustomAppException(ErrorType.INVALID_FILE_EXTENTION,
+            throw new CustomAppException(ErrorType.INVALID_FILE_EXTENSION,
                     "지원하는 이미지 파일 확장자는 " + String.join(", ", allowedExtentionList) + "입니다.");
         }
     }

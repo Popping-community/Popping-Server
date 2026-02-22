@@ -10,41 +10,43 @@ import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 
 import com.example.popping.domain.User;
+import com.example.popping.domain.UserRole;
 import com.example.popping.dto.JoinRequest;
 import com.example.popping.exception.CustomAppException;
 import com.example.popping.exception.ErrorType;
+import com.example.popping.repository.UserIdNicknameView;
 import com.example.popping.repository.UserRepository;
 
 @Service
-@Transactional
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
-    @Transactional(readOnly = true)
-    public boolean checkLoginIdDuplicate(String loginId) {
+    public boolean isLoginIdDuplicated(String loginId) {
         return userRepository.existsByLoginId(loginId);
     }
 
-    @Transactional(readOnly = true)
-    public boolean checkNicknameDuplicate(String nickname) {
+    public boolean isNicknameDuplicated(String nickname) {
         return userRepository.existsByNickname(nickname);
     }
 
+    @Transactional
     public void join(JoinRequest req) {
-        validateDuplicate(req);
-        userRepository.save(req.toEntity(passwordEncoder.encode(req.getPassword())));
-    }
+        validateNoDuplicate(req);
 
-    private void validateDuplicate(JoinRequest req) {
-        if (checkLoginIdDuplicate(req.getLoginId())) {
-            throw new CustomAppException(ErrorType.DUPLICATE_LOGIN_ID, "이미 사용 중인 아이디: " + req.getLoginId());
-        }
-        if (checkNicknameDuplicate(req.getNickname())) {
-            throw new CustomAppException(ErrorType.DUPLICATE_NICKNAME, "이미 사용 중인 닉네임: " + req.getNickname());
-        }
+        String encodedPassword = passwordEncoder.encode(req.password());
+
+        User user = User.create(
+                req.loginId(),
+                encodedPassword,
+                req.nickname(),
+                UserRole.USER
+        );
+
+        userRepository.save(user);
     }
 
     public User getLoginUserById(Long userId) {
@@ -54,10 +56,23 @@ public class UserService {
     }
 
     public Map<Long, String> getUserIdToNicknameMap(Set<Long> userIds) {
-        return userRepository.findUserIdAndNicknameByIds(userIds).stream()
-                .collect(Collectors.toMap(
-                        row -> (Long) row[0],
-                        row -> (String) row[1]
-                ));
+        if (userIds == null || userIds.isEmpty()) {
+            return Map.of();
+        }
+
+        return userRepository.findIdAndNicknameByIds(userIds).stream()
+                .collect(Collectors.toMap(UserIdNicknameView::getId, UserIdNicknameView::getNickname));
+    }
+
+    private void validateNoDuplicate(JoinRequest req) {
+        String loginId = req.loginId();
+        String nickname = req.nickname();
+
+        if (isLoginIdDuplicated(loginId)) {
+            throw new CustomAppException(ErrorType.DUPLICATE_LOGIN_ID, "이미 사용 중인 아이디: " + loginId);
+        }
+        if (isNicknameDuplicated(nickname)) {
+            throw new CustomAppException(ErrorType.DUPLICATE_NICKNAME, "이미 사용 중인 닉네임: " + nickname);
+        }
     }
 }
