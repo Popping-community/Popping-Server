@@ -32,11 +32,7 @@ class CustomUserDetailsServiceTest {
     void loadUserByUsername_Success() {
         // given
         String loginId = "testUser";
-        User user = User.builder()
-                .loginId(loginId)
-                .passwordHash("hashedPassword")
-                .nickname("tester")
-                .build();
+        User user = User.create(loginId, "hashedPassword", "tester", null);
 
         when(userRepository.findByLoginId(loginId)).thenReturn(Optional.of(user));
 
