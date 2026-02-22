@@ -13,6 +13,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
 import com.example.popping.domain.User;
 import com.example.popping.domain.UserPrincipal;
+import com.example.popping.domain.UserRole;
 import com.example.popping.repository.UserRepository;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -32,11 +33,7 @@ class CustomUserDetailsServiceTest {
     void loadUserByUsername_Success() {
         // given
         String loginId = "testUser";
-        User user = User.builder()
-                .loginId(loginId)
-                .passwordHash("hashedPassword")
-                .nickname("tester")
-                .build();
+        User user = User.create(loginId, "hashedPassword", "tester", UserRole.USER);
 
         when(userRepository.findByLoginId(loginId)).thenReturn(Optional.of(user));
 

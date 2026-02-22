@@ -95,7 +95,7 @@
                     <p class="text-sm text-muted-foreground">게시판 정보를 수정합니다.</p>
                 </div>
                 <div class="p-6 pt-0">
-                    <form th:action="@{/boards/{slug}/edit(slug=${form.slug})}" th:object="${boardUpdateRequest}" method="post" class="space-y-4">
+                    <form th:action="@{/boards/{slug}/edit(slug=${form.slug})}" th:object="${form}" method="post" class="space-y-4">
                         <!-- 게시판 이름 필드 -->
                         <div class="space-y-2">
                             <label for="name" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">게시판 이름</label>

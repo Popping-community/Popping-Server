@@ -28,64 +28,83 @@ public class PostService {
     private final PasswordEncoder passwordEncoder;
     private final PostRepository postRepository;
 
-    public Long createMemberPost(String slug, MemberPostCreateRequest dto, UserPrincipal userPrincipal) {
-        Board board = boardService.getBoard(slug);
+    public Long createMemberPost(String slug,
+                                 MemberPostCreateRequest dto,
+                                 UserPrincipal principal) {
 
-        User user = userService.getLoginUserById(userPrincipal.getUserId());
-        Post post = dto.toEntity(user, board);
-        postRepository.save(post);
+        Board board = getBoard(slug);
+        User user = getUser(principal);
 
-        imageService.linkToPostAndMakePermanent(dto.getContent(), post);
+        Post post = Post.createMemberPost(dto.title(), dto.content(), user, board);
+        post = postRepository.save(post);
+
+        linkImages(dto.content(), post);
 
         return post.getId();
     }
 
     public Long createGuestPost(String slug, GuestPostCreateRequest dto) {
-        Board board = boardService.getBoard(slug);
 
-        Post post = dto.toEntity(board, passwordEncoder.encode(dto.getGuestPassword()));
-        postRepository.save(post);
+        Board board = getBoard(slug);
 
-        imageService.linkToPostAndMakePermanent(dto.getContent(), post);
+        String encodedPassword = passwordEncoder.encode(dto.guestPassword());
+
+        Post post = Post.createGuestPost(
+                dto.title(),
+                dto.content(),
+                dto.guestNickname(),
+                encodedPassword,
+                board
+        );
+
+        post = postRepository.save(post);
+
+        linkImages(dto.content(), post);
 
         return post.getId();
     }
 
-    public void updatePost(Long postId, MemberPostUpdateRequest dto, UserPrincipal userPrincipal) {
-        Post post = getPost(postId);
+    public void updatePost(Long postId, MemberPostUpdateRequest dto, UserPrincipal principal) {
 
-        User user = userService.getLoginUserById(userPrincipal.getUserId());
+        Post post = getPost(postId);
+        User user = getUser(principal);
+
         validateAuthor(post, user);
 
-        post.memberUpdate(dto.getTitle(), dto.getContent());
+        post.updateAsMember(dto.title(), dto.content());
 
-        imageService.linkToPostAndMakePermanent(dto.getContent(), post);
+        linkImages(dto.content(), post);
     }
 
     public void updatePostAsGuest(Long postId, GuestPostUpdateRequest dto) {
+
         Post post = getPost(postId);
+        validateGuestPost(post);
 
-        post.guestUpdate(dto.getTitle(), dto.getContent(), dto.getGuestNickname(), passwordEncoder.encode(dto.getGuestPassword()));
+        post.updateAsGuest(dto.title(), dto.content(), dto.guestNickname());
 
-        imageService.linkToPostAndMakePermanent(dto.getContent(), post);
+        post.changeGuestPasswordHash(passwordEncoder.encode(dto.guestPassword()));
+
+        linkImages(dto.content(), post);
     }
 
-    public void deletePost(Long postId, UserPrincipal userPrincipal) {
-        Post post = getPost(postId);
+    public void deletePost(Long postId, UserPrincipal principal) {
 
-        User user = userService.getLoginUserById(userPrincipal.getUserId());
+        Post post = getPost(postId);
+        User user = getUser(principal);
+
         validateAuthor(post, user);
 
-        imageService.deleteImages(post);
-
+        deleteImages(post);
         postRepository.delete(post);
     }
 
     public void deletePostAsGuest(Long postId) {
+
         Post post = getPost(postId);
+        validateGuestPost(post);
 
-        imageService.deleteImages(post);
-
+        deleteImages(post);
         postRepository.delete(post);
     }
 
@@ -101,22 +120,15 @@ public class PostService {
     public PostResponse getPostResponse(Long postId) {
         viewCountService.increaseView(postId);
         Post post = getPost(postId);
-
         return PostResponse.from(post);
     }
 
     @Transactional(readOnly = true)
-    public Post getPost(Long postId) {
-        return postRepository.findById(postId)
-                .orElseThrow(() -> new CustomAppException(ErrorType.POST_NOT_FOUND,
-                        "해당 게시글이 존재하지 않습니다: " + postId));
-    }
+    public PostResponse getMemberPostForEdit(Long postId, UserPrincipal principal) {
 
-    @Transactional(readOnly = true)
-    public PostResponse getMemberPostForEdit(Long postId, UserPrincipal userPrincipal) {
         Post post = getPost(postId);
+        User user = getUser(principal);
 
-        User user = userService.getLoginUserById(userPrincipal.getUserId());
         validateAuthor(post, user);
 
         return PostResponse.from(post);
@@ -124,13 +136,38 @@ public class PostService {
 
     @Transactional(readOnly = true)
     public List<PostResponse> getPostsByBoardSlug(String slug) {
-        Board board = boardService.getBoard(slug);
 
-        List<Post> posts = postRepository.findAllByBoard(board);
+        Board board = getBoard(slug);
 
-        return posts.stream()
+        return postRepository.findAllByBoard(board).stream()
                 .map(PostResponse::from)
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public boolean verifyGuestPassword(Long postId, String rawPassword) {
+
+        Post post = getPost(postId);
+        validateGuestPost(post);
+
+        return passwordEncoder.matches(rawPassword, post.getGuestPasswordHash());
+    }
+
+    @Transactional(readOnly = true)
+    public Post getPost(Long postId) {
+        return postRepository.findById(postId)
+                .orElseThrow(() -> new CustomAppException(
+                        ErrorType.POST_NOT_FOUND,
+                        "해당 게시글이 존재하지 않습니다: " + postId
+                ));
+    }
+
+    private Board getBoard(String slug) {
+        return boardService.getBoard(slug);
+    }
+
+    private User getUser(UserPrincipal principal) {
+        return userService.getLoginUserById(principal.getUserId());
     }
 
     private void validateAuthor(Post post, User user) {
@@ -140,14 +177,19 @@ public class PostService {
         }
     }
 
-    public boolean verifyGuestPassword(Long postId, String password) {
-        Post post = getPost(postId);
-
-        if (post.getAuthor() != null) {
+    private void validateGuestPost(Post post) {
+        if (!post.isGuest()) {
             throw new CustomAppException(ErrorType.ACCESS_DENIED,
-                    "회원 게시글은 비밀번호로 삭제할 수 없습니다.");
+                    "회원 게시글은 비밀번호로 수정/삭제할 수 없습니다.");
         }
+    }
 
-        return passwordEncoder.matches(password, post.getGuestPasswordHash());
+    private void linkImages(String content, Post post) {
+        imageService.linkToPostAndMakePermanent(content, post);
+    }
+
+    private void deleteImages(Post post) {
+        imageService.deleteImages(post);
     }
 }
+

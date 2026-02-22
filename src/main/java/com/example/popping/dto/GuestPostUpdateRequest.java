@@ -1,26 +1,21 @@
 package com.example.popping.dto;
 
-import jakarta.persistence.Lob;
 import jakarta.validation.constraints.NotBlank;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import jakarta.validation.constraints.Size;
 
-@Getter
-@Setter
-@NoArgsConstructor
-public class GuestPostUpdateRequest {
+public record GuestPostUpdateRequest(
 
-    @NotBlank(message = "제목은 필수입니다.")
-    private String title;
+        @NotBlank(message = "제목은 필수입니다.")
+        @Size(max = 200, message = "제목은 200자 이하입니다.")
+        String title,
 
-    @Lob
-    @NotBlank(message = "내용은 필수입니다.")
-    private String content;
+        @NotBlank(message = "내용은 필수입니다.")
+        String content,
 
-    @NotBlank(message = "닉네임은 필수입니다.")
-    private String guestNickname;
+        @NotBlank(message = "닉네임은 필수입니다.")
+        String guestNickname,
 
-    @NotBlank(message = "비밀번호는 필수입니다.")
-    private String guestPassword;
-}
+        @NotBlank(message = "비밀번호는 필수입니다.")
+        String guestPassword
+
+) {}

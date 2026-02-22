@@ -1,35 +1,20 @@
 package com.example.popping.dto;
 
-import jakarta.persistence.Lob;
 import jakarta.validation.constraints.NotBlank;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import jakarta.validation.constraints.Pattern;
 
-import com.example.popping.domain.Board;
-import com.example.popping.domain.User;
+public record BoardCreateRequest(
 
-@Getter
-@Setter
-@NoArgsConstructor
-public class BoardCreateRequest {
+        @NotBlank(message = "게시판 이름은 필수입니다.")
+        String name,
 
-    @NotBlank(message = "게시판 이름은 필수입니다.")
-    private String name;
+        @NotBlank(message = "설명은 필수입니다.")
+        String description,
 
-    @Lob
-    @NotBlank(message = "설명은 필수입니다.")
-    private String description;
+        @Pattern(
+                regexp = "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+                message = "슬러그 형식이 올바르지 않습니다."
+        )
+        String slug
 
-    @NotBlank(message = "슬러그는 필수입니다.")
-    private String slug;
-
-    public Board toEntity(User user) {
-        return Board.builder()
-                .name(this.name)
-                .description(this.description)
-                .slug(this.slug)
-                .createdBy(user)
-                .build();
-    }
-}
+) {}

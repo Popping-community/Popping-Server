@@ -14,22 +14,30 @@ import com.example.popping.service.UserService;
 
 @Controller
 @RequiredArgsConstructor
-@RequestMapping("/users")
+@RequestMapping(UserController.BASE_PATH)
 public class UserController {
+
+    static final String BASE_PATH = "/users";
+
+    private static final String PATH_JOIN = "/join";
+    private static final String VIEW_JOIN_FORM = "users/joinForm";
 
     private final UserService userService;
 
-    @GetMapping("/join")
-    public String addForm(@ModelAttribute JoinRequest joinRequest) {
-        return "users/joinForm";
+    @GetMapping(PATH_JOIN)
+    public String joinForm(@ModelAttribute("form") JoinRequest form) {
+        return VIEW_JOIN_FORM;
     }
 
-    @PostMapping("/join")
-    public String save(@Valid @ModelAttribute JoinRequest joinRequest, BindingResult result) {
-        if (result.hasErrors()) {
-            return "users/joinForm";
+    @PostMapping(PATH_JOIN)
+    public String join(@Valid @ModelAttribute("form") JoinRequest form,
+                       BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            return VIEW_JOIN_FORM;
         }
-        userService.join(joinRequest);
+
+        userService.join(form);
         return "redirect:/login";
     }
 }
+

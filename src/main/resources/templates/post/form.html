@@ -103,7 +103,7 @@
                 </div>
                 <div class="p-6 pt-0">
                     <!-- 회원 게시글 작성 폼 -->
-                    <form sec:authorize="isAuthenticated()" th:action="@{/boards/{slug}/member(slug=${slug})}" th:object="${memberPostCreateRequest}" method="post" class="space-y-4" id="memberForm">
+                    <form sec:authorize="isAuthenticated()" th:action="@{/boards/{slug}/member(slug=${slug})}" th:object="${form}" method="post" class="space-y-4" id="memberForm">
                         <!-- 글로벌 오류 메시지 표시 -->
                         <div th:if="${#fields.hasGlobalErrors()}" class="p-3 rounded-md bg-destructive/10 border border-destructive/20">
                             <div class="flex items-center mb-2">
@@ -154,7 +154,7 @@
                     </form>
 
                     <!-- 게스트 게시글 작성 폼 -->
-                    <form sec:authorize="!isAuthenticated()" th:action="@{/boards/{slug}/guest(slug=${slug})}" th:object="${guestPostCreateRequest}" method="post" class="space-y-4" id="guestForm">
+                    <form sec:authorize="!isAuthenticated()" th:action="@{/boards/{slug}/guest(slug=${slug})}" th:object="${form}" method="post" class="space-y-4" id="guestForm">
                         <!-- 글로벌 오류 메시지 표시 -->
                         <div th:if="${#fields.hasGlobalErrors()}" class="p-3 rounded-md bg-destructive/10 border border-destructive/20">
                             <div class="flex items-center mb-2">

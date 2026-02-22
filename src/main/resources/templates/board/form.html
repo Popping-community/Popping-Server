@@ -95,7 +95,7 @@
                     <p class="text-sm text-muted-foreground">새로운 게시판을 만들어보세요.</p>
                 </div>
                 <div class="p-6 pt-0">
-                    <form th:action="@{/boards}" th:object="${boardCreateRequest}" method="post" class="space-y-4">
+                    <form th:action="@{/boards}" th:object="${form}" method="post" class="space-y-4">
                         <!-- 게시판 이름 필드 -->
                         <div class="space-y-2">
                             <label for="name" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">게시판 이름</label>

@@ -103,7 +103,7 @@
                 </div>
                 <div class="p-6 pt-0">
                     <!-- 회원 게시글 수정 폼 -->
-                    <form th:if="${form.authorId != null}" th:action="@{/boards/{slug}/{postId}/edit(slug=${slug},postId=${form.id})}" th:object="${memberPostUpdateRequest}" method="post" class="space-y-4" id="memberEditForm">
+                    <form th:if="${post.authorId != null}" th:action="@{/boards/{slug}/{postId}/edit(slug=${slug},postId=${post.id})}" th:object="${form}" method="post" class="space-y-4" id="memberEditForm">
                         <!-- 글로벌 오류 메시지 표시 -->
                         <div th:if="${#fields.hasGlobalErrors()}" class="p-3 rounded-md bg-destructive/10 border border-destructive/20">
                             <div class="flex items-center mb-2">
@@ -123,7 +123,7 @@
                         <div class="space-y-2">
                             <label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">게시판</label>
                             <div class="flex h-10 w-full rounded-md border border-input bg-muted px-3 py-2 text-sm items-center">
-                                <span th:text="${form.boardName}">게시판 이름</span>
+                                <span th:text="${post.boardName}">게시판 이름</span>
                             </div>
                             <p class="text-xs text-muted-foreground">게시판은 수정할 수 없습니다.</p>
                         </div>
@@ -151,7 +151,7 @@
                         </div>
 
                         <div class="flex items-center justify-end gap-2 pt-4">
-                            <a th:href="@{/boards/{slug}/{postId}(slug=${slug},postId=${form.id})}" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2">
+                            <a th:href="@{/boards/{slug}/{postId}(slug=${slug},postId=${post.id})}" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2">
                                 취소
                             </a>
                             <button
@@ -164,7 +164,7 @@
                     </form>
 
                     <!-- 게스트 게시글 수정 폼 -->
-                    <form th:if="${form.authorId == null}" th:action="@{/boards/{slug}/{postId}/edit-guest(slug=${slug},postId=${form.id})}" th:object="${guestPostUpdateRequest}" method="post" class="space-y-4" id="guestEditForm">
+                    <form th:if="${post.authorId == null}" th:action="@{/boards/{slug}/{postId}/edit-guest(slug=${slug},postId=${post.id})}" th:object="${form}" method="post" class="space-y-4" id="guestEditForm">
                         <!-- 글로벌 오류 메시지 표시 -->
                         <div th:if="${#fields.hasGlobalErrors()}" class="p-3 rounded-md bg-destructive/10 border border-destructive/20">
                             <div class="flex items-center mb-2">
@@ -184,7 +184,7 @@
                         <div class="space-y-2">
                             <label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">게시판</label>
                             <div class="flex h-10 w-full rounded-md border border-input bg-muted px-3 py-2 text-sm items-center">
-                                <span th:text="${form.boardName}">게시판 이름</span>
+                                <span th:text="${post.boardName}">게시판 이름</span>
                             </div>
                             <p class="text-xs text-muted-foreground">게시판은 수정할 수 없습니다.</p>
                         </div>
@@ -240,7 +240,7 @@
                         </div>
 
                         <div class="flex items-center justify-end gap-2 pt-4">
-                            <a th:href="@{/boards/{slug}/{postId}(slug=${slug},postId=${form.id})}" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2">
+                            <a th:href="@{/boards/{slug}/{postId}(slug=${slug},postId=${post.id})}" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2">
                                 취소
                             </a>
                             <button

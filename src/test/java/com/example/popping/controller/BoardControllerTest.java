@@ -7,15 +7,6 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.argThat;
-import static org.mockito.Mockito.verify;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.example.popping.common.HtmlSanitizer;
@@ -24,6 +15,14 @@ import com.example.popping.domain.UserPrincipal;
 import com.example.popping.domain.UserRole;
 import com.example.popping.service.BoardService;
 import com.example.popping.service.PostService;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.Mockito.verify;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(BoardController.class)
 @Import({GlobalBindingConfig.class, HtmlSanitizer.class})
@@ -68,8 +67,8 @@ class BoardControllerTest {
         // then
         // 서비스의 createBoard 메서드에 전달된 DTO 내부 값이 필터링되었는지 검증
         verify(boardService).createBoard(
-                argThat(dto -> dto.getName().equals(cleanName) &&
-                        dto.getDescription().equals(cleanDescription)),
+                argThat(dto -> dto.name().equals(cleanName) &&
+                        dto.description().equals(cleanDescription)),
                 any() // loginUser
         );
     }

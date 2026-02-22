@@ -74,7 +74,7 @@
                 <p class="text-sm text-muted-foreground">커뮤니티에 가입하고 다양한 글을 작성해보세요.</p>
             </div>
             <div class="p-6 pt-0">
-                <form th:action="@{/users/join}" th:object="${joinRequest}" method="post" class="space-y-4">
+                <form th:action="@{/users/join}" th:object="${form}" method="post" class="space-y-4">
                     <!-- 로그인 아이디 필드 -->
                     <div class="space-y-2">
                         <label for="loginId" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">아이디</label>

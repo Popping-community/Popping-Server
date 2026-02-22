@@ -1,7 +1,5 @@
 package com.example.popping.controller;
 
-import java.util.List;
-
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -12,81 +10,99 @@ import lombok.RequiredArgsConstructor;
 
 import com.example.popping.domain.UserPrincipal;
 import com.example.popping.dto.BoardCreateRequest;
-import com.example.popping.dto.BoardResponse;
 import com.example.popping.dto.BoardUpdateRequest;
-import com.example.popping.dto.PostResponse;
 import com.example.popping.service.BoardService;
 import com.example.popping.service.PostService;
 
 @Controller
 @RequiredArgsConstructor
-@RequestMapping("/boards")
+@RequestMapping(BoardController.BASE_PATH)
 public class BoardController {
 
-    public static final String REDIRECT_BOARDS = "redirect:/boards";
+    static final String BASE_PATH = "/boards";
+
+    private static final String VIEW_LIST = "board/list";
+    private static final String VIEW_DETAIL = "board/detail";
+    private static final String VIEW_FORM = "board/form";
+    private static final String VIEW_EDIT_FORM = "board/edit-form";
+
     private final BoardService boardService;
     private final PostService postService;
 
     @GetMapping
     public String listBoards(Model model) {
-        List<BoardResponse> boards = boardService.getAllBoards();
-        model.addAttribute("boards", boards);
-        return "board/list";
+        model.addAttribute("boards", boardService.getAllBoards());
+        return VIEW_LIST;
     }
 
     @GetMapping("/{slug}")
     public String getBoard(@PathVariable String slug, Model model) {
-        BoardResponse boardResponse = boardService.getBoardResponse(slug);
-        List<PostResponse> postResponses = postService.getPostsByBoardSlug(slug);
-        model.addAttribute("board", boardResponse);
-        model.addAttribute("posts", postResponses);
-        return "board/detail";
+        putBoardDetail(model, slug);
+        return VIEW_DETAIL;
     }
 
     @GetMapping("/new")
-    public String newBoardForm(@ModelAttribute BoardCreateRequest boardCreateRequest) {
-        return "board/form";
+    public String newBoardForm(@ModelAttribute("form") BoardCreateRequest form) {
+        return VIEW_FORM;
     }
 
     @PostMapping
-    public String createBoard(@Valid @ModelAttribute BoardCreateRequest dto,
+    public String createBoard(@Valid @ModelAttribute("form") BoardCreateRequest form,
                               BindingResult bindingResult,
                               @AuthenticationPrincipal UserPrincipal loginUser) {
         if (bindingResult.hasErrors()) {
-            return "board/form";
+            return VIEW_FORM;
         }
-        String slug = boardService.createBoard(dto, loginUser);
-        return REDIRECT_BOARDS + "/" + slug;
+
+        String slug = boardService.createBoard(form, loginUser);
+        return redirectToBoard(slug);
     }
 
     @GetMapping("/{slug}/edit")
-    public String editBoardForm(@ModelAttribute BoardUpdateRequest boardUpdateRequest,
+    public String editBoardForm(@PathVariable String slug,
                                 @AuthenticationPrincipal UserPrincipal loginUser,
-                                @PathVariable String slug, Model model) {
-        BoardResponse dto = boardService.getBoardForEdit(slug, loginUser);
-        model.addAttribute("form", dto);
-        return "board/edit-form";
+                                @ModelAttribute("form") BoardUpdateRequest form,
+                                Model model) {
+        putEditForm(model, slug, loginUser);
+        return VIEW_EDIT_FORM;
     }
 
     @PostMapping("/{slug}/edit")
     public String updateBoard(@PathVariable String slug,
                               @AuthenticationPrincipal UserPrincipal loginUser,
-                              @Valid @ModelAttribute BoardUpdateRequest dto,
+                              @Valid @ModelAttribute("form") BoardUpdateRequest form,
                               BindingResult bindingResult,
                               Model model) {
         if (bindingResult.hasErrors()) {
-            BoardResponse boardResponse = boardService.getBoardForEdit(slug, loginUser);
-            model.addAttribute("form", boardResponse);
-            return "board/edit-form";
+            putEditForm(model, slug, loginUser);
+            return VIEW_EDIT_FORM;
         }
-        boardService.updateBoard(slug, dto, loginUser);
-        return REDIRECT_BOARDS + "/" + slug;
+
+        boardService.updateBoard(slug, form, loginUser);
+        return redirectToBoard(slug);
     }
 
     @PostMapping("/{slug}/delete")
     public String deleteBoard(@PathVariable String slug,
                               @AuthenticationPrincipal UserPrincipal loginUser) {
         boardService.deleteBoard(slug, loginUser);
-        return REDIRECT_BOARDS;
+        return redirectToBoards();
+    }
+
+    private void putBoardDetail(Model model, String slug) {
+        model.addAttribute("board", boardService.getBoardResponse(slug));
+        model.addAttribute("posts", postService.getPostsByBoardSlug(slug));
+    }
+
+    private void putEditForm(Model model, String slug, UserPrincipal loginUser) {
+        model.addAttribute("form", boardService.getBoardForEdit(slug, loginUser));
+    }
+
+    private String redirectToBoards() {
+        return "redirect:" + BASE_PATH;
+    }
+
+    private String redirectToBoard(String slug) {
+        return "redirect:" + BASE_PATH + "/" + slug;
     }
 }
