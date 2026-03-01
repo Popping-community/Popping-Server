@@ -1027,10 +1027,8 @@
         try {
             const response = await fetch(`/boards/${slug}/${postId}/comments/${commentId}/guest`, {
                 method: 'DELETE',
-                headers: {
-                    'Content-Type': 'text/plain',
-                },
-                body: password
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ password })
             });
 
             if (response.ok) {
