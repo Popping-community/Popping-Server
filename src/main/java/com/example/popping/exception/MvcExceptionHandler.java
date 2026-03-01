@@ -7,8 +7,8 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@ControllerAdvice
-public class GlobalExceptionHandler {
+@ControllerAdvice(basePackages = "com.example.popping.controller.mvc")
+public class MvcExceptionHandler {
 
     @ExceptionHandler(CustomAppException.class)
     public String handleCustomAppException(Model model, CustomAppException e) {
