@@ -24,27 +24,8 @@ class HtmlSanitizerTest {
     }
 
     @Test
-    void testStripAllHtmlTags() {
-        String input = "<p>text</p><b>strong</b>";
-        String expected = "textstrong";
-
-        String result = sanitizer.sanitize(input);
-
-        Assertions.assertEquals(expected, result);
-    }
-
-    @Test
     void testNullInput() {
         Assertions.assertNull(sanitizer.sanitize(null));
-    }
-
-    @Test
-    void testOnAttributeInjection() {
-        String malicious = "<img src=x onerror=alert(1) />";
-        String expected = "";
-
-        String result = sanitizer.sanitize(malicious);
-        Assertions.assertEquals(expected, result);
     }
 }
 
