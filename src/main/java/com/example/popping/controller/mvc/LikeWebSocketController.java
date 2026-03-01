@@ -1,4 +1,4 @@
-package com.example.popping.controller;
+package com.example.popping.controller.mvc;
 
 import java.security.Principal;
 
@@ -18,18 +18,22 @@ import com.example.popping.service.LikeService;
 @Controller
 @RequiredArgsConstructor
 public class LikeWebSocketController {
+
     private final LikeService likeService;
 
     @MessageMapping("/like")
     @SendTo("/topic/like-updates")
-    public LikeResponse handleLike(@Valid LikeRequest request, SimpMessageHeaderAccessor headerAccessor) {
-        Principal principal = headerAccessor.getUser();
+    public LikeResponse handleLike(@Valid LikeRequest request,
+                                   SimpMessageHeaderAccessor headerAccessor) {
 
-        UserPrincipal userPrincipal = null;
-        if (principal instanceof Authentication auth && auth.getPrincipal() instanceof UserPrincipal up) {
-            userPrincipal = up;
-        }
-
+        UserPrincipal userPrincipal = extractUserPrincipal(headerAccessor.getUser());
         return likeService.toggleLike(request, userPrincipal);
+    }
+
+    private UserPrincipal extractUserPrincipal(Principal principal) {
+        if (!(principal instanceof Authentication auth)) return null;
+
+        Object p = auth.getPrincipal();
+        return (p instanceof UserPrincipal up) ? up : null;
     }
 }

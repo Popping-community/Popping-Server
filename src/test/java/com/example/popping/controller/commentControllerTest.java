@@ -1,9 +1,5 @@
 package com.example.popping.controller;
 
-import com.example.popping.common.HtmlSanitizer;
-import com.example.popping.config.web.GlobalBindingConfig;
-import com.example.popping.service.CommentService;
-
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +9,11 @@ import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+
+import com.example.popping.common.HtmlSanitizer;
+import com.example.popping.config.web.GlobalBindingConfig;
+import com.example.popping.controller.api.CommentController;
+import com.example.popping.service.CommentService;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.verify;
@@ -57,7 +58,7 @@ class CommentControllerTest {
         // 2. 특히 3번째 인자인 Request DTO의 content가 cleanContent로 바뀌었는지 확인
         verify(commentService).createMemberComment(
                 eq(postId),
-                argThat(request -> request.getContent().equals(cleanContent)), // DTO 내부 필드 검증
+                argThat(request -> request.content().equals(cleanContent)), // DTO 내부 필드 검증
                 any(),
                 any()
         );

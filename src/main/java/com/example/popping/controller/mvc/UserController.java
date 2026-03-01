@@ -1,4 +1,4 @@
-package com.example.popping.controller;
+package com.example.popping.controller.mvc;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;

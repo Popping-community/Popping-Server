@@ -11,6 +11,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import com.example.popping.common.HtmlSanitizer;
 import com.example.popping.config.web.GlobalBindingConfig;
+import com.example.popping.controller.mvc.BoardController;
 import com.example.popping.domain.UserPrincipal;
 import com.example.popping.domain.UserRole;
 import com.example.popping.service.BoardService;
@@ -61,7 +62,7 @@ class BoardControllerTest {
                         // @ModelAttribute는 contentType이 application/x-www-form-urlencoded 입니다.
                         .param("name", dirtyName)
                         .param("description", dirtyDescription)
-                        .param("slug", normalSlug)) // 👈 slug 파라미터 추가
+                        .param("slug", normalSlug)) // slug 파라미터 추가
                 .andExpect(status().is3xxRedirection()); // 리다이렉트 응답 확인
 
         // then

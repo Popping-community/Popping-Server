@@ -48,16 +48,20 @@ public class Post extends BaseEntity {
     @Column(nullable = false)
     private int dislikeCount = 0;
 
+    private Post(String title, String content, User author,
+                 String guestNickname, String guestPasswordHash, Board board) {
+        this.title = title;
+        this.content = content;
+        this.author = author;
+        this.guestNickname = guestNickname;
+        this.guestPasswordHash = guestPasswordHash;
+        this.board = board;
+    }
+
     public static Post createMemberPost(String title, String content, User author, Board board) {
         validateCommon(title, content, board);
         if (author == null) throw new IllegalArgumentException("author는 필수입니다.");
-
-        Post post = new Post();
-        post.title = title;
-        post.content = content;
-        post.author = author;
-        post.board = board;
-        return post;
+        return new Post(title, content, author, null, null, board);
     }
 
     public static Post createGuestPost(String title, String content, String guestNickname, String guestPasswordHash, Board board) {
@@ -66,14 +70,7 @@ public class Post extends BaseEntity {
             throw new IllegalArgumentException("guestNickname은 필수입니다.");
         if (guestPasswordHash == null || guestPasswordHash.isBlank())
             throw new IllegalArgumentException("guestPasswordHash는 필수입니다.");
-
-        Post post = new Post();
-        post.title = title;
-        post.content = content;
-        post.guestNickname = guestNickname;
-        post.guestPasswordHash = guestPasswordHash;
-        post.board = board;
-        return post;
+        return new Post(title, content, null, guestNickname, guestPasswordHash, board);
     }
 
     private static void validateCommon(String title, String content, Board board) {

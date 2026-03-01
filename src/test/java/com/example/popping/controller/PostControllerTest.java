@@ -11,6 +11,7 @@ import org.springframework.mock.web.MockHttpSession;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.example.popping.common.HtmlSanitizer;
+import com.example.popping.controller.mvc.PostController;
 import com.example.popping.dto.PostResponse;
 import com.example.popping.service.CommentService;
 import com.example.popping.service.PostService;

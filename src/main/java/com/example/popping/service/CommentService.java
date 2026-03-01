@@ -19,8 +19,7 @@ import com.example.popping.dto.MemberCommentCreateRequest;
 import com.example.popping.exception.CustomAppException;
 import com.example.popping.exception.ErrorType;
 import com.example.popping.repository.CommentRepository;
-
-import static com.example.popping.dto.CommentResponse.mapToResponse;
+import com.example.popping.repository.CommentTreeRowView;
 
 @Service
 @Transactional
@@ -28,43 +27,56 @@ import static com.example.popping.dto.CommentResponse.mapToResponse;
 public class CommentService {
 
     public static final int COMMENTS_SIZE = 100;
+
     private final PostService postService;
     private final UserService userService;
     private final CommentRepository commentRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public Long createMemberComment(Long postId, MemberCommentCreateRequest dto, UserPrincipal userPrincipal, Long parentId) {
+    public Long createMemberComment(Long postId,
+                                    MemberCommentCreateRequest dto,
+                                    UserPrincipal principal,
+                                    Long parentId) {
+
         Post post = postService.getPost(postId);
         Comment parent = getParentComment(parentId);
 
-        User user = userService.getLoginUserById(userPrincipal.getUserId());
-        Comment comment = dto.toEntity(user, post, parent);
-        commentRepository.save(comment);
+        User user = userService.getLoginUserById(principal.getUserId());
+
+        Comment comment = Comment.createMemberComment(dto.content(), user, post, parent);
+        comment = commentRepository.save(comment);
 
         post.increaseCommentCount();
         return comment.getId();
     }
 
-    public Long createGuestComment(Long postId, GuestCommentCreateRequest dto, Long parentId) {
+    public Long createGuestComment(Long postId,
+                                   GuestCommentCreateRequest dto,
+                                   Long parentId) {
+
         Post post = postService.getPost(postId);
         Comment parent = getParentComment(parentId);
 
-        String hashedPassword = passwordEncoder.encode(dto.getGuestPassword());
-        Comment comment = dto.toEntity(post, parent, hashedPassword);
-        commentRepository.save(comment);
+        String hashedPassword = passwordEncoder.encode(dto.guestPassword());
+
+        Comment comment = Comment.createGuestComment(
+                dto.content(),
+                dto.guestNickname(),
+                hashedPassword,
+                post,
+                parent
+        );
+        comment = commentRepository.save(comment);
 
         post.increaseCommentCount();
         return comment.getId();
     }
 
-    public void deleteComment(Long commentId, UserPrincipal userPrincipal) {
+    public void deleteComment(Long commentId, UserPrincipal principal) {
         Comment comment = getComment(commentId);
 
-        User user = userService.getLoginUserById(userPrincipal.getUserId());
-        if (!comment.isAuthor(user)) {
-            throw new CustomAppException(ErrorType.ACCESS_DENIED,
-                    "댓글 작성자가 아닙니다." + user.getLoginId());
-        }
+        User user = userService.getLoginUserById(principal.getUserId());
+        validateMemberAuthor(comment, user);
 
         comment.getPost().decreaseCommentCount();
         commentRepository.delete(comment);
@@ -73,15 +85,8 @@ public class CommentService {
     public void deleteCommentAsGuest(Long commentId, String password) {
         Comment comment = getComment(commentId);
 
-        if (comment.getAuthor() != null) {
-            throw new CustomAppException(ErrorType.ACCESS_DENIED,
-                    "회원이 작성한 댓글은 비밀번호로 삭제할 수 없습니다.");
-        }
-
-        if (!passwordEncoder.matches(password, comment.getGuestPasswordHash())) {
-            throw new CustomAppException(ErrorType.ACCESS_DENIED,
-                    "비밀번호가 일치하지 않습니다.");
-        }
+        validateGuestComment(comment);
+        validateGuestPassword(comment, password);
 
         comment.getPost().decreaseCommentCount();
         commentRepository.delete(comment);
@@ -98,39 +103,35 @@ public class CommentService {
     @Transactional(readOnly = true)
     public CommentPageResponse getCommentPage(Long postId, int page) {
         Post post = postService.getPost(postId);
+
         int totalComments = post.getCommentCount();
+        int totalPages = totalComments == 0 ? 0 : (int) Math.ceil((double) totalComments / COMMENTS_SIZE);
 
-        int totalPages = (int) Math.ceil((double) totalComments / COMMENTS_SIZE);
-        boolean hasNext = page < totalPages - 1;
         boolean hasPrevious = page > 0;
+        boolean hasNext = totalPages != 0 && page < totalPages - 1;
 
-        List<Object[]> pagedCommentTree = commentRepository.findPagedCommentTree(postId, COMMENTS_SIZE, page * COMMENTS_SIZE);
-        List<CommentResponse> commentResponses = buildCommentTree(pagedCommentTree);
+        int offset = page * COMMENTS_SIZE;
 
-        return CommentPageResponse.builder()
-                .comments(commentResponses)
-                .totalComments(totalComments)
-                .currentPage(page)
-                .totalPages(totalPages)
-                .hasNext(hasNext)
-                .hasPrevious(hasPrevious)
-                .build();
+        List<CommentTreeRowView> rows = commentRepository.findPagedCommentTree(postId, COMMENTS_SIZE, offset);
+        List<CommentResponse> comments = buildCommentTree(rows);
+
+        return new CommentPageResponse(
+                comments,
+                totalComments,
+                page,
+                totalPages,
+                hasNext,
+                hasPrevious
+        );
     }
 
     @Transactional(readOnly = true)
-    public List<CommentResponse> getCommentsByPostId(Long postId) {
-        Post post = postService.getPost(postId);
-
-        List<Comment> parentComments = commentRepository.findByPostAndParentIsNullOrderByIdAsc(post);
-
-        return parentComments.stream()
-                .map(CommentResponse::from)
-                .toList();
-    }
-
     public Comment getComment(Long commentId) {
         return commentRepository.findById(commentId)
-                .orElseThrow(() -> new CustomAppException(ErrorType.COMMENT_NOT_FOUND, "해당 댓글이 존재하지 않습니다: " + commentId));
+                .orElseThrow(() -> new CustomAppException(
+                        ErrorType.COMMENT_NOT_FOUND,
+                        "해당 댓글이 존재하지 않습니다: " + commentId
+                ));
     }
 
     private Comment getParentComment(Long parentId) {
@@ -138,57 +139,91 @@ public class CommentService {
         return getComment(parentId);
     }
 
-    public Long getParentCommentId(Long commentId) {
-        Comment comment = getComment(commentId);
+    @Transactional(readOnly = true)
+    public List<CommentResponse> buildCommentTree(List<CommentTreeRowView> rows) {
+        if (rows == null || rows.isEmpty()) return List.of();
 
-        return comment.getParent() != null ? comment.getParent().getId() : null;
-    }
-
-    public Long getPreviousCommentId(Long postId, Long commentId) {
-        Post post = postService.getPost(postId);
-
-        List<Comment> parentComments = commentRepository.findByPostAndParentIsNullOrderByIdAsc(post);
-
-        Long previousId = null;
-        for (Comment comment : parentComments) {
-            if (comment.getId().equals(commentId)) {
-                return previousId;
-            }
-            previousId = comment.getId();
-        }
-
-        return null;
-    }
-
-    public List<CommentResponse> buildCommentTree(List<Object[]> rows) {
         Set<Long> userIds = rows.stream()
-                .map(row -> row[6])
+                .map(CommentTreeRowView::getUserId)
                 .filter(Objects::nonNull)
-                .map(userId -> (Long) userId)
                 .collect(Collectors.toSet());
 
-        Map<Long, String> userIdToNickname = userService
-                .getUserIdToNicknameMap(userIds);
+        Map<Long, String> userIdToNickname = userService.getUserIdToNicknameMap(userIds);
 
-        Map<Long, CommentResponse> map = new LinkedHashMap<>();
-        List<CommentResponse> result = new ArrayList<>();
+        Map<Long, CommentNode> nodeMap = new LinkedHashMap<>();
+        List<CommentNode> roots = new ArrayList<>();
 
-        for (Object[] row : rows) {
-            CommentResponse dto = mapToResponse(row, userIdToNickname);
-            map.put(dto.getId(), dto);
+        for (CommentTreeRowView row : rows) {
+            CommentResponse base = CommentResponse.mapToResponse(row, userIdToNickname);
+            CommentNode node = new CommentNode(base);
+            nodeMap.put(base.id(), node);
 
-            if (dto.getParentId() == null) {
-                result.add(dto);
+            if (base.parentId() == null) {
+                roots.add(node);
             } else {
-                CommentResponse parent = map.get(dto.getParentId());
+                CommentNode parent = nodeMap.get(base.parentId());
                 if (parent != null) {
-                    parent.getChildren().add(dto);
+                    parent.children.add(node);
                 } else {
-                    result.add(dto); // Orphaned reply, treat as top-level
+                    // 페이징으로 부모가 누락된 경우 방어적으로 루트에 둠
+                    roots.add(node);
                 }
             }
         }
 
-        return result;
+        return roots.stream()
+                .map(CommentNode::toResponse)
+                .toList();
+    }
+
+    private void validateMemberAuthor(Comment comment, User user) {
+        if (!comment.isAuthor(user)) {
+            throw new CustomAppException(
+                    ErrorType.ACCESS_DENIED,
+                    "댓글 작성자가 아닙니다." + user.getLoginId()
+            );
+        }
+    }
+
+    private void validateGuestComment(Comment comment) {
+        if (!comment.isGuest()) {
+            throw new CustomAppException(
+                    ErrorType.ACCESS_DENIED,
+                    "회원이 작성한 댓글은 비밀번호로 삭제할 수 없습니다."
+            );
+        }
+    }
+
+    private void validateGuestPassword(Comment comment, String rawPassword) {
+        if (!passwordEncoder.matches(rawPassword, comment.getGuestPasswordHash())) {
+            throw new CustomAppException(
+                    ErrorType.ACCESS_DENIED,
+                    "비밀번호가 일치하지 않습니다."
+            );
+        }
+    }
+
+    private static final class CommentNode {
+        private final CommentResponse base;
+        private final List<CommentNode> children = new ArrayList<>();
+
+        private CommentNode(CommentResponse base) {
+            this.base = base;
+        }
+
+        private CommentResponse toResponse() {
+            return new CommentResponse(
+                    base.id(),
+                    base.content(),
+                    base.authorName(),
+                    base.authorId(),
+                    base.guestNickname(),
+                    base.likeCount(),
+                    base.dislikeCount(),
+                    base.parentId(),
+                    base.depth(),
+                    children.stream().map(CommentNode::toResponse).toList()
+            );
+        }
     }
 }

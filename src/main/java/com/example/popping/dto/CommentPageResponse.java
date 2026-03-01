@@ -2,16 +2,18 @@ package com.example.popping.dto;
 
 import java.util.List;
 
-import lombok.Builder;
-import lombok.Getter;
+public record CommentPageResponse(
 
-@Getter
-@Builder
-public class CommentPageResponse {
-    private List<CommentResponse> comments;
-    private int totalComments;
-    private int currentPage;
-    private int totalPages;
-    private boolean hasNext;
-    private boolean hasPrevious;
+        List<CommentResponse> comments,
+        int totalComments,
+        int currentPage,
+        int totalPages,
+        boolean hasNext,
+        boolean hasPrevious
+
+) {
+
+    public CommentPageResponse {
+        comments = comments == null ? List.of() : List.copyOf(comments);
+    }
 }

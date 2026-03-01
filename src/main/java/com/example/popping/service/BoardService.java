@@ -35,7 +35,7 @@ public class BoardService {
                 user
         );
 
-        boardRepository.save(board);
+        board = boardRepository.save(board);
 
         return board.getSlug();
     }
