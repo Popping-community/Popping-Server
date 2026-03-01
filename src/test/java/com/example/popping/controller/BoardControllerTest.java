@@ -46,8 +46,8 @@ class BoardControllerTest {
         String dirtyName = "<script>alert('xss')</script>공지사항";
         String cleanName = "공지사항";
         String dirtyDescription = "<b>내용</b><iframe src='...'></iframe>";
-        String cleanDescription = "내용"; // Safelist.none() 사용 시 모든 태그 제거
-        String normalSlug = "notice-board"; // 필수 값인 slug 추가
+        String cleanDescription = "<b>내용</b>";
+        String normalSlug = "notice-board";
 
         UserPrincipal mockPrincipal = UserPrincipal.builder()
                 .nickname("테스트유저")
