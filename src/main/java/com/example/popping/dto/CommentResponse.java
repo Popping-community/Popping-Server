@@ -1,69 +1,51 @@
 package com.example.popping.dto;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
-import lombok.Builder;
-import lombok.Getter;
+import com.example.popping.repository.CommentTreeRowView;
 
-import com.example.popping.domain.Comment;
+public record CommentResponse(
 
-@Getter
-@Builder
-public class CommentResponse {
+        Long id,
+        String content,
+        String authorName,
+        Long authorId,
+        String guestNickname,
+        int likeCount,
+        int dislikeCount,
+        Long parentId,
+        int depth,
+        List<CommentResponse> children
 
-    private Long id;
-    private String content;
-    private String authorName;
-    private Long authorId;
-    private String guestNickname;
-    private int likeCount;
-    private int dislikeCount;
-    private Long parentId;
-    private int depth;
-    private List<CommentResponse> children;
+) {
 
-    public static CommentResponse from(Comment comment) {
-        return CommentResponse.builder()
-                .id(comment.getId())
-                .content(comment.getContent())
-                .authorName(comment.isGuest() ? comment.getGuestNickname() : comment.getAuthor().getNickname())
-                .authorId(comment.isGuest() ? null : comment.getAuthor().getId())
-                .guestNickname(comment.isGuest() ? comment.getGuestNickname() : null)
-                .likeCount(comment.getLikeCount())
-                .dislikeCount(comment.getDislikeCount())
-                .parentId(comment.isReply() ? comment.getParent().getId() : null)
-                .depth(comment.getDepth())
-                .children(comment.getChildren().stream()
-                        .map(CommentResponse::from)
-                        .collect(Collectors.toList()))
-                .build();
+    public CommentResponse {
+        children = children == null ? List.of() : List.copyOf(children);
     }
 
-    public static CommentResponse mapToResponse(Object[] row, Map<Long, String> userIdToNickname) {
-        Long id = (Long) row[0];
-        Long parentId = row[1] != null ? (Long) row[1] : null;
-        String content = (String) row[3];
-        int depth = (int) row[4];
-        Long userId = row[6] != null ? (Long) row[6] : null;
-        String guestNickname = (String) row[7];
-        int likeCount = (int) row[8];
-        int dislikeCount = (int) row[9];
+    public static CommentResponse mapToResponse(
+            CommentTreeRowView row,
+            Map<Long, String> userIdToNickname
+    ) {
+        Long userId = row.getUserId();
+        String guestNickname = row.getGuestNickname();
 
-        return CommentResponse.builder()
-                .id(id)
-                .content(content)
-                .authorId(userId)
-                .authorName(userId != null
-                        ? userIdToNickname.getOrDefault(userId, "알 수 없음") : null)
-                .guestNickname(userId == null ? guestNickname : null)
-                .likeCount(likeCount)
-                .dislikeCount(dislikeCount)
-                .parentId(parentId)
-                .depth(depth)
-                .children(new ArrayList<>())
-                .build();
+        String authorName = (userId != null)
+                ? userIdToNickname.getOrDefault(userId, "알 수 없음")
+                : guestNickname;
+
+        return new CommentResponse(
+                row.getId(),
+                row.getContent(),
+                authorName,
+                userId,
+                userId == null ? guestNickname : null,
+                row.getLikeCount() == null ? 0 : row.getLikeCount(),
+                row.getDislikeCount() == null ? 0 : row.getDislikeCount(),
+                row.getParentId(),
+                row.getDepth() == null ? 0 : row.getDepth(),
+                List.of() // record에서 방어적 복사하니까 불변 빈 리스트
+        );
     }
 }
