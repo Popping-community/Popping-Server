@@ -43,6 +43,9 @@ class BoardServiceTest {
         User user = userAuthOnly();
         when(userService.getLoginUserById(1L)).thenReturn(user);
 
+        when(boardRepository.save(any(Board.class)))
+                .thenAnswer(inv -> inv.getArgument(0));
+
         // when
         String slug = boardService.createBoard(req, principal);
 
