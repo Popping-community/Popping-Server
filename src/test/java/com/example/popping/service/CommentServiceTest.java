@@ -1,12 +1,20 @@
 package com.example.popping.service;
 
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.*;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.example.popping.domain.Comment;
@@ -32,8 +40,17 @@ class CommentServiceTest {
     @Mock UserService userService;
     @Mock CommentRepository commentRepository;
     @Mock PasswordEncoder passwordEncoder;
+    @Mock
+    CacheManager cacheManager;
+    @Mock
+    Cache cache;
 
     @InjectMocks CommentService commentService;
+
+    @BeforeEach
+    void setUpCacheManager() {
+        lenient().when(cacheManager.getCache(anyString())).thenReturn(cache);
+    }
 
     @Test
     @DisplayName("회원 댓글 생성: Comment를 올바르게 생성하고 저장 후 commentCount를 증가시킨다")

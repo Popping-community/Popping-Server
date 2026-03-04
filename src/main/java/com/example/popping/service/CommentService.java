@@ -3,6 +3,8 @@ package com.example.popping.service;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,11 +29,13 @@ import com.example.popping.repository.CommentTreeRowView;
 public class CommentService {
 
     public static final int COMMENTS_SIZE = 100;
+    private static final String COMMENT_FIRST_PAGE_CACHE = "commentFirstPage";
 
     private final PostService postService;
     private final UserService userService;
     private final CommentRepository commentRepository;
     private final PasswordEncoder passwordEncoder;
+    private final CacheManager cacheManager;
 
     public Long createMemberComment(Long postId,
                                     MemberCommentCreateRequest dto,
@@ -47,6 +51,7 @@ public class CommentService {
         comment = commentRepository.save(comment);
 
         post.increaseCommentCount();
+        evictFirstPageCacheByPostId(postId);
         return comment.getId();
     }
 
@@ -69,6 +74,7 @@ public class CommentService {
         comment = commentRepository.save(comment);
 
         post.increaseCommentCount();
+        evictFirstPageCacheByPostId(postId);
         return comment.getId();
     }
 
@@ -78,8 +84,10 @@ public class CommentService {
         User user = userService.getLoginUserById(principal.getUserId());
         validateMemberAuthor(comment, user);
 
+        Long postId = comment.getPost().getId();
         comment.getPost().decreaseCommentCount();
         commentRepository.delete(comment);
+        evictFirstPageCacheByPostId(postId);
     }
 
     public void deleteCommentAsGuest(Long commentId, String password) {
@@ -88,20 +96,61 @@ public class CommentService {
         validateGuestComment(comment);
         validateGuestPassword(comment, password);
 
+        Long postId = comment.getPost().getId();
         comment.getPost().decreaseCommentCount();
         commentRepository.delete(comment);
+        evictFirstPageCacheByPostId(postId);
     }
 
     public void updateLikeCount(Long targetId, int delta) {
         commentRepository.updateLikeCount(targetId, delta);
+        evictFirstPageCacheByCommentId(targetId);
     }
 
     public void updateDislikeCount(Long targetId, int delta) {
         commentRepository.updateDislikeCount(targetId, delta);
+        evictFirstPageCacheByCommentId(targetId);
     }
 
     @Transactional(readOnly = true)
     public CommentPageResponse getCommentPage(Long postId, int page) {
+        if (page == 0) {
+            return getFirstPage(postId);
+        }
+        return buildCommentPage(postId, page);
+    }
+
+    @Transactional(readOnly = true)
+    public Comment getComment(Long commentId) {
+        return commentRepository.findById(commentId)
+                .orElseThrow(() -> new CustomAppException(
+                        ErrorType.COMMENT_NOT_FOUND,
+                        "해당 댓글이 존재하지 않습니다: " + commentId
+                ));
+    }
+
+    private Comment getParentComment(Long parentId) {
+        if (parentId == null) return null;
+        return getComment(parentId);
+    }
+
+    private CommentPageResponse getFirstPage(Long postId) {
+        Cache cache = cacheManager.getCache(COMMENT_FIRST_PAGE_CACHE);
+        if (cache == null) {
+            return buildCommentPage(postId, 0);
+        }
+
+        CommentPageResponse cached = cache.get(postId, CommentPageResponse.class);
+        if (cached != null) {
+            return cached;
+        }
+
+        CommentPageResponse fresh = buildCommentPage(postId, 0);
+        cache.put(postId, fresh);
+        return fresh;
+    }
+
+    private CommentPageResponse buildCommentPage(Long postId, int page) {
         Post post = postService.getPost(postId);
 
         int totalComments = post.getCommentCount();
@@ -123,20 +172,6 @@ public class CommentService {
                 hasNext,
                 hasPrevious
         );
-    }
-
-    @Transactional(readOnly = true)
-    public Comment getComment(Long commentId) {
-        return commentRepository.findById(commentId)
-                .orElseThrow(() -> new CustomAppException(
-                        ErrorType.COMMENT_NOT_FOUND,
-                        "해당 댓글이 존재하지 않습니다: " + commentId
-                ));
-    }
-
-    private Comment getParentComment(Long parentId) {
-        if (parentId == null) return null;
-        return getComment(parentId);
     }
 
     @Transactional(readOnly = true)
@@ -200,6 +235,22 @@ public class CommentService {
                     ErrorType.ACCESS_DENIED,
                     "비밀번호가 일치하지 않습니다."
             );
+        }
+    }
+
+    private void evictFirstPageCacheByPostId(Long postId) {
+        Cache cache = cacheManager.getCache(COMMENT_FIRST_PAGE_CACHE);
+        if (cache == null || postId == null) return;
+        cache.evict(postId);
+    }
+
+    private void evictFirstPageCacheByCommentId(Long commentId) {
+        Cache cache = cacheManager.getCache(COMMENT_FIRST_PAGE_CACHE);
+        if (cache == null || commentId == null) return;
+
+        Long postId = commentRepository.findPostIdByCommentId(commentId);
+        if (postId != null) {
+            cache.evict(postId);
         }
     }
 

@@ -11,6 +11,9 @@ import com.example.popping.domain.Comment;
 
 public interface CommentRepository extends JpaRepository<Comment, Long> {
 
+    @Query("select c.post.id from Comment c where c.id = :commentId")
+    Long findPostIdByCommentId(@Param("commentId") Long commentId);
+
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("UPDATE Comment c SET c.likeCount = c.likeCount + :delta WHERE c.id = :commentId")
     int updateLikeCount(@Param("commentId") Long commentId, @Param("delta") int delta);
