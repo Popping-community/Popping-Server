@@ -10,6 +10,8 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.example.popping.domain.Board;
@@ -398,7 +400,7 @@ class PostServiceTest {
     }
 
     @Test
-    @DisplayName("게시판별 게시글 조회: PostResponse 리스트로 변환된다")
+    @DisplayName("게시판별 게시글 조회: Post → PostResponse 매핑 및 페이지 정보를 반환한다")
     void getPostsByBoardSlug_success_mapping() {
 
         // given
@@ -423,14 +425,16 @@ class PostServiceTest {
         when(p2.getAuthor()).thenReturn(a2);
         when(p2.getBoard()).thenReturn(board);
 
-        when(postRepository.findAllByBoard(board)).thenReturn(List.of(p1, p2));
+        when(postRepository.findAllByBoard(board, PageRequest.of(0, 20)))
+                .thenReturn(new PageImpl<>(List.of(p1, p2)));
 
         // when
-        List<PostResponse> list = postService.getPostsByBoardSlug(slug);
+        PostPageResponse page = postService.getPostPage(slug, 0, 20);
 
         // then
-        assertEquals(2, list.size());
-        verify(postRepository).findAllByBoard(board);
+        assertEquals(2, page.posts().size());
+        assertEquals(2, page.totalPosts());
+        verify(postRepository).findAllByBoard(board, PageRequest.of(0, 20));
     }
 
     @Test

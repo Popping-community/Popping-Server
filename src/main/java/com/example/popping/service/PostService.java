@@ -1,7 +1,7 @@
 package com.example.popping.service;
 
-import java.util.List;
-
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -135,13 +135,21 @@ public class PostService {
     }
 
     @Transactional(readOnly = true)
-    public List<PostResponse> getPostsByBoardSlug(String slug) {
+    public PostPageResponse getPostPage(String slug, int page, int size) {
 
         Board board = getBoard(slug);
 
-        return postRepository.findAllByBoard(board).stream()
-                .map(PostResponse::from)
-                .toList();
+        Page<PostResponse> postPage = postRepository.findAllByBoard(board, PageRequest.of(page, size))
+                .map(PostResponse::from);
+
+        return new PostPageResponse(
+                postPage.getContent(),
+                (int) postPage.getTotalElements(),
+                postPage.getNumber(),
+                postPage.getTotalPages(),
+                postPage.hasNext(),
+                postPage.hasPrevious()
+        );
     }
 
     @Transactional(readOnly = true)

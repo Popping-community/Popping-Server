@@ -135,13 +135,13 @@
                 </div>
 
                 <!-- 게시글이 없을 경우 -->
-                <div th:if="${#lists.isEmpty(posts)}" class="text-center py-12 text-muted-foreground">
+                <div th:if="${#lists.isEmpty(postPage.posts())}" class="text-center py-12 text-muted-foreground">
                     아직 게시글이 없습니다. 첫 번째 글을 작성해보세요!
                 </div>
 
                 <!-- 게시글 목록 -->
-                <div th:if="${not #lists.isEmpty(posts)}" class="space-y-2">
-                    <div th:each="post : ${posts}" class="bg-background rounded-md p-4 hover:shadow transition-shadow">
+                <div th:if="${not #lists.isEmpty(postPage.posts())}" class="space-y-2">
+                    <div th:each="post : ${postPage.posts()}" class="bg-background rounded-md p-4 hover:shadow transition-shadow">
                         <a th:href="@{/boards/{slug}/{postId}(slug=${board.slug},postId=${post.id})}" class="block">
                             <div class="flex justify-between items-start mb-3">
                                 <h3 class="font-medium" th:text="${post.title}">게시글 제목</h3>
@@ -184,27 +184,15 @@
                     </div>
                 </div>
 
-                <!-- 페이지네이션 (필요한 경우) -->
-                <div th:if="${not #lists.isEmpty(posts) and posts.size() > 10}" class="mt-6 flex justify-center">
-                    <nav class="flex items-center gap-1">
-                        <a href="#" class="inline-flex items-center justify-center rounded-md text-sm font-medium h-8 w-8 border border-input bg-background">
-                            <span class="sr-only">이전 페이지</span>
-                            <span>‹</span>
-                        </a>
-                        <a href="#" class="inline-flex items-center justify-center rounded-md text-sm font-medium h-8 w-8 bg-primary text-primary-foreground">
-                            <span>1</span>
-                        </a>
-                        <a href="#" class="inline-flex items-center justify-center rounded-md text-sm font-medium h-8 w-8 border border-input bg-background">
-                            <span>2</span>
-                        </a>
-                        <a href="#" class="inline-flex items-center justify-center rounded-md text-sm font-medium h-8 w-8 border border-input bg-background">
-                            <span>3</span>
-                        </a>
-                        <a href="#" class="inline-flex items-center justify-center rounded-md text-sm font-medium h-8 w-8 border border-input bg-background">
-                            <span class="sr-only">다음 페이지</span>
-                            <span>›</span>
-                        </a>
-                    </nav>
+                <div th:if="${postPage.totalPages() > 1}" class="mt-6 flex justify-center gap-2">
+                    <a th:if="${postPage.hasPrevious()}"
+                       th:href="@{/boards/{slug}(slug=${board.slug}, page=${postPage.currentPage() - 1})}"
+                       class="inline-flex items-center justify-center rounded-md text-sm font-medium h-9 px-3 border border-input bg-background">이전</a>
+                    <span class="inline-flex items-center text-sm text-muted-foreground"
+                          th:text="|${postPage.currentPage() + 1} / ${postPage.totalPages()}|">1 / 1</span>
+                    <a th:if="${postPage.hasNext()}"
+                       th:href="@{/boards/{slug}(slug=${board.slug}, page=${postPage.currentPage() + 1})}"
+                       class="inline-flex items-center justify-center rounded-md text-sm font-medium h-9 px-3 border border-input bg-background">다음</a>
                 </div>
             </div>
         </div>

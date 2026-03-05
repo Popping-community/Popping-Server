@@ -10,11 +10,14 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 
 import com.example.popping.domain.Board;
 import com.example.popping.domain.User;
 import com.example.popping.domain.UserPrincipal;
 import com.example.popping.dto.BoardCreateRequest;
+import com.example.popping.dto.BoardPageResponse;
 import com.example.popping.dto.BoardResponse;
 import com.example.popping.dto.BoardUpdateRequest;
 import com.example.popping.exception.CustomAppException;
@@ -200,22 +203,24 @@ class BoardServiceTest {
     }
 
     @Test
-    @DisplayName("전체 게시판 조회: BoardResponse 리스트로 변환된다")
+    @DisplayName("게시판 목록 조회: Board → BoardResponse 매핑 및 페이지 정보를 반환한다")
     void getAllBoards_success_mapping() {
 
         // given
         Board b1 = boardForMapping("s1", "n1", "d1", userForMapping(1L, "u1"));
         Board b2 = boardForMapping("s2", "n2", "d2", userForMapping(2L, "u2"));
 
-        when(boardRepository.findAll()).thenReturn(List.of(b1, b2));
+        when(boardRepository.findAll(PageRequest.of(0, 20)))
+                .thenReturn(new PageImpl<>(List.of(b1, b2)));
 
         // when
-        List<BoardResponse> list = boardService.getAllBoards();
+        BoardPageResponse page = boardService.getBoardPage(0, 20);
 
         // then
-        assertEquals(2, list.size());
-        assertEquals("n1", list.get(0).name());
-        assertEquals("u2", list.get(1).createdBy());
+        assertEquals(2, page.boards().size());
+        assertEquals("n1", page.boards().get(0).name());
+        assertEquals("u2", page.boards().get(1).createdBy());
+        assertEquals(2, page.totalBoards());
     }
 
     private UserPrincipal principal(Long userId) {

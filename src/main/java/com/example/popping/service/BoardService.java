@@ -1,7 +1,7 @@
 package com.example.popping.service;
 
-import java.util.List;
-
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -10,6 +10,7 @@ import com.example.popping.domain.Board;
 import com.example.popping.domain.User;
 import com.example.popping.domain.UserPrincipal;
 import com.example.popping.dto.BoardCreateRequest;
+import com.example.popping.dto.BoardPageResponse;
 import com.example.popping.dto.BoardResponse;
 import com.example.popping.dto.BoardUpdateRequest;
 import com.example.popping.exception.CustomAppException;
@@ -61,10 +62,18 @@ public class BoardService {
         return BoardResponse.from(board);
     }
 
-    public List<BoardResponse> getAllBoards() {
-        return boardRepository.findAll().stream()
-                .map(BoardResponse::from)
-                .toList();
+    public BoardPageResponse getBoardPage(int page, int size) {
+        Page<BoardResponse> boardPage = boardRepository.findAll(PageRequest.of(page, size))
+                .map(BoardResponse::from);
+
+        return new BoardPageResponse(
+                boardPage.getContent(),
+                (int) boardPage.getTotalElements(),
+                boardPage.getNumber(),
+                boardPage.getTotalPages(),
+                boardPage.hasNext(),
+                boardPage.hasPrevious()
+        );
     }
 
     public Board getBoard(String slug) {

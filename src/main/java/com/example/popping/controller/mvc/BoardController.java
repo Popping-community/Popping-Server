@@ -10,7 +10,9 @@ import lombok.RequiredArgsConstructor;
 
 import com.example.popping.domain.UserPrincipal;
 import com.example.popping.dto.BoardCreateRequest;
+import com.example.popping.dto.BoardPageResponse;
 import com.example.popping.dto.BoardUpdateRequest;
+import com.example.popping.dto.PostPageResponse;
 import com.example.popping.service.BoardService;
 import com.example.popping.service.PostService;
 
@@ -30,14 +32,18 @@ public class BoardController {
     private final PostService postService;
 
     @GetMapping
-    public String listBoards(Model model) {
-        model.addAttribute("boards", boardService.getAllBoards());
+    public String listBoards(@RequestParam(defaultValue = "0") int page, Model model) {
+        BoardPageResponse boardPage = boardService.getBoardPage(page, 20);
+
+        model.addAttribute("boardPage", boardPage);
         return VIEW_LIST;
     }
 
     @GetMapping("/{slug}")
-    public String getBoard(@PathVariable String slug, Model model) {
-        putBoardDetail(model, slug);
+    public String getBoard(@PathVariable String slug,
+                           @RequestParam(defaultValue = "0") int page,
+                           Model model) {
+        putBoardDetail(model, slug, page);
         return VIEW_DETAIL;
     }
 
@@ -89,9 +95,11 @@ public class BoardController {
         return redirectToBoards();
     }
 
-    private void putBoardDetail(Model model, String slug) {
+    private void putBoardDetail(Model model, String slug, int page) {
+        PostPageResponse postPage = postService.getPostPage(slug, page, 20);
+
         model.addAttribute("board", boardService.getBoardResponse(slug));
-        model.addAttribute("posts", postService.getPostsByBoardSlug(slug));
+        model.addAttribute("postPage", postPage);
     }
 
     private void putEditForm(Model model, String slug, UserPrincipal loginUser) {
