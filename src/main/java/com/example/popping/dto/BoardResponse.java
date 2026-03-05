@@ -12,9 +12,8 @@ public record BoardResponse(
 
 ) {
     public static BoardResponse from(Board board) {
-        if (board == null) return null;
-
         var user = board.getCreatedBy();
+
         return new BoardResponse(
                 board.getName(),
                 board.getDescription(),
