@@ -29,7 +29,7 @@ jib {
 	}
 	container {
 		environment = [TZ: "Asia/Seoul"]
-		jvmFlags = ['-Dspring.profiles.active=dev', '-XX:+UseContainerSupport', '-Dfile.encoding=UTF-8', '-Duser.timezone="Asia/Seoul"']
+		jvmFlags = ['-XX:+UseContainerSupport', '-Dfile.encoding=UTF-8', '-Duser.timezone="Asia/Seoul"']
 	}
 }
 
