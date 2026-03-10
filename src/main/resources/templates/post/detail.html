@@ -602,7 +602,7 @@
             console.log('Connected: ' + frame);
             stompClient.subscribe('/topic/like-updates', function (response) {
                 const parsedResponse = JSON.parse(response.body);
-                updateLikeCounts(parsedResponse);
+                updateReaction(parsedResponse);
             });
             console.log('WebSocket connected successfully');
         }, function(error) {
@@ -645,17 +645,34 @@
         stompClient.send('/app/like', headers, JSON.stringify(request));
     }
 
-    function updateLikeCounts(response) {
-        console.log('Received like update:', response);
+    function updateReaction(response) {
         const targetType = response.targetType.toLowerCase();
-        const likeCountElement = document.getElementById(`like-count-${targetType}-${response.targetId}`);
-        const dislikeCountElement = document.getElementById(`dislike-count-${targetType}-${response.targetId}`);
+        const targetId = response.targetId;
+        const action = response.action;
 
-        if (likeCountElement) {
-            likeCountElement.textContent = response.likeCount;
+        const likeCountElement = document.getElementById(`like-count-${targetType}-${targetId}`);
+        const dislikeCountElement = document.getElementById(`dislike-count-${targetType}-${targetId}`);
+
+        if (!likeCountElement || !dislikeCountElement) {
+            return;
         }
-        if (dislikeCountElement) {
-            dislikeCountElement.textContent = response.dislikeCount;
+
+        let likeCount = parseInt(likeCountElement.textContent, 10);
+        let dislikeCount = parseInt(dislikeCountElement.textContent, 10);
+
+        switch (action) {
+            case 'LIKED':
+                likeCountElement.textContent = likeCount + 1;
+                break;
+            case 'UNLIKED':
+                likeCountElement.textContent = Math.max(0, likeCount - 1);
+                break;
+            case 'DISLIKED':
+                dislikeCountElement.textContent = dislikeCount + 1;
+                break;
+            case 'UNDISLIKED':
+                dislikeCountElement.textContent = Math.max(0, dislikeCount - 1);
+                break;
         }
     }
 
