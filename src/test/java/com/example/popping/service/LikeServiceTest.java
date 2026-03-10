@@ -10,9 +10,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.example.popping.domain.Comment;
 import com.example.popping.domain.Like;
-import com.example.popping.domain.Post;
 import com.example.popping.domain.User;
 import com.example.popping.domain.UserPrincipal;
 import com.example.popping.dto.LikeRequest;
@@ -49,9 +47,6 @@ class LikeServiceTest {
                 Like.TargetType.POST, 10L, user, null, Like.Type.LIKE
         )).thenReturn(Optional.empty());
 
-        Post post = postWithCounts(3, 1);
-        when(postService.getPost(10L)).thenReturn(post);
-
         // when
         LikeResponse res = likeService.toggleLike(req, principal);
 
@@ -73,8 +68,7 @@ class LikeServiceTest {
 
         assertEquals(10L, res.targetId());
         assertEquals(Like.TargetType.POST, res.targetType());
-        assertEquals(3, res.likeCount());
-        assertEquals(1, res.dislikeCount());
+        assertEquals(LikeResponse.LikeAction.LIKED, res.action());
     }
 
     @Test
@@ -93,9 +87,6 @@ class LikeServiceTest {
                 Like.TargetType.COMMENT, 20L, user, null, Like.Type.DISLIKE
         )).thenReturn(Optional.of(existing));
 
-        Comment comment = commentWithCounts(7, 4);
-        when(commentService.getComment(20L)).thenReturn(comment);
-
         // when
         LikeResponse res = likeService.toggleLike(req, principal);
 
@@ -109,8 +100,7 @@ class LikeServiceTest {
 
         assertEquals(20L, res.targetId());
         assertEquals(Like.TargetType.COMMENT, res.targetType());
-        assertEquals(7, res.likeCount());
-        assertEquals(4, res.dislikeCount());
+        assertEquals(LikeResponse.LikeAction.UNDISLIKED, res.action());
     }
 
     @Test
@@ -124,9 +114,6 @@ class LikeServiceTest {
         when(likeRepository.findByTargetTypeAndTargetIdAndUserAndGuestIdentifierAndType(
                 Like.TargetType.POST, 30L, null, "guest-abc", Like.Type.DISLIKE
         )).thenReturn(Optional.empty());
-
-        Post post = postWithCounts(0, 9);
-        when(postService.getPost(30L)).thenReturn(post);
 
         // when
         LikeResponse res = likeService.toggleLike(req, principal);
@@ -147,8 +134,7 @@ class LikeServiceTest {
 
         assertEquals(30L, res.targetId());
         assertEquals(Like.TargetType.POST, res.targetType());
-        assertEquals(0, res.likeCount());
-        assertEquals(9, res.dislikeCount());
+        assertEquals(LikeResponse.LikeAction.DISLIKED, res.action());
     }
 
     @Test
@@ -178,19 +164,5 @@ class LikeServiceTest {
 
     private User userAuthOnly() {
         return mock(User.class);
-    }
-
-    private Post postWithCounts(int likeCount, int dislikeCount) {
-        Post post = mock(Post.class);
-        when(post.getLikeCount()).thenReturn(likeCount);
-        when(post.getDislikeCount()).thenReturn(dislikeCount);
-        return post;
-    }
-
-    private Comment commentWithCounts(int likeCount, int dislikeCount) {
-        Comment comment = mock(Comment.class);
-        when(comment.getLikeCount()).thenReturn(likeCount);
-        when(comment.getDislikeCount()).thenReturn(dislikeCount);
-        return comment;
     }
 }
