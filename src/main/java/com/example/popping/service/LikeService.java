@@ -26,7 +26,6 @@ public class LikeService {
         User user = getUser(principal);
         String guestIdentifier = req.guestIdentifier();
 
-        // 회원/게스트 중 하나는 반드시 확정되어야 함
         validateActor(user, guestIdentifier);
 
         Like.TargetType targetType = req.targetType();
@@ -34,6 +33,7 @@ public class LikeService {
         Long targetId = req.targetId();
 
         Like existing = findExisting(targetType, targetId, type, user, guestIdentifier);
+        boolean removed = existing != null;
 
         if (existing != null) {
             likeRepository.delete(existing);
@@ -47,8 +47,7 @@ public class LikeService {
             applyDelta(targetType, type, targetId, 1);
         }
 
-        LikeCounts counts = loadCounts(targetType, targetId);
-        return new LikeResponse(targetId, targetType, counts.likeCount(), counts.dislikeCount());
+        return new LikeResponse(targetId, targetType, resolveAction(type, removed));
     }
 
     private User getUser(UserPrincipal principal) {
@@ -89,18 +88,15 @@ public class LikeService {
         else commentService.updateDislikeCount(commentId, delta);
     }
 
-    private LikeCounts loadCounts(Like.TargetType targetType, Long targetId) {
-        return switch (targetType) {
-            case POST -> {
-                Post post = postService.getPost(targetId);
-                yield new LikeCounts(post.getLikeCount(), post.getDislikeCount());
-            }
-            case COMMENT -> {
-                Comment comment = commentService.getComment(targetId);
-                yield new LikeCounts(comment.getLikeCount(), comment.getDislikeCount());
-            }
-        };
-    }
+    private LikeResponse.LikeAction resolveAction(Like.Type type, boolean removed) {
+        if (type == Like.Type.LIKE) {
+            return removed
+                    ? LikeResponse.LikeAction.UNLIKED
+                    : LikeResponse.LikeAction.LIKED;
+        }
 
-    private record LikeCounts(int likeCount, int dislikeCount) {}
+        return removed
+                ? LikeResponse.LikeAction.UNDISLIKED
+                : LikeResponse.LikeAction.DISLIKED;
+    }
 }
