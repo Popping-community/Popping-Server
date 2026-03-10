@@ -5,6 +5,12 @@ import com.example.popping.domain.Like;
 public record LikeResponse(
         Long targetId,
         Like.TargetType targetType,
-        int likeCount,
-        int dislikeCount
-) {}
+        LikeAction action
+) {
+    public enum LikeAction {
+        LIKED,
+        UNLIKED,
+        DISLIKED,
+        UNDISLIKED
+    }
+}
