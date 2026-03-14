@@ -10,10 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 
-import com.example.popping.domain.Comment;
-import com.example.popping.domain.Post;
-import com.example.popping.domain.User;
-import com.example.popping.domain.UserPrincipal;
+import com.example.popping.domain.*;
 import com.example.popping.dto.CommentPageResponse;
 import com.example.popping.dto.CommentResponse;
 import com.example.popping.dto.GuestCommentCreateRequest;
@@ -33,6 +30,7 @@ public class CommentService {
 
     private final PostService postService;
     private final UserService userService;
+    private final LikeQueryService likeQueryService;
     private final CommentRepository commentRepository;
     private final PasswordEncoder passwordEncoder;
     private final CacheManager cacheManager;
@@ -113,11 +111,12 @@ public class CommentService {
     }
 
     @Transactional(readOnly = true)
-    public CommentPageResponse getCommentPage(Long postId, int page) {
-        if (page == 0) {
-            return getFirstPage(postId);
-        }
-        return buildCommentPage(postId, page);
+    public CommentPageResponse getCommentPage(Long postId, int page, UserPrincipal principal, String guestIdentifier) {
+        CommentPageResponse commonPage = (page == 0)
+                ? getFirstPageCommon(postId)
+                : buildCommentPage(postId, page);
+
+        return mergeReactionState(commonPage, principal, guestIdentifier);
     }
 
     @Transactional(readOnly = true)
@@ -134,7 +133,7 @@ public class CommentService {
         return getComment(parentId);
     }
 
-    private CommentPageResponse getFirstPage(Long postId) {
+    private CommentPageResponse getFirstPageCommon(Long postId) {
         Cache cache = cacheManager.getCache(COMMENT_FIRST_PAGE_CACHE);
         if (cache == null) {
             return buildCommentPage(postId, 0);
@@ -189,7 +188,7 @@ public class CommentService {
         List<CommentNode> roots = new ArrayList<>();
 
         for (CommentTreeRowView row : rows) {
-            CommentResponse base = CommentResponse.mapToResponse(row, userIdToNickname);
+            CommentResponse base = CommentResponse.mapToResponse(row, userIdToNickname, false, false);
             CommentNode node = new CommentNode(base);
             nodeMap.put(base.id(), node);
 
@@ -209,6 +208,72 @@ public class CommentService {
         return roots.stream()
                 .map(CommentNode::toResponse)
                 .toList();
+    }
+
+    private CommentPageResponse mergeReactionState(CommentPageResponse commonPage,
+                                                   UserPrincipal principal,
+                                                   String guestIdentifier) {
+        if (commonPage == null || commonPage.comments().isEmpty()) {
+            return commonPage;
+        }
+
+        if (principal == null && (guestIdentifier == null || guestIdentifier.isBlank())) {
+            return commonPage;
+        }
+
+        Set<Long> commentIds = new LinkedHashSet<>();
+        collectCommentIds(commonPage.comments(), commentIds);
+
+        Map<Long, Set<Like.Type>> reactionMap =
+                likeQueryService.getReactionMap(Like.TargetType.COMMENT, commentIds, principal, guestIdentifier);
+
+        List<CommentResponse> mergedComments = commonPage.comments().stream()
+                .map(comment -> applyReaction(comment, reactionMap))
+                .toList();
+
+        return new CommentPageResponse(
+                mergedComments,
+                commonPage.totalComments(),
+                commonPage.currentPage(),
+                commonPage.totalPages(),
+                commonPage.hasNext(),
+                commonPage.hasPrevious()
+        );
+    }
+
+    private void collectCommentIds(List<CommentResponse> comments, Set<Long> collector) {
+        for (CommentResponse comment : comments) {
+            collector.add(comment.id());
+            if (!comment.children().isEmpty()) {
+                collectCommentIds(comment.children(), collector);
+            }
+        }
+    }
+
+    private CommentResponse applyReaction(CommentResponse comment,
+                                          Map<Long, Set<Like.Type>> reactionMap) {
+        Set<Like.Type> reactions = reactionMap.get(comment.id());
+        boolean likedByMe = reactions != null && reactions.contains(Like.Type.LIKE);
+        boolean dislikedByMe = reactions != null && reactions.contains(Like.Type.DISLIKE);
+
+        List<CommentResponse> mergedChildren = comment.children().stream()
+                .map(child -> applyReaction(child, reactionMap))
+                .toList();
+
+        return new CommentResponse(
+                comment.id(),
+                comment.content(),
+                comment.authorName(),
+                comment.authorId(),
+                comment.guestNickname(),
+                comment.likeCount(),
+                comment.dislikeCount(),
+                likedByMe,
+                dislikedByMe,
+                comment.parentId(),
+                comment.depth(),
+                mergedChildren
+        );
     }
 
     private void validateMemberAuthor(Comment comment, User user) {
@@ -271,6 +336,8 @@ public class CommentService {
                     base.guestNickname(),
                     base.likeCount(),
                     base.dislikeCount(),
+                    base.likedByMe(),
+                    base.dislikedByMe(),
                     base.parentId(),
                     base.depth(),
                     children.stream().map(CommentNode::toResponse).toList()
