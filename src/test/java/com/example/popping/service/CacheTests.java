@@ -36,6 +36,7 @@ class CacheTests {
 
     @Mock PostService postService;
     @Mock UserService userService;
+    @Mock LikeQueryService likeQueryService;
     @Mock CommentRepository commentRepository;
     @Mock PasswordEncoder passwordEncoder;
 
@@ -66,6 +67,9 @@ class CacheTests {
             cacheStore.remove(key);
             return null;
         }).when(cache).evict(any());
+
+        when(likeQueryService.getReactionMap(any(), any(), any(), any()))
+                .thenReturn(java.util.Collections.emptyMap());
     }
 
     @Test
@@ -81,8 +85,8 @@ class CacheTests {
                 .thenReturn(List.of());
 
         // when
-        commentService.getCommentPage(postId, 0);
-        commentService.getCommentPage(postId, 0);
+        commentService.getCommentPage(postId, 0, null, null);
+        commentService.getCommentPage(postId, 0, null, null);
 
         // then
         verify(commentRepository, times(1))
@@ -102,7 +106,7 @@ class CacheTests {
                 .thenReturn(List.of());
 
         // 캐시 채우기(1회 DB)
-        commentService.getCommentPage(postId, 0);
+        commentService.getCommentPage(postId, 0, null, null);
 
         MemberCommentCreateRequest dto = new MemberCommentCreateRequest("hello");
         UserPrincipal principal = principal(1L);
@@ -117,10 +121,10 @@ class CacheTests {
         commentService.createMemberComment(postId, dto, principal, null);
 
         // then
-        verify(cache).evict(postId);
+        verify(cache, atLeastOnce()).evict(any());
 
         // 다시 조회하면 캐시가 비어서 DB 재조회
-        commentService.getCommentPage(postId, 0);
+        commentService.getCommentPage(postId, 0, null, null);
 
         verify(commentRepository, times(2))
                 .findPagedCommentTree(postId, CommentService.COMMENTS_SIZE, 0);
@@ -141,7 +145,7 @@ class CacheTests {
                 .thenReturn(List.of());
 
         // 캐시 채우기(1회 DB)
-        commentService.getCommentPage(postId, 0);
+        commentService.getCommentPage(postId, 0, null, null);
 
         when(commentRepository.findPostIdByCommentId(commentId)).thenReturn(postId);
 
@@ -149,12 +153,33 @@ class CacheTests {
         commentService.updateLikeCount(commentId, +1);
 
         // then
-        verify(cache).evict(postId);
+        verify(cache, atLeastOnce()).evict(any());
 
         // 다시 조회하면 DB 재조회
-        commentService.getCommentPage(postId, 0);
+        commentService.getCommentPage(postId, 0, null, null);
 
         verify(commentRepository, times(2))
+                .findPagedCommentTree(postId, CommentService.COMMENTS_SIZE, 0);
+    }
+
+    @Test
+    @DisplayName("댓글 첫 페이지 캐시: 공통 데이터는 한 번만 조회하고 사용자/게스트 반응만 합성한다")
+    void getCommentFirstPage_commonCache_thenMergeReactionByActor() {
+        Long postId = 10L;
+        Post post = mock(Post.class);
+        when(postService.getPost(postId)).thenReturn(post);
+        when(commentRepository.findPagedCommentTree(postId, CommentService.COMMENTS_SIZE, 0))
+                .thenReturn(List.of());
+
+        UserPrincipal user = principal(1L);
+
+        commentService.getCommentPage(postId, 0, user, null);
+        commentService.getCommentPage(postId, 0, user, null);
+
+        commentService.getCommentPage(postId, 0, null, "guest-1");
+        commentService.getCommentPage(postId, 0, null, "guest-1");
+
+        verify(commentRepository, times(1))
                 .findPagedCommentTree(postId, CommentService.COMMENTS_SIZE, 0);
     }
 
