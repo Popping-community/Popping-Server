@@ -3,6 +3,7 @@ package com.example.popping.service;
 import java.util.List;
 import java.util.Optional;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -32,11 +33,17 @@ class PostServiceTest {
     @Mock BoardService boardService;
     @Mock ImageService imageService;
     @Mock UserService userService;
+    @Mock LikeQueryService likeQueryService;
     @Mock ViewCountService viewCountService;
     @Mock PasswordEncoder passwordEncoder;
     @Mock PostRepository postRepository;
 
     @InjectMocks PostService postService;
+
+    @BeforeEach
+    void setUp() {
+        lenient().when(likeQueryService.getReactionMap(any(), any(), any(), any())).thenReturn(java.util.Collections.emptyMap());
+    }
 
     @Test
     @DisplayName("회원 게시글 생성: Post를 올바르게 생성하고 저장 후 이미지 링크를 수행한다")
@@ -333,7 +340,7 @@ class PostServiceTest {
         when(postRepository.findById(postId)).thenReturn(Optional.of(post));
 
         // when
-        PostResponse res = postService.getPostResponse(postId);
+        PostResponse res = postService.getPostResponse(postId, null, null);
 
         // then
         verify(viewCountService).increaseView(postId);
@@ -429,7 +436,7 @@ class PostServiceTest {
                 .thenReturn(new PageImpl<>(List.of(p1, p2)));
 
         // when
-        PostPageResponse page = postService.getPostPage(slug, 0, 20);
+        PostPageResponse page = postService.getPostPage(slug, 0, 20, null, null);
 
         // then
         assertEquals(2, page.posts().size());

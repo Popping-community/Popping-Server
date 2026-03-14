@@ -55,9 +55,9 @@ class PostControllerTest {
 
         PostResponse postResponse = new PostResponse(
                 10L, "t", "c", "author", "board",
-                null, "guestNick", 0L, 0, 0, 0
+                null, "guestNick", 0L, 0, 0, 0, false, false
         );
-        when(postService.getPostResponse(postId)).thenReturn(postResponse);
+        when(postService.getPostResponse(postId, null, null)).thenReturn(postResponse);
 
         MockHttpSession session = new MockHttpSession();
 
@@ -79,7 +79,7 @@ class PostControllerTest {
                 .andExpect(model().attributeExists("form"));
 
         verify(postService).verifyGuestPassword(postId, password);
-        verify(postService).getPostResponse(postId);
+        verify(postService).getPostResponse(postId, null, null);
     }
 
     @Test
@@ -110,7 +110,7 @@ class PostControllerTest {
                 .andExpect(redirectedUrl("/boards/" + slug + "/" + postId + "/edit-password"));
 
         verify(postService).verifyGuestPassword(postId, password);
-        verify(postService, never()).getPostResponse(anyLong());
+        verify(postService, never()).getPostResponse(anyLong(), any(), any());
     }
 
     @Test
