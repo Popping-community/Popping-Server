@@ -21,15 +21,15 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     @EntityGraph(attributePaths = {"author"})
     Page<Post> findAllByBoard(Board board, Pageable pageable);
 
-    @Modifying
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("UPDATE Post p SET p.viewCount = p.viewCount + 1 WHERE p.id = :postId")
     void increaseViewCount(@Param("postId") Long postId);
 
-    @Modifying
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("UPDATE Post p SET p.likeCount = p.likeCount + :delta WHERE p.id = :postId")
     void updateLikeCount(@Param("postId") Long postId, @Param("delta") int delta);
 
-    @Modifying
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("UPDATE Post p SET p.dislikeCount = p.dislikeCount + :delta WHERE p.id = :postId")
     void updateDislikeCount(@Param("postId") Long postId, @Param("delta") int delta);
 }
