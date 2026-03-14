@@ -1,5 +1,9 @@
 package com.example.popping.service;
 
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -7,10 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 
-import com.example.popping.domain.Board;
-import com.example.popping.domain.Post;
-import com.example.popping.domain.User;
-import com.example.popping.domain.UserPrincipal;
+import com.example.popping.domain.*;
 import com.example.popping.dto.*;
 import com.example.popping.exception.CustomAppException;
 import com.example.popping.exception.ErrorType;
@@ -24,6 +25,7 @@ public class PostService {
     private final BoardService boardService;
     private final ImageService imageService;
     private final UserService userService;
+    private final LikeQueryService likeQueryService;
     private final ViewCountService viewCountService;
     private final PasswordEncoder passwordEncoder;
     private final PostRepository postRepository;
@@ -117,10 +119,21 @@ public class PostService {
     }
 
     @Transactional(readOnly = true)
-    public PostResponse getPostResponse(Long postId) {
+    public PostResponse getPostResponse(Long postId, UserPrincipal principal, String guestIdentifier) {
         viewCountService.increaseView(postId);
         Post post = getPost(postId);
-        return PostResponse.from(post);
+        boolean likedByMe = false;
+        boolean dislikedByMe = false;
+
+        if (principal != null || (guestIdentifier != null && !guestIdentifier.isBlank())) {
+            Map<Long, Set<Like.Type>> reactionMap =
+                    likeQueryService.getReactionMap(Like.TargetType.POST, List.of(postId), principal, guestIdentifier);
+            Set<Like.Type> reactions = reactionMap.get(postId);
+            likedByMe = reactions != null && reactions.contains(Like.Type.LIKE);
+            dislikedByMe = reactions != null && reactions.contains(Like.Type.DISLIKE);
+        }
+
+        return PostResponse.from(post, likedByMe, dislikedByMe);
     }
 
     @Transactional(readOnly = true)
@@ -131,19 +144,32 @@ public class PostService {
 
         validateAuthor(post, user);
 
-        return PostResponse.from(post);
+        return PostResponse.from(post, false, false);
     }
 
     @Transactional(readOnly = true)
-    public PostPageResponse getPostPage(String slug, int page, int size) {
+    public PostPageResponse getPostPage(String slug, int page, int size, UserPrincipal principal, String guestIdentifier) {
 
         Board board = getBoard(slug);
 
-        Page<PostResponse> postPage = postRepository.findAllByBoard(board, PageRequest.of(page, size))
-                .map(PostResponse::from);
+        Page<Post> postPage = postRepository.findAllByBoard(board, PageRequest.of(page, size));
+
+        List<Long> postIds = postPage.getContent().stream()
+                .map(Post::getId)
+                .toList();
+
+        Map<Long, Set<Like.Type>> reactionMap =
+                likeQueryService.getReactionMap(Like.TargetType.POST, postIds, principal, guestIdentifier);
+
+        Page<PostResponse> postResponsePage = postPage.map(post -> {
+            Set<Like.Type> reactions = reactionMap.get(post.getId());
+            boolean likedByMe = reactions != null && reactions.contains(Like.Type.LIKE);
+            boolean dislikedByMe = reactions != null && reactions.contains(Like.Type.DISLIKE);
+            return PostResponse.from(post, likedByMe, dislikedByMe);
+        });
 
         return new PostPageResponse(
-                postPage.getContent(),
+                postResponsePage.getContent(),
                 (int) postPage.getTotalElements(),
                 postPage.getNumber(),
                 postPage.getTotalPages(),
