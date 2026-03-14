@@ -14,10 +14,12 @@ public record PostResponse(
         Long viewCount,
         int commentCount,
         int likeCount,
-        int dislikeCount
+        int dislikeCount,
+        boolean likedByMe,
+        boolean dislikedByMe
 
 ) {
-    public static PostResponse from(Post post) {
+    public static PostResponse from(Post post, boolean likedByMe, boolean dislikedByMe) {
 
         boolean isGuest = post.isGuest();
 
@@ -32,7 +34,9 @@ public record PostResponse(
                 post.getViewCount(),
                 post.getCommentCount(),
                 post.getLikeCount(),
-                post.getDislikeCount()
+                post.getDislikeCount(),
+                likedByMe,
+                dislikedByMe
         );
     }
 }
