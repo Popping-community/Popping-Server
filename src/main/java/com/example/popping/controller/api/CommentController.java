@@ -23,9 +23,11 @@ public class CommentController {
     public CommentPageResponse getComments(
             @PathVariable String slug,
             @PathVariable Long postId,
-            @RequestParam(defaultValue = "0") int page
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(required = false) String guestIdentifier,
+            @AuthenticationPrincipal UserPrincipal user
     ) {
-        return commentService.getCommentPage(postId, page);
+        return commentService.getCommentPage(postId, page, user, guestIdentifier);
     }
 
     @PostMapping("/member")

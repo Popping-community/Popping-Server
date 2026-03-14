@@ -44,9 +44,12 @@ public class PostController {
     }
 
     @GetMapping("/{postId}")
-    public String getPost(@PathVariable Long postId, Model model) {
-        PostResponse postResponse = postService.getPostResponse(postId);
-        CommentPageResponse commentPageResponses = commentService.getCommentPage(postId, 0);
+    public String getPost(@PathVariable Long postId,
+                          @AuthenticationPrincipal UserPrincipal loginUser,
+                          @CookieValue(name = "guestIdentifier", required = false) String guestIdentifier,
+                          Model model) {
+        PostResponse postResponse = postService.getPostResponse(postId, loginUser, guestIdentifier);
+        CommentPageResponse commentPageResponses = commentService.getCommentPage(postId, 0, loginUser, guestIdentifier);
 
         model.addAttribute(ATTR_POST, postResponse);
         model.addAttribute(ATTR_COMMENTS, commentPageResponses);
@@ -131,7 +134,7 @@ public class PostController {
             return redirectToEditPassword(slug, postId, false);
         }
 
-        PostResponse dto = postService.getPostResponse(postId);
+        PostResponse dto = postService.getPostResponse(postId, null, null);
         model.addAttribute(ATTR_POST, dto);
         model.addAttribute(ATTR_FORM, PostEditForm.from(dto));
         return VIEW_POST_EDIT_FORM;
@@ -166,7 +169,7 @@ public class PostController {
         }
 
         if (bindingResult.hasErrors()) {
-            PostResponse postResponse = postService.getPostResponse(postId);
+            PostResponse postResponse = postService.getPostResponse(postId, null, null);
             model.addAttribute(ATTR_POST, postResponse);
             return VIEW_POST_EDIT_FORM;
         }

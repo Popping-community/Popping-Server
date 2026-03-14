@@ -42,8 +42,10 @@ public class BoardController {
     @GetMapping("/{slug}")
     public String getBoard(@PathVariable String slug,
                            @RequestParam(defaultValue = "0") int page,
+                           @AuthenticationPrincipal UserPrincipal loginUser,
+                           @CookieValue(name = "guestIdentifier", required = false) String guestIdentifier,
                            Model model) {
-        putBoardDetail(model, slug, page);
+        putBoardDetail(model, slug, page, loginUser, guestIdentifier);
         return VIEW_DETAIL;
     }
 
@@ -95,8 +97,8 @@ public class BoardController {
         return redirectToBoards();
     }
 
-    private void putBoardDetail(Model model, String slug, int page) {
-        PostPageResponse postPage = postService.getPostPage(slug, page, 20);
+    private void putBoardDetail(Model model, String slug, int page, UserPrincipal loginUser, String guestIdentifier) {
+        PostPageResponse postPage = postService.getPostPage(slug, page, 20, loginUser, guestIdentifier);
 
         model.addAttribute("board", boardService.getBoardResponse(slug));
         model.addAttribute("postPage", postPage);
