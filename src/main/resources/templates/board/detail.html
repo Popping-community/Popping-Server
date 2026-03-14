@@ -211,5 +211,16 @@
         </div>
     </div>
 </footer>
+
+<script>
+    (function syncGuestIdentifierCookie() {
+        let guestId = localStorage.getItem('guestIdentifier');
+        if (!guestId) {
+            guestId = 'guest-' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+            localStorage.setItem('guestIdentifier', guestId);
+        }
+        document.cookie = `guestIdentifier=${encodeURIComponent(guestId)}; path=/; max-age=31536000; SameSite=Lax`;
+    })();
+</script>
 </body>
 </html>

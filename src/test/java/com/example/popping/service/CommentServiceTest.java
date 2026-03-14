@@ -38,6 +38,7 @@ class CommentServiceTest {
 
     @Mock PostService postService;
     @Mock UserService userService;
+    @Mock LikeQueryService likeQueryService;
     @Mock CommentRepository commentRepository;
     @Mock PasswordEncoder passwordEncoder;
     @Mock
@@ -49,7 +50,7 @@ class CommentServiceTest {
 
     @BeforeEach
     void setUpCacheManager() {
-        lenient().when(cacheManager.getCache(anyString())).thenReturn(cache);
+        lenient().when(likeQueryService.getReactionMap(any(), any(), any(), any())).thenReturn(java.util.Collections.emptyMap());
     }
 
     @Test
@@ -322,7 +323,7 @@ class CommentServiceTest {
                 .thenReturn(Map.of(100L, "닉"));
 
         // when
-        CommentPageResponse res = commentService.getCommentPage(postId, page);
+        CommentPageResponse res = commentService.getCommentPage(postId, page, null, null);
 
         // then
         assertEquals(2, res.totalComments());

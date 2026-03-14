@@ -14,6 +14,8 @@ public record CommentResponse(
         String guestNickname,
         int likeCount,
         int dislikeCount,
+        boolean likedByMe,
+        boolean dislikedByMe,
         Long parentId,
         int depth,
         List<CommentResponse> children
@@ -26,7 +28,9 @@ public record CommentResponse(
 
     public static CommentResponse mapToResponse(
             CommentTreeRowView row,
-            Map<Long, String> userIdToNickname
+            Map<Long, String> userIdToNickname,
+            boolean likedByMe,
+            boolean dislikedByMe
     ) {
         Long userId = row.getUserId();
         String guestNickname = row.getGuestNickname();
@@ -43,6 +47,8 @@ public record CommentResponse(
                 userId == null ? guestNickname : null,
                 row.getLikeCount() == null ? 0 : row.getLikeCount(),
                 row.getDislikeCount() == null ? 0 : row.getDislikeCount(),
+                likedByMe,
+                dislikedByMe,
                 row.getParentId(),
                 row.getDepth() == null ? 0 : row.getDepth(),
                 List.of() // record에서 방어적 복사하니까 불변 빈 리스트
