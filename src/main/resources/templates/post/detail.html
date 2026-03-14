@@ -438,7 +438,8 @@
                         <button
                                 th:onclick="'sendLike(' + ${post.id} + ', \'POST\', \'LIKE\')'"
                                 class="like-button inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 gap-2"
-                                th:id="'like-btn-post-' + ${post.id}">
+                                th:id="'like-btn-post-' + ${post.id}"
+                                th:classappend="${post.likedByMe} ? ' active' : ''">
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M7 10v12"></path>
                                 <path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2h0a3.13 3.13 0 0 1 3 3.88Z"></path>
@@ -449,7 +450,8 @@
                         <button
                                 th:onclick="'sendLike(' + ${post.id} + ', \'POST\', \'DISLIKE\')'"
                                 class="dislike-button inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 gap-2"
-                                th:id="'dislike-btn-post-' + ${post.id}">
+                                th:id="'dislike-btn-post-' + ${post.id}"
+                                th:classappend="${post.dislikedByMe} ? ' active' : ''">
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M17 14V2"></path>
                                 <path d="M9 18.12 10 14H4.17a2 2 0 0 1-1.92-2.56l2.33-8A2 2 0 0 1 6.5 2H20a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2.76a2 2 0 0 0-1.79 1.11L12 22h0a3.13 3.13 0 0 1-3-3.88Z"></path>
@@ -624,6 +626,12 @@
             return;
         }
 
+        const targetTypeLower = targetType.toLowerCase();
+        const typeLower = type.toLowerCase();
+        const button = document.getElementById(`${typeLower}-btn-${targetTypeLower}-${targetId}`);
+        const isActive = button && button.classList.contains('active');
+        const destination = isActive ? '/app/like/remove' : '/app/like/add';
+
         const request = {
             targetId: targetId,
             targetType: targetType,
@@ -641,8 +649,16 @@
             headers[csrfHeader.getAttribute('content')] = csrfToken.getAttribute('content');
         }
 
-        console.log('Sending like request:', request);
-        stompClient.send('/app/like', headers, JSON.stringify(request));
+        if (button) {
+            if (isActive) {
+                button.classList.remove('active');
+            } else {
+                button.classList.add('active');
+            }
+        }
+
+        console.log('Sending like request:', request, destination);
+        stompClient.send(destination, headers, JSON.stringify(request));
     }
 
     function updateReaction(response) {
@@ -685,10 +701,17 @@
         return guestId;
     }
 
+    function syncGuestIdentifierCookie() {
+        const guestId = getGuestIdentifier();
+        document.cookie = `guestIdentifier=${encodeURIComponent(guestId)}; path=/; max-age=31536000; SameSite=Lax`;
+        return guestId;
+    }
+
     // 댓글 관련 함수들
     async function loadComments(page = 0) {
         try {
-            const response = await fetch(`/boards/${slug}/${postId}/comments?page=${page}`);
+            const guestIdentifier = getGuestIdentifier();
+            const response = await fetch(`/boards/${slug}/${postId}/comments?page=${page}&guestIdentifier=${encodeURIComponent(guestIdentifier)}`);
             const data = await response.json();
 
             currentPage = data.currentPage;
@@ -773,7 +796,7 @@
                 <div class="comment-content">${comment.content}</div>
                 <div class="comment-actions">
                     <button onclick="sendLike(${comment.id}, 'COMMENT', 'LIKE')"
-                            class="action-button like-button"
+                            class="action-button like-button${comment.likedByMe ? ' active' : ''}"
                             id="like-btn-comment-${comment.id}">
                         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M7 10v12"></path>
@@ -782,7 +805,7 @@
                         <span id="like-count-comment-${comment.id}">${comment.likeCount}</span>
                     </button>
                     <button onclick="sendLike(${comment.id}, 'COMMENT', 'DISLIKE')"
-                            class="action-button dislike-button"
+                            class="action-button dislike-button${comment.dislikedByMe ? ' active' : ''}"
                             id="dislike-btn-comment-${comment.id}">
                         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M17 14V2"></path>
@@ -1099,6 +1122,7 @@
 
     // 이벤트 리스너 등록
     document.addEventListener('DOMContentLoaded', function() {
+        syncGuestIdentifierCookie();
         // WebSocket 연결
         connect();
 
