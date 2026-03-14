@@ -4,7 +4,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 
-import com.example.popping.domain.*;
+import com.example.popping.domain.Like;
+import com.example.popping.domain.User;
+import com.example.popping.domain.UserPrincipal;
 import com.example.popping.dto.LikeRequest;
 import com.example.popping.dto.LikeResponse;
 import com.example.popping.exception.CustomAppException;
@@ -21,33 +23,44 @@ public class LikeService {
     private final CommentService commentService;
     private final UserService userService;
 
-    public LikeResponse toggleLike(LikeRequest req, UserPrincipal principal) {
-
+    public LikeResponse addLike(LikeRequest req, UserPrincipal principal) {
         User user = getUser(principal);
         String guestIdentifier = req.guestIdentifier();
-
         validateActor(user, guestIdentifier);
 
-        Like.TargetType targetType = req.targetType();
-        Like.Type type = req.type();
-        Long targetId = req.targetId();
+        int inserted = likeRepository.insertIgnore(
+                guestIdentifier,
+                req.targetId(),
+                req.targetType().name(),
+                req.type().name(),
+                user != null ? user.getId() : null
+        );
 
-        Like existing = findExisting(targetType, targetId, type, user, guestIdentifier);
-        boolean removed = existing != null;
-
-        if (existing != null) {
-            likeRepository.delete(existing);
-            applyDelta(targetType, type, targetId, -1);
-        } else {
-            Like like = (user != null)
-                    ? Like.createByMember(type, targetType, targetId, user)
-                    : Like.createByGuest(type, targetType, targetId, guestIdentifier);
-
-            likeRepository.save(like);
-            applyDelta(targetType, type, targetId, 1);
+        if (inserted > 0) {
+            applyDelta(req.targetType(), req.type(), req.targetId(), 1);
         }
 
-        return new LikeResponse(targetId, targetType, resolveAction(type, removed));
+        return new LikeResponse(req.targetId(), req.targetType(), addedAction(req.type()));
+    }
+
+    public LikeResponse removeLike(LikeRequest req, UserPrincipal principal) {
+        User user = getUser(principal);
+        String guestIdentifier = req.guestIdentifier();
+        validateActor(user, guestIdentifier);
+
+        int deleted = likeRepository.deleteByActor(
+                req.targetType(),
+                req.targetId(),
+                req.type(),
+                user,
+                guestIdentifier
+        );
+
+        if (deleted > 0) {
+            applyDelta(req.targetType(), req.type(), req.targetId(), -1);
+        }
+
+        return new LikeResponse(req.targetId(), req.targetType(), removedAction(req.type()));
     }
 
     private User getUser(UserPrincipal principal) {
@@ -59,15 +72,6 @@ public class LikeService {
         if (user == null && (guestIdentifier == null || guestIdentifier.isBlank())) {
             throw new CustomAppException(ErrorType.ACCESS_DENIED);
         }
-    }
-
-    private Like findExisting(Like.TargetType targetType, Long targetId, Like.Type type,
-                              User user, String guestIdentifier) {
-        return likeRepository
-                .findByTargetTypeAndTargetIdAndUserAndGuestIdentifierAndType(
-                        targetType, targetId, user, guestIdentifier, type
-                )
-                .orElse(null);
     }
 
     private void applyDelta(Like.TargetType targetType, Like.Type type, Long targetId, int delta) {
@@ -88,15 +92,15 @@ public class LikeService {
         else commentService.updateDislikeCount(commentId, delta);
     }
 
-    private LikeResponse.LikeAction resolveAction(Like.Type type, boolean removed) {
-        if (type == Like.Type.LIKE) {
-            return removed
-                    ? LikeResponse.LikeAction.UNLIKED
-                    : LikeResponse.LikeAction.LIKED;
-        }
-
-        return removed
-                ? LikeResponse.LikeAction.UNDISLIKED
+    private LikeResponse.LikeAction addedAction(Like.Type type) {
+        return type == Like.Type.LIKE
+                ? LikeResponse.LikeAction.LIKED
                 : LikeResponse.LikeAction.DISLIKED;
+    }
+
+    private LikeResponse.LikeAction removedAction(Like.Type type) {
+        return type == Like.Type.LIKE
+                ? LikeResponse.LikeAction.UNLIKED
+                : LikeResponse.LikeAction.UNDISLIKED;
     }
 }

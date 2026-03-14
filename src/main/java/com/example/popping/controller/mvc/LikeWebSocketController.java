@@ -25,20 +25,36 @@ public class LikeWebSocketController {
 
     private final LikeService likeService;
 
-    @MessageMapping("/like")
+    @MessageMapping("/like/add")
     @SendTo("/topic/like-updates")
-    public LikeResponse handleLike(@Valid LikeRequest request,
+    public LikeResponse handleAddLike(@Valid LikeRequest request,
                                    SimpMessageHeaderAccessor headerAccessor) {
 
         UserPrincipal userPrincipal = extractUserPrincipal(headerAccessor.getUser());
-        return likeService.toggleLike(request, userPrincipal);
+        return likeService.addLike(request, userPrincipal);
     }
 
-    @PostMapping("/api/test/likes/toggle")
+    @MessageMapping("/like/remove")
+    @SendTo("/topic/like-updates")
+    public LikeResponse handleRemoveLike(@Valid LikeRequest request,
+                                         SimpMessageHeaderAccessor headerAccessor) {
+
+        UserPrincipal userPrincipal = extractUserPrincipal(headerAccessor.getUser());
+        return likeService.removeLike(request, userPrincipal);
+    }
+
+    @PostMapping("/api/test/likes/add")
     @ResponseBody
-    public LikeResponse toggle(@RequestBody LikeRequest request,
+    public LikeResponse add(@RequestBody LikeRequest request,
+                            @AuthenticationPrincipal UserPrincipal principal) {
+        return likeService.addLike(request, principal);
+    }
+
+    @PostMapping("/api/test/likes/remove")
+    @ResponseBody
+    public LikeResponse remove(@RequestBody LikeRequest request,
                                @AuthenticationPrincipal UserPrincipal principal) {
-        return likeService.toggleLike(request, principal);
+        return likeService.removeLike(request, principal);
     }
 
     private UserPrincipal extractUserPrincipal(Principal principal) {
