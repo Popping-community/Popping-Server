@@ -32,7 +32,7 @@ public class CommentService {
     private final UserService userService;
     private final LikeQueryService likeQueryService;
     private final CommentRepository commentRepository;
-    private final PasswordEncoder passwordEncoder;
+    private final PasswordEncoder guestPasswordEncoder;
     private final CacheManager cacheManager;
 
     public Long createMemberComment(Long postId,
@@ -60,7 +60,7 @@ public class CommentService {
         Post post = postService.getPost(postId);
         Comment parent = getParentComment(parentId);
 
-        String hashedPassword = passwordEncoder.encode(dto.guestPassword());
+        String hashedPassword = guestPasswordEncoder.encode(dto.guestPassword());
 
         Comment comment = Comment.createGuestComment(
                 dto.content(),
@@ -295,7 +295,7 @@ public class CommentService {
     }
 
     private void validateGuestPassword(Comment comment, String rawPassword) {
-        if (!passwordEncoder.matches(rawPassword, comment.getGuestPasswordHash())) {
+        if (!guestPasswordEncoder.matches(rawPassword, comment.getGuestPasswordHash())) {
             throw new CustomAppException(
                     ErrorType.ACCESS_DENIED,
                     "비밀번호가 일치하지 않습니다."
