@@ -40,7 +40,7 @@ class CommentServiceTest {
     @Mock UserService userService;
     @Mock LikeQueryService likeQueryService;
     @Mock CommentRepository commentRepository;
-    @Mock PasswordEncoder passwordEncoder;
+    @Mock PasswordEncoder guestPasswordEncoder;
     @Mock
     CacheManager cacheManager;
     @Mock
@@ -149,7 +149,7 @@ class CommentServiceTest {
         Post post = mock(Post.class);
         when(postService.getPost(postId)).thenReturn(post);
 
-        when(passwordEncoder.encode("1234")).thenReturn("ENC");
+        when(guestPasswordEncoder.encode("1234")).thenReturn("ENC");
 
         Comment saved = commentWithId(200L);
         when(commentRepository.save(any(Comment.class))).thenReturn(saved);
@@ -171,7 +171,7 @@ class CommentServiceTest {
         assertNull(captured.getParent());
         assertEquals(0, captured.getDepth());
 
-        verify(passwordEncoder).encode("1234");
+        verify(guestPasswordEncoder).encode("1234");
         verify(post).increaseCommentCount();
     }
 
@@ -240,7 +240,7 @@ class CommentServiceTest {
         when(comment.isGuest()).thenReturn(true);
         when(comment.getGuestPasswordHash()).thenReturn("HASH");
 
-        when(passwordEncoder.matches("raw", "HASH")).thenReturn(true);
+        when(guestPasswordEncoder.matches("raw", "HASH")).thenReturn(true);
 
         Post post = mock(Post.class);
         when(comment.getPost()).thenReturn(post);
@@ -265,7 +265,7 @@ class CommentServiceTest {
         when(comment.isGuest()).thenReturn(true);
         when(comment.getGuestPasswordHash()).thenReturn("HASH");
 
-        when(passwordEncoder.matches("wrong", "HASH")).thenReturn(false);
+        when(guestPasswordEncoder.matches("wrong", "HASH")).thenReturn(false);
 
         // when
         CustomAppException ex = assertThrows(
@@ -297,7 +297,7 @@ class CommentServiceTest {
 
         // then
         assertEquals(ErrorType.ACCESS_DENIED, ex.getErrorType());
-        verify(passwordEncoder, never()).matches(anyString(), anyString());
+        verify(guestPasswordEncoder, never()).matches(anyString(), anyString());
         verify(commentRepository, never()).delete(any());
     }
 
