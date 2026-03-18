@@ -27,7 +27,7 @@ public class PostService {
     private final UserService userService;
     private final LikeQueryService likeQueryService;
     private final ViewCountService viewCountService;
-    private final PasswordEncoder passwordEncoder;
+    private final PasswordEncoder guestPasswordEncoder;
     private final PostRepository postRepository;
 
     public Long createMemberPost(String slug,
@@ -49,7 +49,7 @@ public class PostService {
 
         Board board = getBoard(slug);
 
-        String encodedPassword = passwordEncoder.encode(dto.guestPassword());
+        String encodedPassword = guestPasswordEncoder.encode(dto.guestPassword());
 
         Post post = Post.createGuestPost(
                 dto.title(),
@@ -85,7 +85,7 @@ public class PostService {
 
         post.updateAsGuest(dto.title(), dto.content(), dto.guestNickname());
 
-        post.changeGuestPasswordHash(passwordEncoder.encode(dto.guestPassword()));
+        post.changeGuestPasswordHash(guestPasswordEncoder.encode(dto.guestPassword()));
 
         linkImages(dto.content(), post);
     }
@@ -184,7 +184,7 @@ public class PostService {
         Post post = getPost(postId);
         validateGuestPost(post);
 
-        return passwordEncoder.matches(rawPassword, post.getGuestPasswordHash());
+        return guestPasswordEncoder.matches(rawPassword, post.getGuestPasswordHash());
     }
 
     @Transactional(readOnly = true)

@@ -35,7 +35,7 @@ class PostServiceTest {
     @Mock UserService userService;
     @Mock LikeQueryService likeQueryService;
     @Mock ViewCountService viewCountService;
-    @Mock PasswordEncoder passwordEncoder;
+    @Mock PasswordEncoder guestPasswordEncoder;
     @Mock PostRepository postRepository;
 
     @InjectMocks PostService postService;
@@ -95,7 +95,7 @@ class PostServiceTest {
         Board board = mock(Board.class);
         when(boardService.getBoard(slug)).thenReturn(board);
 
-        when(passwordEncoder.encode("1234")).thenReturn("ENC");
+        when(guestPasswordEncoder.encode("1234")).thenReturn("ENC");
 
         Post saved = postWithId(200L);
         when(postRepository.save(any(Post.class))).thenReturn(saved);
@@ -116,7 +116,7 @@ class PostServiceTest {
         assertEquals("ENC", captured.getGuestPasswordHash());
         assertSame(board, captured.getBoard());
 
-        verify(passwordEncoder).encode("1234");
+        verify(guestPasswordEncoder).encode("1234");
         verify(imageService).linkToPostAndMakePermanent(dto.content(), saved);
     }
 
@@ -187,14 +187,14 @@ class PostServiceTest {
         when(postRepository.findById(postId)).thenReturn(Optional.of(post));
         when(post.isGuest()).thenReturn(true);
 
-        when(passwordEncoder.encode("9999")).thenReturn("ENC2");
+        when(guestPasswordEncoder.encode("9999")).thenReturn("ENC2");
 
         // when
         postService.updatePostAsGuest(postId, dto);
 
         // then
         verify(post).updateAsGuest("newTitle", "newContent<img/>", "newNick");
-        verify(passwordEncoder).encode("9999");
+        verify(guestPasswordEncoder).encode("9999");
         verify(post).changeGuestPasswordHash("ENC2");
         verify(imageService).linkToPostAndMakePermanent(dto.content(), post);
     }
@@ -223,7 +223,7 @@ class PostServiceTest {
         assertEquals(ErrorType.ACCESS_DENIED, ex.getErrorType());
         verify(post, never()).updateAsGuest(anyString(), anyString(), anyString());
         verify(post, never()).changeGuestPasswordHash(anyString());
-        verify(passwordEncoder, never()).encode(anyString());
+        verify(guestPasswordEncoder, never()).encode(anyString());
         verify(imageService, never()).linkToPostAndMakePermanent(anyString(), any());
     }
 
@@ -455,14 +455,14 @@ class PostServiceTest {
         when(post.isGuest()).thenReturn(true);
         when(post.getGuestPasswordHash()).thenReturn("HASH");
 
-        when(passwordEncoder.matches("raw", "HASH")).thenReturn(true);
+        when(guestPasswordEncoder.matches("raw", "HASH")).thenReturn(true);
 
         // when
         boolean ok = postService.verifyGuestPassword(postId, "raw");
 
         // then
         assertTrue(ok);
-        verify(passwordEncoder).matches("raw", "HASH");
+        verify(guestPasswordEncoder).matches("raw", "HASH");
     }
 
     @Test
@@ -483,7 +483,7 @@ class PostServiceTest {
 
         // then
         assertEquals(ErrorType.ACCESS_DENIED, ex.getErrorType());
-        verify(passwordEncoder, never()).matches(anyString(), anyString());
+        verify(guestPasswordEncoder, never()).matches(anyString(), anyString());
     }
 
     @Test
