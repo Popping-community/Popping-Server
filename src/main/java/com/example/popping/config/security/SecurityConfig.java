@@ -23,7 +23,7 @@ public class SecurityConfig {
                                 "/boards/new",
                                 "/boards/*/edit",
                                 "/boards/*/delete",
-                                "/boards/*/*/posts/member",
+                                "/boards/*/member",
                                 "/boards/*/*/comments/member"
                         ).authenticated()
                         .anyRequest().permitAll()
