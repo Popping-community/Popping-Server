@@ -19,7 +19,13 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(authz -> authz
-                        .requestMatchers("/boards/new", "/boards/*/edit", "/boards/*/delete").authenticated() // 로그인 필요
+                        .requestMatchers(
+                                "/boards/new",
+                                "/boards/*/edit",
+                                "/boards/*/delete",
+                                "/boards/*/*/posts/member",
+                                "/boards/*/*/comments/member"
+                        ).authenticated()
                         .anyRequest().permitAll()
                 )
                 .formLogin(form -> form
