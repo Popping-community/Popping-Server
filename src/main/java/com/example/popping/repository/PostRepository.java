@@ -18,8 +18,11 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     @EntityGraph(attributePaths = {"author", "board"})
     Optional<Post> findById(Long id);
 
-    @EntityGraph(attributePaths = {"author"})
-    Page<Post> findAllByBoard(Board board, Pageable pageable);
+    @Query(
+        value = "SELECT p FROM Post p LEFT JOIN FETCH p.author WHERE p.board = :board",
+        countQuery = "SELECT COUNT(p) FROM Post p WHERE p.board = :board"
+    )
+    Page<Post> findAllByBoard(@Param("board") Board board, Pageable pageable);
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("UPDATE Post p SET p.viewCount = p.viewCount + 1 WHERE p.id = :postId")
