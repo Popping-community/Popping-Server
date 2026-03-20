@@ -11,7 +11,6 @@ import lombok.RequiredArgsConstructor;
 
 import com.example.popping.domain.UserPrincipal;
 import com.example.popping.dto.*;
-import com.example.popping.service.CommentService;
 import com.example.popping.service.PostService;
 
 @Controller
@@ -26,7 +25,6 @@ public class PostController {
 
     private static final String ATTR_SLUG = "slug";
     private static final String ATTR_POST = "post";
-    private static final String ATTR_COMMENTS = "comments";
     private static final String ATTR_FORM = "form";
 
     private static final String VIEW_POST_DETAIL = "post/detail";
@@ -36,7 +34,6 @@ public class PostController {
     private static final String VIEW_DELETE_PASSWORD_FORM = "post/delete-password-form";
 
     private final PostService postService;
-    private final CommentService commentService;
 
     @ModelAttribute(ATTR_SLUG)
     public String slug(@PathVariable String slug) {
@@ -49,10 +46,8 @@ public class PostController {
                           @CookieValue(name = "guestIdentifier", required = false) String guestIdentifier,
                           Model model) {
         PostResponse postResponse = postService.getPostResponse(postId, loginUser, guestIdentifier);
-        CommentPageResponse commentPageResponses = commentService.getCommentPage(postId, 0, loginUser, guestIdentifier);
 
         model.addAttribute(ATTR_POST, postResponse);
-        model.addAttribute(ATTR_COMMENTS, commentPageResponses);
         return VIEW_POST_DETAIL;
     }
 
