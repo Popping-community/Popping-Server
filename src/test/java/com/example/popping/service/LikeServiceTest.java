@@ -42,7 +42,7 @@ class LikeServiceTest {
         when(userService.getLoginUserById(1L)).thenReturn(user);
         when(user.getId()).thenReturn(1L);
 
-        when(likeRepository.insertIgnore(null, 10L, "POST", "LIKE", 1L))
+        when(likeRepository.insertIgnore("POST", 10L, "Like", 1L, null))
                 .thenReturn(1);
 
         // when
@@ -62,7 +62,7 @@ class LikeServiceTest {
         // given
         LikeRequest req = new LikeRequest(10L, Like.TargetType.POST, Like.Type.LIKE, "guest-1");
 
-        when(likeRepository.insertIgnore("guest-1", 10L, "POST", "LIKE", null))
+        when(likeRepository.insertIgnore("POST", 10L, "Like", null, "guest-1"))
                 .thenReturn(0);
 
         // when
