@@ -29,11 +29,11 @@ public class LikeService {
         validateActor(user, guestIdentifier);
 
         int inserted = likeRepository.insertIgnore(
-                guestIdentifier,
-                req.targetId(),
                 req.targetType().name(),
+                req.targetId(),
                 req.type().name(),
-                user != null ? user.getId() : null
+                user != null ? user.getId() : null,
+                guestIdentifier
         );
 
         if (inserted > 0) {

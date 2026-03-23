@@ -2,7 +2,6 @@ package com.example.popping.repository;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -13,7 +12,6 @@ import com.example.popping.domain.Like;
 import com.example.popping.domain.User;
 
 public interface LikeRepository extends JpaRepository<Like, Long> {
-    Optional<Like> findByTargetTypeAndTargetIdAndUserAndGuestIdentifierAndType(Like.TargetType targetType, Long targetId, User user, String guestIdentifier, Like.Type type);
 
     List<Like> findAllByTargetTypeAndTargetIdInAndUser(Like.TargetType targetType, Collection<Long> targetIds, User user);
 
@@ -24,15 +22,15 @@ public interface LikeRepository extends JpaRepository<Like, Long> {
 
     @Modifying
     @Query(value = """
-    insert ignore into likes (guest_identifier, target_id, target_type, type, user_id)
-    values (:guestIdentifier, :targetId, :targetType, :type, :userId)
+    insert ignore into likes (target_type, target_id, type, user_id, guest_identifier)
+    values (:targetType, :targetId, :type, :userId, :guestIdentifier)
     """, nativeQuery = true)
     int insertIgnore(
-            @Param("guestIdentifier") String guestIdentifier,
-            @Param("targetId") Long targetId,
             @Param("targetType") String targetType,
+            @Param("targetId") Long targetId,
             @Param("type") String type,
-            @Param("userId") Long userId
+            @Param("userId") Long userId,
+            @Param("guestIdentifier") String guestIdentifier
     );
 
     @Modifying
