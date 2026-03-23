@@ -13,6 +13,10 @@ import lombok.NoArgsConstructor;
         uniqueConstraints = {
                 @UniqueConstraint(columnNames = {"user_id", "target_type", "target_id", "type"}),
                 @UniqueConstraint(columnNames = {"guestIdentifier", "target_type", "target_id", "type"})
+        },
+        indexes = {
+                @Index(name = "idx_like_target_member", columnList = "target_id,user_id,target_type,type"),
+                @Index(name = "idx_like_target_guest",  columnList = "target_id,guest_identifier,target_type,type")
         }
 )
 public class Like {
@@ -45,38 +49,4 @@ public class Like {
     private User user;
 
     private String guestIdentifier;
-
-    private Like(Type type, TargetType targetType, Long targetId,
-                 User user, String guestIdentifier) {
-        this.type = type;
-        this.targetType = targetType;
-        this.targetId = targetId;
-        this.user = user;
-        this.guestIdentifier = guestIdentifier;
-    }
-
-    public static Like createByMember(Type type, TargetType targetType,
-                                      Long targetId, User user) {
-        validateCommon(type, targetType, targetId);
-        if (user == null) {
-            throw new IllegalArgumentException("회원 Like는 user가 필수입니다.");
-        }
-        return new Like(type, targetType, targetId, user, null);
-    }
-
-    public static Like createByGuest(Type type, TargetType targetType,
-                                     Long targetId, String guestIdentifier) {
-        validateCommon(type, targetType, targetId);
-        if (guestIdentifier == null || guestIdentifier.isBlank()) {
-            throw new IllegalArgumentException("게스트 Like는 guestIdentifier가 필수입니다.");
-        }
-        return new Like(type, targetType, targetId, null, guestIdentifier);
-    }
-
-    private static void validateCommon(Type type, TargetType targetType,
-                                       Long targetId) {
-        if (type == null) throw new IllegalArgumentException("type은 필수입니다.");
-        if (targetType == null) throw new IllegalArgumentException("targetType은 필수입니다.");
-        if (targetId == null) throw new IllegalArgumentException("targetId는 필수입니다.");
-    }
 }
