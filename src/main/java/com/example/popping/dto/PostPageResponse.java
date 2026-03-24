@@ -4,7 +4,7 @@ import java.util.List;
 
 public record PostPageResponse(
 
-        List<PostResponse> posts,
+        List<PostListItemResponse> posts,
         int totalPosts,
         int currentPage,
         int totalPages,
