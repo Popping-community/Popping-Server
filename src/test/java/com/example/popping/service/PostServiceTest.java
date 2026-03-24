@@ -407,7 +407,7 @@ class PostServiceTest {
     }
 
     @Test
-    @DisplayName("게시판별 게시글 조회: Post → PostResponse 매핑 및 페이지 정보를 반환한다")
+    @DisplayName("게시판별 게시글 조회: PostListItemResponse 매핑 및 페이지 정보를 반환한다")
     void getPostsByBoardSlug_success_mapping() {
 
         // given
@@ -415,25 +415,11 @@ class PostServiceTest {
         Board board = mock(Board.class);
         when(boardService.getBoard(slug)).thenReturn(board);
 
-        User a1 = userForMapping(1L, "u1");
-        User a2 = userForMapping(2L, "u2");
+        PostListItemResponse r1 = new PostListItemResponse(1L, "t1", "u1", 1L, null, 0L, 0, 0, 0, false, false);
+        PostListItemResponse r2 = new PostListItemResponse(2L, "t2", "u2", 2L, null, 0L, 0, 0, 0, false, false);
 
-        Post p1 = mock(Post.class);
-        when(p1.getId()).thenReturn(1L);
-        when(p1.getTitle()).thenReturn("t1");
-        when(p1.getContent()).thenReturn("c1");
-        when(p1.getAuthor()).thenReturn(a1);
-        when(p1.getBoard()).thenReturn(board);
-
-        Post p2 = mock(Post.class);
-        when(p2.getId()).thenReturn(2L);
-        when(p2.getTitle()).thenReturn("t2");
-        when(p2.getContent()).thenReturn("c2");
-        when(p2.getAuthor()).thenReturn(a2);
-        when(p2.getBoard()).thenReturn(board);
-
-        when(postRepository.findAllByBoard(board, PageRequest.of(0, 20)))
-                .thenReturn(new PageImpl<>(List.of(p1, p2)));
+        when(postRepository.findPostListByBoard(board, PageRequest.of(0, 20)))
+                .thenReturn(new PageImpl<>(List.of(r1, r2)));
 
         // when
         PostPageResponse page = postService.getPostPage(slug, 0, 20, null, null);
@@ -441,7 +427,7 @@ class PostServiceTest {
         // then
         assertEquals(2, page.posts().size());
         assertEquals(2, page.totalPosts());
-        verify(postRepository).findAllByBoard(board, PageRequest.of(0, 20));
+        verify(postRepository).findPostListByBoard(board, PageRequest.of(0, 20));
     }
 
     @Test
