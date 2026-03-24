@@ -12,6 +12,7 @@ import org.springframework.data.repository.query.Param;
 
 import com.example.popping.domain.Board;
 import com.example.popping.domain.Post;
+import com.example.popping.dto.PostListItemResponse;
 
 public interface PostRepository extends JpaRepository<Post, Long> {
 
@@ -19,10 +20,13 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     Optional<Post> findById(Long id);
 
     @Query(
-        value = "SELECT p FROM Post p LEFT JOIN FETCH p.author WHERE p.board = :board",
+        value = "SELECT new com.example.popping.dto.PostListItemResponse(" +
+                "p.id, p.title, COALESCE(u.nickname, p.guestNickname), u.id, p.guestNickname, " +
+                "p.viewCount, p.commentCount, p.likeCount, p.dislikeCount, false, false) " +
+                "FROM Post p LEFT JOIN p.author u WHERE p.board = :board",
         countQuery = "SELECT COUNT(p) FROM Post p WHERE p.board = :board"
     )
-    Page<Post> findAllByBoard(@Param("board") Board board, Pageable pageable);
+    Page<PostListItemResponse> findPostListByBoard(@Param("board") Board board, Pageable pageable);
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("UPDATE Post p SET p.viewCount = p.viewCount + 1 WHERE p.id = :postId")
