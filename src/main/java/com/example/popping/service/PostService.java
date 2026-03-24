@@ -152,20 +152,20 @@ public class PostService {
 
         Board board = getBoard(slug);
 
-        Page<Post> postPage = postRepository.findAllByBoard(board, PageRequest.of(page, size));
+        Page<PostListItemResponse> postPage = postRepository.findPostListByBoard(board, PageRequest.of(page, size));
 
         List<Long> postIds = postPage.getContent().stream()
-                .map(Post::getId)
+                .map(PostListItemResponse::id)
                 .toList();
 
         Map<Long, Set<Like.Type>> reactionMap =
                 likeQueryService.getReactionMap(Like.TargetType.POST, postIds, principal, guestIdentifier);
 
-        Page<PostResponse> postResponsePage = postPage.map(post -> {
-            Set<Like.Type> reactions = reactionMap.get(post.getId());
+        Page<PostListItemResponse> postResponsePage = postPage.map(item -> {
+            Set<Like.Type> reactions = reactionMap.get(item.id());
             boolean likedByMe = reactions != null && reactions.contains(Like.Type.LIKE);
             boolean dislikedByMe = reactions != null && reactions.contains(Like.Type.DISLIKE);
-            return PostResponse.from(post, likedByMe, dislikedByMe);
+            return item.withReactions(likedByMe, dislikedByMe);
         });
 
         return new PostPageResponse(
