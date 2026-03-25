@@ -36,7 +36,6 @@ class CacheTests {
 
     @Mock PostService postService;
     @Mock UserService userService;
-    @Mock LikeQueryService likeQueryService;
     @Mock CommentRepository commentRepository;
     @Mock PasswordEncoder passwordEncoder;
 
@@ -68,8 +67,6 @@ class CacheTests {
             return null;
         }).when(cache).evict(any());
 
-        when(likeQueryService.getReactionMap(any(), any(), any(), any()))
-                .thenReturn(java.util.Collections.emptyMap());
     }
 
     @Test
@@ -131,8 +128,8 @@ class CacheTests {
     }
 
     @Test
-    @DisplayName("댓글 좋아요 변경: 첫 페이지 캐시를 무효화한다")
-    void updateLikeCount_shouldEvictFirstPageCache() {
+    @DisplayName("댓글 좋아요 변경: 첫 페이지 캐시를 무효화하지 않는다 (반응 수치는 매 요청마다 fresh 조회)")
+    void updateLikeCount_shouldNotEvictFirstPageCache() {
 
         // given
         Long postId = 10L;
@@ -147,18 +144,16 @@ class CacheTests {
         // 캐시 채우기(1회 DB)
         commentService.getCommentPage(postId, 0, null, null);
 
-        when(commentRepository.findPostIdByCommentId(commentId)).thenReturn(postId);
-
         // when
         commentService.updateLikeCount(commentId, +1);
 
-        // then
-        verify(cache, atLeastOnce()).evict(any());
+        // then - 좋아요는 캐시를 evict하지 않는다
+        verify(cache, never()).evict(any());
 
-        // 다시 조회하면 DB 재조회
+        // 다시 조회해도 캐시가 유지되어 DB 재조회 없음
         commentService.getCommentPage(postId, 0, null, null);
 
-        verify(commentRepository, times(2))
+        verify(commentRepository, times(1))
                 .findPagedCommentTree(postId, CommentService.COMMENTS_SIZE, 0);
     }
 

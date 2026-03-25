@@ -1,5 +1,6 @@
 package com.example.popping.repository;
 
+import java.util.Collection;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -10,6 +11,44 @@ import org.springframework.data.repository.query.Param;
 import com.example.popping.domain.Comment;
 
 public interface CommentRepository extends JpaRepository<Comment, Long> {
+
+    interface CommentReactionSummary {
+        Long getTargetId();
+        int getLikeCount();
+        int getDislikeCount();
+        int getLikedByMe();
+        int getDislikedByMe();
+    }
+
+    @Query(value = """
+            SELECT l.target_id AS targetId,
+                   SUM(CASE WHEN l.type = 'LIKE'    THEN 1 ELSE 0 END) AS likeCount,
+                   SUM(CASE WHEN l.type = 'DISLIKE' THEN 1 ELSE 0 END) AS dislikeCount,
+                   MAX(CASE WHEN l.user_id = :userId AND l.type = 'LIKE'    THEN 1 ELSE 0 END) AS likedByMe,
+                   MAX(CASE WHEN l.user_id = :userId AND l.type = 'DISLIKE' THEN 1 ELSE 0 END) AS dislikedByMe
+            FROM likes l
+            WHERE l.target_type = 'COMMENT'
+              AND l.target_id IN (:commentIds)
+            GROUP BY l.target_id
+            """, nativeQuery = true)
+    List<CommentReactionSummary> findReactionSummaryForMember(
+            @Param("commentIds") Collection<Long> commentIds,
+            @Param("userId") Long userId);
+
+    @Query(value = """
+            SELECT l.target_id AS targetId,
+                   SUM(CASE WHEN l.type = 'LIKE'    THEN 1 ELSE 0 END) AS likeCount,
+                   SUM(CASE WHEN l.type = 'DISLIKE' THEN 1 ELSE 0 END) AS dislikeCount,
+                   MAX(CASE WHEN l.guest_identifier = :guestId AND l.type = 'LIKE'    THEN 1 ELSE 0 END) AS likedByMe,
+                   MAX(CASE WHEN l.guest_identifier = :guestId AND l.type = 'DISLIKE' THEN 1 ELSE 0 END) AS dislikedByMe
+            FROM likes l
+            WHERE l.target_type = 'COMMENT'
+              AND l.target_id IN (:commentIds)
+            GROUP BY l.target_id
+            """, nativeQuery = true)
+    List<CommentReactionSummary> findReactionSummaryForGuest(
+            @Param("commentIds") Collection<Long> commentIds,
+            @Param("guestId") String guestId);
 
     @Query("select c.post.id from Comment c where c.id = :commentId")
     Long findPostIdByCommentId(@Param("commentId") Long commentId);
