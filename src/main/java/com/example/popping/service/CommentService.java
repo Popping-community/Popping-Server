@@ -18,6 +18,7 @@ import com.example.popping.dto.MemberCommentCreateRequest;
 import com.example.popping.exception.CustomAppException;
 import com.example.popping.exception.ErrorType;
 import com.example.popping.repository.CommentRepository;
+import com.example.popping.repository.CommentRepository.CommentReactionSummary;
 import com.example.popping.repository.CommentTreeRowView;
 
 @Service
@@ -30,7 +31,6 @@ public class CommentService {
 
     private final PostService postService;
     private final UserService userService;
-    private final LikeQueryService likeQueryService;
     private final CommentRepository commentRepository;
     private final PasswordEncoder guestPasswordEncoder;
     private final CacheManager cacheManager;
@@ -102,21 +102,19 @@ public class CommentService {
 
     public void updateLikeCount(Long targetId, int delta) {
         commentRepository.updateLikeCount(targetId, delta);
-        evictFirstPageCacheByCommentId(targetId);
     }
 
     public void updateDislikeCount(Long targetId, int delta) {
         commentRepository.updateDislikeCount(targetId, delta);
-        evictFirstPageCacheByCommentId(targetId);
     }
 
     @Transactional(readOnly = true)
     public CommentPageResponse getCommentPage(Long postId, int page, UserPrincipal principal, String guestIdentifier) {
-        CommentPageResponse commonPage = (page == 0)
+        CommentPageResponse base = (page == 0)
                 ? getFirstPageCommon(postId)
                 : buildCommentPage(postId, page);
 
-        return mergeReactionState(commonPage, principal, guestIdentifier);
+        return mergeReactionSummary(base, principal, guestIdentifier);
     }
 
     @Transactional(readOnly = true)
@@ -210,34 +208,62 @@ public class CommentService {
                 .toList();
     }
 
-    private CommentPageResponse mergeReactionState(CommentPageResponse commonPage,
-                                                   UserPrincipal principal,
-                                                   String guestIdentifier) {
-        if (commonPage == null || commonPage.comments().isEmpty()) {
-            return commonPage;
-        }
-
-        if (principal == null && (guestIdentifier == null || guestIdentifier.isBlank())) {
-            return commonPage;
-        }
+    private CommentPageResponse mergeReactionSummary(CommentPageResponse page,
+                                                     UserPrincipal principal,
+                                                     String guestIdentifier) {
+        if (page == null || page.comments().isEmpty()) return page;
+        if (principal == null && (guestIdentifier == null || guestIdentifier.isBlank())) return page;
 
         Set<Long> commentIds = new LinkedHashSet<>();
-        collectCommentIds(commonPage.comments(), commentIds);
+        collectCommentIds(page.comments(), commentIds);
 
-        Map<Long, Set<Like.Type>> reactionMap =
-                likeQueryService.getReactionMap(Like.TargetType.COMMENT, commentIds, principal, guestIdentifier);
+        List<CommentReactionSummary> summaries = (principal != null)
+                ? commentRepository.findReactionSummaryForMember(commentIds, principal.getUserId())
+                : commentRepository.findReactionSummaryForGuest(commentIds, guestIdentifier);
 
-        List<CommentResponse> mergedComments = commonPage.comments().stream()
-                .map(comment -> applyReaction(comment, reactionMap))
+        Map<Long, CommentReactionSummary> summaryMap = summaries.stream()
+                .collect(Collectors.toMap(CommentReactionSummary::getTargetId, s -> s));
+
+        List<CommentResponse> merged = page.comments().stream()
+                .map(comment -> applyReactionSummary(comment, summaryMap))
                 .toList();
 
         return new CommentPageResponse(
-                mergedComments,
-                commonPage.totalComments(),
-                commonPage.currentPage(),
-                commonPage.totalPages(),
-                commonPage.hasNext(),
-                commonPage.hasPrevious()
+                merged,
+                page.totalComments(),
+                page.currentPage(),
+                page.totalPages(),
+                page.hasNext(),
+                page.hasPrevious()
+        );
+    }
+
+    private CommentResponse applyReactionSummary(CommentResponse comment,
+                                                  Map<Long, CommentReactionSummary> summaryMap) {
+        CommentReactionSummary s = summaryMap.get(comment.id());
+
+        int likeCount    = s != null ? s.getLikeCount()    : comment.likeCount();
+        int dislikeCount = s != null ? s.getDislikeCount() : comment.dislikeCount();
+        boolean likedByMe    = s != null && s.getLikedByMe()    == 1;
+        boolean dislikedByMe = s != null && s.getDislikedByMe() == 1;
+
+        List<CommentResponse> mergedChildren = comment.children().stream()
+                .map(child -> applyReactionSummary(child, summaryMap))
+                .toList();
+
+        return new CommentResponse(
+                comment.id(),
+                comment.content(),
+                comment.authorName(),
+                comment.authorId(),
+                comment.guestNickname(),
+                likeCount,
+                dislikeCount,
+                likedByMe,
+                dislikedByMe,
+                comment.parentId(),
+                comment.depth(),
+                mergedChildren
         );
     }
 
@@ -248,32 +274,6 @@ public class CommentService {
                 collectCommentIds(comment.children(), collector);
             }
         }
-    }
-
-    private CommentResponse applyReaction(CommentResponse comment,
-                                          Map<Long, Set<Like.Type>> reactionMap) {
-        Set<Like.Type> reactions = reactionMap.get(comment.id());
-        boolean likedByMe = reactions != null && reactions.contains(Like.Type.LIKE);
-        boolean dislikedByMe = reactions != null && reactions.contains(Like.Type.DISLIKE);
-
-        List<CommentResponse> mergedChildren = comment.children().stream()
-                .map(child -> applyReaction(child, reactionMap))
-                .toList();
-
-        return new CommentResponse(
-                comment.id(),
-                comment.content(),
-                comment.authorName(),
-                comment.authorId(),
-                comment.guestNickname(),
-                comment.likeCount(),
-                comment.dislikeCount(),
-                likedByMe,
-                dislikedByMe,
-                comment.parentId(),
-                comment.depth(),
-                mergedChildren
-        );
     }
 
     private void validateMemberAuthor(Comment comment, User user) {
@@ -307,16 +307,6 @@ public class CommentService {
         Cache cache = cacheManager.getCache(COMMENT_FIRST_PAGE_CACHE);
         if (cache == null || postId == null) return;
         cache.evict(postId);
-    }
-
-    private void evictFirstPageCacheByCommentId(Long commentId) {
-        Cache cache = cacheManager.getCache(COMMENT_FIRST_PAGE_CACHE);
-        if (cache == null || commentId == null) return;
-
-        Long postId = commentRepository.findPostIdByCommentId(commentId);
-        if (postId != null) {
-            cache.evict(postId);
-        }
     }
 
     private static final class CommentNode {
