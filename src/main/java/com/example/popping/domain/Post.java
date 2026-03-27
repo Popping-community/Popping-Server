@@ -9,9 +9,9 @@ import lombok.NoArgsConstructor;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-//@Table(indexes = {
-//        @Index(name = "idx_post_board", columnList = "board_id")
-//})
+@Table(indexes = {
+        @Index(name = "idx_post_board", columnList = "board_id")
+})
 public class Post extends BaseEntity {
 
     @Id
