@@ -11,12 +11,12 @@ import lombok.NoArgsConstructor;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-/*@Table(
+@Table(
         name = "comment",
         indexes = {
                 @Index(name = "idx_comment_post_parent", columnList = "post_id,parent_id")
         }
-)*/
+)
 public class Comment extends BaseEntity {
 
     @Id
