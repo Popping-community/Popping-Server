@@ -353,12 +353,14 @@ class CommentServiceTest {
                 .thenReturn(Map.of(100L, "nick"));
 
         // likeCount 갱신: 5로 업데이트
+        CommentRepository.LikeCount lc = likeCount(1L, 5, 1);
         when(commentRepository.findLikeCountsByIds(anyCollection()))
-                .thenReturn(List.of(likeCount(1L, 5, 1)));
+                .thenReturn(List.of(lc));
 
         // 개인 반응: likedByMe=true
+        MyReactionView rv = myReaction(1L, 1, 0);
         when(likeRepository.findReactionForMember(anyCollection(), any(), eq(42L)))
-                .thenReturn(List.of(myReaction(1L, 1, 0)));
+                .thenReturn(List.of(rv));
 
         // when
         CommentPageResponse res = commentService.getCommentPage(postId, 0, principal, null);
@@ -424,11 +426,13 @@ class CommentServiceTest {
         when(userService.getUserIdToNicknameMap(Set.of(100L)))
                 .thenReturn(Map.of(100L, "nick"));
 
+        CommentRepository.LikeCount lc = likeCount(1L, 2, 0);
         when(commentRepository.findLikeCountsByIds(anyCollection()))
-                .thenReturn(List.of(likeCount(1L, 2, 0)));
+                .thenReturn(List.of(lc));
 
+        MyReactionView rv = myReaction(1L, 1, 0);
         when(likeRepository.findReactionForGuest(anyCollection(), any(), eq(guestId)))
-                .thenReturn(List.of(myReaction(1L, 1, 0)));
+                .thenReturn(List.of(rv));
 
         // when
         CommentPageResponse res = commentService.getCommentPage(postId, 0, null, guestId);
@@ -495,12 +499,14 @@ class CommentServiceTest {
                 .thenReturn(Map.of(100L, "nick"));
 
         // child(id=2): dislikeCount=3 갱신
+        CommentRepository.LikeCount childLc = likeCount(2L, 0, 3);
         when(commentRepository.findLikeCountsByIds(anyCollection()))
-                .thenReturn(List.of(likeCount(2L, 0, 3)));
+                .thenReturn(List.of(childLc));
 
         // child(id=2): dislikedByMe=true
+        MyReactionView childRv = myReaction(2L, 0, 1);
         when(likeRepository.findReactionForMember(anyCollection(), any(), eq(42L)))
-                .thenReturn(List.of(myReaction(2L, 0, 1)));
+                .thenReturn(List.of(childRv));
 
         // when
         CommentPageResponse res = commentService.getCommentPage(postId, 0, principal, null);
