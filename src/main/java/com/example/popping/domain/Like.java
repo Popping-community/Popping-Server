@@ -13,11 +13,11 @@ import lombok.NoArgsConstructor;
         uniqueConstraints = {
                 @UniqueConstraint(columnNames = {"user_id", "target_type", "target_id", "type"}),
                 @UniqueConstraint(columnNames = {"guestIdentifier", "target_type", "target_id", "type"})
+        },
+        indexes = {
+                @Index(name = "idx_like_target_member", columnList = "target_id,user_id,target_type,type"),
+                @Index(name = "idx_like_target_guest",  columnList = "target_id,guest_identifier,target_type,type")
         }
-//        indexes = {
-//                @Index(name = "idx_like_target_member", columnList = "target_id,user_id,target_type,type"),
-//                @Index(name = "idx_like_target_guest",  columnList = "target_id,guest_identifier,target_type,type")
-//        }
 )
 public class Like {
 
