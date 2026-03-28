@@ -28,6 +28,8 @@ import com.example.popping.exception.CustomAppException;
 import com.example.popping.exception.ErrorType;
 import com.example.popping.repository.CommentRepository;
 import com.example.popping.repository.CommentTreeRowView;
+import com.example.popping.repository.LikeRepository;
+import com.example.popping.repository.MyReactionView;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -38,6 +40,7 @@ class CommentServiceTest {
     @Mock PostService postService;
     @Mock UserService userService;
     @Mock CommentRepository commentRepository;
+    @Mock LikeRepository likeRepository;
     @Mock PasswordEncoder guestPasswordEncoder;
     @Mock CacheManager cacheManager;
     @Mock Cache cache;
@@ -331,7 +334,7 @@ class CommentServiceTest {
     }
 
     @Test
-    @DisplayName("댓글 페이지 조회(회원): findReactionSummaryForMember를 호출하고 likedByMe=true와 최신 likeCount를 반영한다")
+    @DisplayName("댓글 페이지 조회(회원): likeCount는 findLikeCountsByIds로, likedByMe는 findReactionForMember로 반영된다")
     void getCommentPage_member_likedByMeTrue_andLikeCountUpdated() {
 
         // given
@@ -349,10 +352,15 @@ class CommentServiceTest {
         when(userService.getUserIdToNicknameMap(Set.of(100L)))
                 .thenReturn(Map.of(100L, "nick"));
 
-        // 통합 쿼리: likeCount=5(갱신), likedByMe=1
-        CommentRepository.CommentReactionSummary s = reactionSummary(1L, 5, 1, 1, 0);
-        when(commentRepository.findReactionSummaryForMember(anyCollection(), eq(42L)))
-                .thenReturn(List.of(s));
+        // likeCount 갱신: 5로 업데이트
+        CommentRepository.LikeCount lc = likeCount(1L, 5, 1);
+        when(commentRepository.findLikeCountsByIds(anyCollection()))
+                .thenReturn(List.of(lc));
+
+        // 개인 반응: likedByMe=true
+        MyReactionView rv = myReaction(1L, 1, 0);
+        when(likeRepository.findReactionForMember(anyCollection(), any(), eq(42L)))
+                .thenReturn(List.of(rv));
 
         // when
         CommentPageResponse res = commentService.getCommentPage(postId, 0, principal, null);
@@ -364,12 +372,12 @@ class CommentServiceTest {
         assertTrue(comment.likedByMe());
         assertFalse(comment.dislikedByMe());
 
-        verify(commentRepository).findReactionSummaryForMember(anyCollection(), eq(42L));
-        verify(commentRepository, never()).findReactionSummaryForGuest(any(), any());
+        verify(likeRepository).findReactionForMember(anyCollection(), any(), eq(42L));
+        verify(likeRepository, never()).findReactionForGuest(any(), any(), any());
     }
 
     @Test
-    @DisplayName("댓글 페이지 조회(회원): summary에 없는 댓글은 CTE 기준 likeCount를 유지하고 likedByMe=false다")
+    @DisplayName("댓글 페이지 조회(회원): likes 테이블에 row가 없으면 CTE 기준 likeCount를 유지하고 likedByMe=false다")
     void getCommentPage_member_noSummary_keepsOriginalCountsAndLikedByMeFalse() {
 
         // given
@@ -387,9 +395,7 @@ class CommentServiceTest {
         when(userService.getUserIdToNicknameMap(Set.of(100L)))
                 .thenReturn(Map.of(100L, "nick"));
 
-        // 통합 쿼리 결과 없음 (likes 테이블에 해당 댓글 row 없음)
-        when(commentRepository.findReactionSummaryForMember(anyCollection(), eq(42L)))
-                .thenReturn(List.of());
+        // findLikeCountsByIds, findReactionForMember 모두 빈 리스트 반환 (Mockito 기본값)
 
         // when
         CommentPageResponse res = commentService.getCommentPage(postId, 0, principal, null);
@@ -403,7 +409,7 @@ class CommentServiceTest {
     }
 
     @Test
-    @DisplayName("댓글 페이지 조회(게스트): findReactionSummaryForGuest를 호출하고 likedByMe=true를 반영한다")
+    @DisplayName("댓글 페이지 조회(게스트): findReactionForGuest를 호출하고 likedByMe=true를 반영한다")
     void getCommentPage_guest_likedByMeTrue() {
 
         // given
@@ -420,9 +426,13 @@ class CommentServiceTest {
         when(userService.getUserIdToNicknameMap(Set.of(100L)))
                 .thenReturn(Map.of(100L, "nick"));
 
-        CommentRepository.CommentReactionSummary s = reactionSummary(1L, 2, 0, 1, 0);
-        when(commentRepository.findReactionSummaryForGuest(anyCollection(), eq(guestId)))
-                .thenReturn(List.of(s));
+        CommentRepository.LikeCount lc = likeCount(1L, 2, 0);
+        when(commentRepository.findLikeCountsByIds(anyCollection()))
+                .thenReturn(List.of(lc));
+
+        MyReactionView rv = myReaction(1L, 1, 0);
+        when(likeRepository.findReactionForGuest(anyCollection(), any(), eq(guestId)))
+                .thenReturn(List.of(rv));
 
         // when
         CommentPageResponse res = commentService.getCommentPage(postId, 0, null, guestId);
@@ -433,8 +443,8 @@ class CommentServiceTest {
         assertTrue(comment.likedByMe());
         assertFalse(comment.dislikedByMe());
 
-        verify(commentRepository).findReactionSummaryForGuest(anyCollection(), eq(guestId));
-        verify(commentRepository, never()).findReactionSummaryForMember(any(), any());
+        verify(likeRepository).findReactionForGuest(anyCollection(), any(), eq(guestId));
+        verify(likeRepository, never()).findReactionForMember(any(), any(), any());
     }
 
     @Test
@@ -458,10 +468,10 @@ class CommentServiceTest {
         CommentPageResponse res = commentService.getCommentPage(postId, 0, null, null);
 
         // then
-        verify(commentRepository, never()).findReactionSummaryForMember(any(), any());
-        verify(commentRepository, never()).findReactionSummaryForGuest(any(), any());
+        verify(likeRepository, never()).findReactionForMember(any(), any(), any());
+        verify(likeRepository, never()).findReactionForGuest(any(), any(), any());
 
-        // likeCount는 CTE 값 그대로
+        // likeCount는 CTE 값 그대로 (mergeLikeCounts는 호출됨)
         CommentResponse comment = res.comments().get(0);
         assertEquals(3, comment.likeCount());
         assertEquals(1, comment.dislikeCount());
@@ -469,7 +479,7 @@ class CommentServiceTest {
     }
 
     @Test
-    @DisplayName("댓글 페이지 조회(회원): 대댓글(children)에도 반응 요약이 적용된다")
+    @DisplayName("댓글 페이지 조회(회원): 대댓글(children)에도 likeCount 갱신과 개인 반응이 적용된다")
     void getCommentPage_member_reactionAppliedToChildren() {
 
         // given
@@ -488,10 +498,15 @@ class CommentServiceTest {
         when(userService.getUserIdToNicknameMap(Set.of(100L)))
                 .thenReturn(Map.of(100L, "nick"));
 
-        // root: 반응 없음 / child(id=2): dislikedByMe=1
-        CommentRepository.CommentReactionSummary childSummary = reactionSummary(2L, 0, 3, 0, 1);
-        when(commentRepository.findReactionSummaryForMember(anyCollection(), eq(42L)))
-                .thenReturn(List.of(childSummary));
+        // child(id=2): dislikeCount=3 갱신
+        CommentRepository.LikeCount childLc = likeCount(2L, 0, 3);
+        when(commentRepository.findLikeCountsByIds(anyCollection()))
+                .thenReturn(List.of(childLc));
+
+        // child(id=2): dislikedByMe=true
+        MyReactionView childRv = myReaction(2L, 0, 1);
+        when(likeRepository.findReactionForMember(anyCollection(), any(), eq(42L)))
+                .thenReturn(List.of(childRv));
 
         // when
         CommentPageResponse res = commentService.getCommentPage(postId, 0, principal, null);
@@ -505,7 +520,7 @@ class CommentServiceTest {
 
         assertEquals(3, child.dislikeCount());   // 0 → 3 갱신
         assertFalse(child.likedByMe());
-        assertTrue(child.dislikedByMe());        // dislikedByMe=1 반영
+        assertTrue(child.dislikedByMe());        // dislikedByMe=true 반영
     }
 
     @Test
@@ -541,32 +556,25 @@ class CommentServiceTest {
         return c;
     }
 
-    private CommentRepository.CommentReactionSummary reactionSummary(
-            Long targetId,
-            int likeCount,
-            int dislikeCount,
-            int likedByMe,
-            int dislikedByMe
-    ) {
-        CommentRepository.CommentReactionSummary s = mock(CommentRepository.CommentReactionSummary.class);
-        when(s.getTargetId()).thenReturn(targetId);
-        when(s.getLikeCount()).thenReturn(likeCount);
-        when(s.getDislikeCount()).thenReturn(dislikeCount);
-        when(s.getLikedByMe()).thenReturn(likedByMe);
-        when(s.getDislikedByMe()).thenReturn(dislikedByMe);
-        return s;
+    private MyReactionView myReaction(Long targetId, int likedByMe, int dislikedByMe) {
+        MyReactionView rv = mock(MyReactionView.class);
+        when(rv.getTargetId()).thenReturn(targetId);
+        when(rv.getLikedByMe()).thenReturn(likedByMe);
+        when(rv.getDislikedByMe()).thenReturn(dislikedByMe);
+        return rv;
     }
 
-    private CommentTreeRowView rowView(
-            Long id,
-            Long parentId,
-            String content,
-            int depth,
-            Long userId,
-            String guestNickname,
-            int likeCount,
-            int dislikeCount
-    ) {
+    private CommentRepository.LikeCount likeCount(Long id, int likeCount, int dislikeCount) {
+        CommentRepository.LikeCount lc = mock(CommentRepository.LikeCount.class);
+        when(lc.getId()).thenReturn(id);
+        when(lc.getLikeCount()).thenReturn(likeCount);
+        when(lc.getDislikeCount()).thenReturn(dislikeCount);
+        return lc;
+    }
+
+    private CommentTreeRowView rowView(Long id, Long parentId, String content, int depth,
+                                       Long userId, String guestNickname,
+                                       int likeCount, int dislikeCount) {
         CommentTreeRowView v = mock(CommentTreeRowView.class);
         when(v.getId()).thenReturn(id);
         when(v.getParentId()).thenReturn(parentId);

@@ -22,6 +22,7 @@ import com.example.popping.domain.UserPrincipal;
 import com.example.popping.dto.*;
 import com.example.popping.exception.CustomAppException;
 import com.example.popping.exception.ErrorType;
+import com.example.popping.repository.LikeRepository;
 import com.example.popping.repository.PostRepository;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -33,16 +34,17 @@ class PostServiceTest {
     @Mock BoardService boardService;
     @Mock ImageService imageService;
     @Mock UserService userService;
-    @Mock LikeQueryService likeQueryService;
     @Mock ViewCountService viewCountService;
     @Mock PasswordEncoder guestPasswordEncoder;
     @Mock PostRepository postRepository;
+    @Mock LikeRepository likeRepository;
 
     @InjectMocks PostService postService;
 
     @BeforeEach
     void setUp() {
-        lenient().when(likeQueryService.getReactionMap(any(), any(), any(), any())).thenReturn(java.util.Collections.emptyMap());
+        lenient().when(likeRepository.findReactionForMember(any(), any(), any())).thenReturn(java.util.Collections.emptyList());
+        lenient().when(likeRepository.findReactionForGuest(any(), any(), any())).thenReturn(java.util.Collections.emptyList());
     }
 
     @Test

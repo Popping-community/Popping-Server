@@ -13,9 +13,35 @@ import com.example.popping.domain.User;
 
 public interface LikeRepository extends JpaRepository<Like, Long> {
 
-    List<Like> findAllByTargetTypeAndTargetIdInAndUser(Like.TargetType targetType, Collection<Long> targetIds, User user);
+    @Query(value = """
+            SELECT l.target_id AS targetId,
+                   MAX(CASE WHEN l.type = 'LIKE'    THEN 1 ELSE 0 END) AS likedByMe,
+                   MAX(CASE WHEN l.type = 'DISLIKE' THEN 1 ELSE 0 END) AS dislikedByMe
+            FROM likes l
+            WHERE l.user_id = :userId
+              AND l.target_type = :targetType
+              AND l.target_id IN (:ids)
+            GROUP BY l.target_id
+            """, nativeQuery = true)
+    List<MyReactionView> findReactionForMember(
+            @Param("ids") Collection<Long> ids,
+            @Param("targetType") String targetType,
+            @Param("userId") Long userId);
 
-    List<Like> findAllByTargetTypeAndTargetIdInAndGuestIdentifier(Like.TargetType targetType, Collection<Long> targetIds, String guestIdentifier);
+    @Query(value = """
+            SELECT l.target_id AS targetId,
+                   MAX(CASE WHEN l.type = 'LIKE'    THEN 1 ELSE 0 END) AS likedByMe,
+                   MAX(CASE WHEN l.type = 'DISLIKE' THEN 1 ELSE 0 END) AS dislikedByMe
+            FROM likes l
+            WHERE l.guest_identifier = :guestId
+              AND l.target_type = :targetType
+              AND l.target_id IN (:ids)
+            GROUP BY l.target_id
+            """, nativeQuery = true)
+    List<MyReactionView> findReactionForGuest(
+            @Param("ids") Collection<Long> ids,
+            @Param("targetType") String targetType,
+            @Param("guestId") String guestId);
 
     long countByTargetIdAndTargetTypeAndTypeAndUser_Id(
             Long targetId, Like.TargetType targetType, Like.Type type, Long userId);

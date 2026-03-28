@@ -1,8 +1,9 @@
 package com.example.popping.service;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -15,7 +16,9 @@ import com.example.popping.domain.*;
 import com.example.popping.dto.*;
 import com.example.popping.exception.CustomAppException;
 import com.example.popping.exception.ErrorType;
+import com.example.popping.repository.LikeRepository;
 import com.example.popping.repository.PostRepository;
+import com.example.popping.repository.MyReactionView;
 
 @Service
 @Transactional
@@ -25,10 +28,10 @@ public class PostService {
     private final BoardService boardService;
     private final ImageService imageService;
     private final UserService userService;
-    private final LikeQueryService likeQueryService;
     private final ViewCountService viewCountService;
     private final PasswordEncoder guestPasswordEncoder;
     private final PostRepository postRepository;
+    private final LikeRepository likeRepository;
 
     public Long createMemberPost(String slug,
                                  MemberPostCreateRequest dto,
@@ -126,11 +129,10 @@ public class PostService {
         boolean dislikedByMe = false;
 
         if (principal != null || (guestIdentifier != null && !guestIdentifier.isBlank())) {
-            Map<Long, Set<Like.Type>> reactionMap =
-                    likeQueryService.getReactionMap(Like.TargetType.POST, List.of(postId), principal, guestIdentifier);
-            Set<Like.Type> reactions = reactionMap.get(postId);
-            likedByMe = reactions != null && reactions.contains(Like.Type.LIKE);
-            dislikedByMe = reactions != null && reactions.contains(Like.Type.DISLIKE);
+            MyReactionView s = getPostReaction(List.of(postId), principal, guestIdentifier)
+                    .get(postId);
+            likedByMe    = s != null && s.getLikedByMe()    == 1;
+            dislikedByMe = s != null && s.getDislikedByMe() == 1;
         }
 
         return PostResponse.from(post, likedByMe, dislikedByMe);
@@ -158,13 +160,12 @@ public class PostService {
                 .map(PostListItemResponse::id)
                 .toList();
 
-        Map<Long, Set<Like.Type>> reactionMap =
-                likeQueryService.getReactionMap(Like.TargetType.POST, postIds, principal, guestIdentifier);
+        Map<Long, MyReactionView> reactionMap = getPostReaction(postIds, principal, guestIdentifier);
 
         Page<PostListItemResponse> postResponsePage = postPage.map(item -> {
-            Set<Like.Type> reactions = reactionMap.get(item.id());
-            boolean likedByMe = reactions != null && reactions.contains(Like.Type.LIKE);
-            boolean dislikedByMe = reactions != null && reactions.contains(Like.Type.DISLIKE);
+            MyReactionView s = reactionMap.get(item.id());
+            boolean likedByMe    = s != null && s.getLikedByMe()    == 1;
+            boolean dislikedByMe = s != null && s.getDislikedByMe() == 1;
             return item.withReactions(likedByMe, dislikedByMe);
         });
 
@@ -194,6 +195,25 @@ public class PostService {
                         ErrorType.POST_NOT_FOUND,
                         "해당 게시글이 존재하지 않습니다: " + postId
                 ));
+    }
+
+    private Map<Long, MyReactionView> getPostReaction(List<Long> postIds,
+                                                               UserPrincipal principal,
+                                                               String guestIdentifier) {
+        if (postIds == null || postIds.isEmpty()) return Collections.emptyMap();
+
+        String targetType = Like.TargetType.POST.name();
+        List<MyReactionView> myReactionViews;
+        if (principal != null) {
+            myReactionViews = likeRepository.findReactionForMember(postIds, targetType, principal.getUserId());
+        } else if (guestIdentifier != null && !guestIdentifier.isBlank()) {
+            myReactionViews = likeRepository.findReactionForGuest(postIds, targetType, guestIdentifier);
+        } else {
+            return Collections.emptyMap();
+        }
+
+        return myReactionViews.stream()
+                .collect(Collectors.toMap(MyReactionView::getTargetId, s -> s));
     }
 
     private Board getBoard(String slug) {
@@ -226,4 +246,3 @@ public class PostService {
         imageService.deleteImages(post);
     }
 }
-
