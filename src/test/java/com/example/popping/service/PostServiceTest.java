@@ -11,8 +11,8 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.SliceImpl;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.example.popping.domain.Board;
@@ -421,14 +421,14 @@ class PostServiceTest {
         PostListItemResponse r2 = new PostListItemResponse(2L, "t2", "u2", 2L, null, 0L, 0, 0, 0, false, false);
 
         when(postRepository.findPostListByBoard(board, PageRequest.of(0, 20)))
-                .thenReturn(new PageImpl<>(List.of(r1, r2)));
+                .thenReturn(new SliceImpl<>(List.of(r1, r2), PageRequest.of(0, 20), false));
 
         // when
         PostPageResponse page = postService.getPostPage(slug, 0, 20, null, null);
 
         // then
         assertEquals(2, page.posts().size());
-        assertEquals(2, page.totalPosts());
+        assertFalse(page.hasNext());
         verify(postRepository).findPostListByBoard(board, PageRequest.of(0, 20));
     }
 
