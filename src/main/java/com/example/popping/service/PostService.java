@@ -5,8 +5,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Slice;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -154,7 +154,7 @@ public class PostService {
 
         Board board = getBoard(slug);
 
-        Page<PostListItemResponse> postPage = postRepository.findPostListByBoard(board, PageRequest.of(page, size));
+        Slice<PostListItemResponse> postPage = postRepository.findPostListByBoard(board, PageRequest.of(page, size));
 
         List<Long> postIds = postPage.getContent().stream()
                 .map(PostListItemResponse::id)
@@ -162,18 +162,18 @@ public class PostService {
 
         Map<Long, MyReactionView> reactionMap = getPostReaction(postIds, principal, guestIdentifier);
 
-        Page<PostListItemResponse> postResponsePage = postPage.map(item -> {
-            MyReactionView s = reactionMap.get(item.id());
-            boolean likedByMe    = s != null && s.getLikedByMe()    == 1;
-            boolean dislikedByMe = s != null && s.getDislikedByMe() == 1;
-            return item.withReactions(likedByMe, dislikedByMe);
-        });
+        List<PostListItemResponse> posts = postPage.getContent().stream()
+                .map(item -> {
+                    MyReactionView s = reactionMap.get(item.id());
+                    boolean likedByMe    = s != null && s.getLikedByMe()    == 1;
+                    boolean dislikedByMe = s != null && s.getDislikedByMe() == 1;
+                    return item.withReactions(likedByMe, dislikedByMe);
+                })
+                .toList();
 
         return new PostPageResponse(
-                postResponsePage.getContent(),
-                (int) postPage.getTotalElements(),
+                posts,
                 postPage.getNumber(),
-                postPage.getTotalPages(),
                 postPage.hasNext(),
                 postPage.hasPrevious()
         );

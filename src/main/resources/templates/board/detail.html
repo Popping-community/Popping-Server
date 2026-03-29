@@ -184,12 +184,12 @@
                     </div>
                 </div>
 
-                <div th:if="${postPage.totalPages() > 1}" class="mt-6 flex justify-center gap-2">
+                <div th:if="${postPage.hasPrevious() or postPage.hasNext()}" class="mt-6 flex justify-center gap-2">
                     <a th:if="${postPage.hasPrevious()}"
                        th:href="@{/boards/{slug}(slug=${board.slug}, page=${postPage.currentPage() - 1})}"
                        class="inline-flex items-center justify-center rounded-md text-sm font-medium h-9 px-3 border border-input bg-background">이전</a>
                     <span class="inline-flex items-center text-sm text-muted-foreground"
-                          th:text="|${postPage.currentPage() + 1} / ${postPage.totalPages()}|">1 / 1</span>
+                          th:text="${postPage.currentPage() + 1} + '페이지'">1페이지</span>
                     <a th:if="${postPage.hasNext()}"
                        th:href="@{/boards/{slug}(slug=${board.slug}, page=${postPage.currentPage() + 1})}"
                        class="inline-flex items-center justify-center rounded-md text-sm font-medium h-9 px-3 border border-input bg-background">다음</a>
