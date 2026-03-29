@@ -2,8 +2,8 @@ package com.example.popping.repository;
 
 import java.util.Optional;
 
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -23,10 +23,9 @@ public interface PostRepository extends JpaRepository<Post, Long> {
         value = "SELECT new com.example.popping.dto.PostListItemResponse(" +
                 "p.id, p.title, COALESCE(u.nickname, p.guestNickname), u.id, p.guestNickname, " +
                 "p.viewCount, p.commentCount, p.likeCount, p.dislikeCount, false, false) " +
-                "FROM Post p LEFT JOIN p.author u WHERE p.board = :board",
-        countQuery = "SELECT COUNT(p) FROM Post p WHERE p.board = :board"
+                "FROM Post p LEFT JOIN p.author u WHERE p.board = :board"
     )
-    Page<PostListItemResponse> findPostListByBoard(@Param("board") Board board, Pageable pageable);
+    Slice<PostListItemResponse> findPostListByBoard(@Param("board") Board board, Pageable pageable);
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("UPDATE Post p SET p.viewCount = p.viewCount + 1 WHERE p.id = :postId")
