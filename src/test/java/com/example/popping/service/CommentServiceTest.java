@@ -15,6 +15,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import com.example.popping.domain.Comment;
 import com.example.popping.domain.Post;
@@ -44,6 +45,7 @@ class CommentServiceTest {
     @Mock PasswordEncoder guestPasswordEncoder;
     @Mock CacheManager cacheManager;
     @Mock Cache cache;
+    @Mock TransactionTemplate readOnlyTx;
 
     @InjectMocks CommentService commentService;
 

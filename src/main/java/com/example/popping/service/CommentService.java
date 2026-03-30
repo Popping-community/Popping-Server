@@ -8,6 +8,7 @@ import org.springframework.cache.CacheManager;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 import lombok.RequiredArgsConstructor;
 
 import com.example.popping.domain.*;
@@ -36,6 +37,7 @@ public class CommentService {
     private final LikeRepository likeRepository;
     private final PasswordEncoder guestPasswordEncoder;
     private final CacheManager cacheManager;
+    private final TransactionTemplate readOnlyTx;
 
     public Long createMemberComment(Long postId,
                                     MemberCommentCreateRequest dto,
@@ -143,14 +145,7 @@ public class CommentService {
             return buildCommentPage(postId, 0);
         }
 
-        CommentPageResponse cached = cache.get(postId, CommentPageResponse.class);
-        if (cached != null) {
-            return cached;
-        }
-
-        CommentPageResponse fresh = buildCommentPage(postId, 0);
-        cache.put(postId, fresh);
-        return fresh;
+        return cache.get(postId, () -> readOnlyTx.execute(status -> buildCommentPage(postId, 0)));
     }
 
     private CommentPageResponse buildCommentPage(Long postId, int page) {
