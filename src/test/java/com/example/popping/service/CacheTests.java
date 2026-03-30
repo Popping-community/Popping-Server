@@ -15,6 +15,7 @@ import org.mockito.quality.Strictness;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import com.example.popping.domain.Comment;
 import com.example.popping.domain.Post;
@@ -33,6 +34,7 @@ class CacheTests {
 
     @Mock CacheManager cacheManager;
     @Mock Cache cache;
+    @Mock TransactionTemplate readOnlyTx;
 
     @Mock PostService postService;
     @Mock UserService userService;
@@ -49,9 +51,25 @@ class CacheTests {
 
         when(cacheManager.getCache(anyString())).thenReturn(cache);
 
-        when(cache.get(any(), eq(CommentPageResponse.class))).thenAnswer(inv -> {
+        when(cache.get(any(), any(java.util.concurrent.Callable.class))).thenAnswer(inv -> {
             Object key = inv.getArgument(0);
-            return (CommentPageResponse) cacheStore.get(key);
+            if (cacheStore.containsKey(key)) {
+                return cacheStore.get(key);
+            }
+            java.util.concurrent.Callable<?> loader = inv.getArgument(1);
+            Object value;
+            try {
+                value = loader.call();
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+            cacheStore.put(key, value);
+            return value;
+        });
+
+        when(readOnlyTx.execute(any())).thenAnswer(inv -> {
+            org.springframework.transaction.support.TransactionCallback<?> cb = inv.getArgument(0);
+            return cb.doInTransaction(null);
         });
 
         doAnswer(inv -> {
