@@ -19,6 +19,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.cache.Cache;
 import org.springframework.cache.caffeine.CaffeineCache;
 import org.springframework.cache.support.SimpleCacheManager;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.support.TransactionTemplate;
 
@@ -42,6 +43,7 @@ class CommentCacheStampedeTest {
     @Mock CommentRepository commentRepository;
     @Mock LikeRepository likeRepository;
     @Mock PasswordEncoder guestPasswordEncoder;
+    @Mock ApplicationEventPublisher eventPublisher;
 
     CommentService commentService;
 
@@ -66,7 +68,7 @@ class CommentCacheStampedeTest {
 
         commentService = new CommentService(
                 postService, userService, commentRepository,
-                likeRepository, guestPasswordEncoder, cacheManager, readOnlyTx
+                likeRepository, guestPasswordEncoder, cacheManager, readOnlyTx, eventPublisher
         );
     }
 

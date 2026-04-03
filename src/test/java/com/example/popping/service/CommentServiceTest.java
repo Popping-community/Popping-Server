@@ -14,6 +14,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.support.TransactionTemplate;
 
@@ -46,6 +47,7 @@ class CommentServiceTest {
     @Mock CacheManager cacheManager;
     @Mock Cache cache;
     @Mock TransactionTemplate readOnlyTx;
+    @Mock ApplicationEventPublisher eventPublisher;
 
     @InjectMocks CommentService commentService;
 

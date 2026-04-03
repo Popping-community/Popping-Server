@@ -5,11 +5,14 @@ import java.util.stream.Collectors;
 
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
 import lombok.RequiredArgsConstructor;
+
+import com.example.popping.event.CommentCacheEvictEvent;
 
 import com.example.popping.domain.*;
 import com.example.popping.dto.CommentPageResponse;
@@ -38,6 +41,7 @@ public class CommentService {
     private final PasswordEncoder guestPasswordEncoder;
     private final CacheManager cacheManager;
     private final TransactionTemplate readOnlyTx;
+    private final ApplicationEventPublisher eventPublisher;
 
     public Long createMemberComment(Long postId,
                                     MemberCommentCreateRequest dto,
@@ -353,9 +357,8 @@ public class CommentService {
     }
 
     private void evictFirstPageCacheByPostId(Long postId) {
-        Cache cache = cacheManager.getCache(COMMENT_FIRST_PAGE_CACHE);
-        if (cache == null || postId == null) return;
-        cache.evict(postId);
+        if (postId == null) return;
+        eventPublisher.publishEvent(new CommentCacheEvictEvent(postId));
     }
 
     private static final class CommentNode {

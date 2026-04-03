@@ -14,8 +14,11 @@ import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.support.TransactionTemplate;
+
+import com.example.popping.event.CommentCacheEvictEvent;
 
 import com.example.popping.domain.Comment;
 import com.example.popping.domain.Post;
@@ -35,6 +38,7 @@ class CacheTests {
     @Mock CacheManager cacheManager;
     @Mock Cache cache;
     @Mock TransactionTemplate readOnlyTx;
+    @Mock ApplicationEventPublisher eventPublisher;
 
     @Mock PostService postService;
     @Mock UserService userService;
@@ -109,19 +113,13 @@ class CacheTests {
     }
 
     @Test
-    @DisplayName("댓글 생성: 첫 페이지 캐시를 무효화하여 다음 조회 시 DB에서 다시 조회한다")
-    void createComment_shouldEvictFirstPageCache() {
+    @DisplayName("댓글 생성: 트랜잭션 커밋 후 캐시 무효화를 위해 CommentCacheEvictEvent를 발행한다")
+    void createComment_shouldPublishCacheEvictEvent() {
 
         // given
         Long postId = 10L;
         Post post = mock(Post.class);
         when(postService.getPost(postId)).thenReturn(post);
-
-        when(commentRepository.findPagedCommentTree(postId, CommentService.COMMENTS_SIZE, 0))
-                .thenReturn(List.of());
-
-        // 캐시 채우기(1회 DB)
-        commentService.getCommentPage(postId, 0, null, null);
 
         MemberCommentCreateRequest dto = new MemberCommentCreateRequest("hello");
         UserPrincipal principal = principal(1L);
@@ -132,17 +130,12 @@ class CacheTests {
         Comment saved = commentWithId(100L);
         when(commentRepository.save(any(Comment.class))).thenReturn(saved);
 
-        // when (댓글 생성 -> 캐시 evict)
+        // when
         commentService.createMemberComment(postId, dto, principal, null);
 
-        // then
-        verify(cache, atLeastOnce()).evict(any());
-
-        // 다시 조회하면 캐시가 비어서 DB 재조회
-        commentService.getCommentPage(postId, 0, null, null);
-
-        verify(commentRepository, times(2))
-                .findPagedCommentTree(postId, CommentService.COMMENTS_SIZE, 0);
+        // then: evict는 AFTER_COMMIT 리스너에서 실행되므로, 이벤트 발행 여부만 검증한다
+        verify(eventPublisher).publishEvent(any(CommentCacheEvictEvent.class));
+        verify(cache, never()).evict(any());
     }
 
     @Test
