@@ -48,8 +48,9 @@ public interface LikeRepository extends JpaRepository<Like, Long> {
 
     @Modifying
     @Query(value = """
-    insert ignore into likes (target_type, target_id, type, user_id, guest_identifier)
+    insert into likes (target_type, target_id, type, user_id, guest_identifier)
     values (:targetType, :targetId, :type, :userId, :guestIdentifier)
+    on duplicate key update id = id
     """, nativeQuery = true)
     int insertIgnore(
             @Param("targetType") String targetType,
