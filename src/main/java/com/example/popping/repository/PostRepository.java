@@ -38,4 +38,22 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("UPDATE Post p SET p.dislikeCount = p.dislikeCount + :delta WHERE p.id = :postId")
     void updateDislikeCount(@Param("postId") Long postId, @Param("delta") int delta);
+
+    @Modifying
+    @Query(value = """
+            UPDATE post p
+            JOIN (
+                SELECT target_id,
+                       SUM(CASE WHEN type = 'LIKE'    THEN 1 ELSE 0 END) AS like_count,
+                       SUM(CASE WHEN type = 'DISLIKE' THEN 1 ELSE 0 END) AS dislike_count
+                FROM likes
+                WHERE target_type = 'POST'
+                GROUP BY target_id
+            ) l ON p.id = l.target_id
+            SET p.like_count    = l.like_count,
+                p.dislike_count = l.dislike_count
+            WHERE p.like_count != l.like_count
+               OR p.dislike_count != l.dislike_count
+            """, nativeQuery = true)
+    int reconcileLikeCounts();
 }
