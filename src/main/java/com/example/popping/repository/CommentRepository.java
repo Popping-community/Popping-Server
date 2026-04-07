@@ -33,6 +33,24 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
     @Query("UPDATE Comment c SET c.dislikeCount = c.dislikeCount + :delta WHERE c.id = :commentId")
     int updateDislikeCount(@Param("commentId") Long commentId, @Param("delta") int delta);
 
+    @Modifying
+    @Query(value = """
+            UPDATE comment c
+            JOIN (
+                SELECT target_id,
+                       SUM(CASE WHEN type = 'LIKE'    THEN 1 ELSE 0 END) AS like_count,
+                       SUM(CASE WHEN type = 'DISLIKE' THEN 1 ELSE 0 END) AS dislike_count
+                FROM likes
+                WHERE target_type = 'COMMENT'
+                GROUP BY target_id
+            ) l ON c.id = l.target_id
+            SET c.like_count    = l.like_count,
+                c.dislike_count = l.dislike_count
+            WHERE c.like_count != l.like_count
+               OR c.dislike_count != l.dislike_count
+            """, nativeQuery = true)
+    int reconcileLikeCounts();
+
     @Query(value = """
             WITH RECURSIVE comment_tree AS (
                 SELECT 
