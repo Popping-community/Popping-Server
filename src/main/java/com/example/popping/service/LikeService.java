@@ -22,10 +22,11 @@ public class LikeService {
     private final PostService postService;
     private final CommentService commentService;
     private final UserService userService;
+    private final GuestIdentifierService guestIdentifierService;
 
     public LikeResponse addLike(LikeRequest req, UserPrincipal principal) {
         User user = getUser(principal);
-        String guestIdentifier = req.guestIdentifier();
+        String guestIdentifier = resolveGuestIdentifier(req.guestIdentifier());
         validateActor(user, guestIdentifier);
 
         int inserted = likeRepository.insertIgnore(
@@ -45,7 +46,7 @@ public class LikeService {
 
     public LikeResponse removeLike(LikeRequest req, UserPrincipal principal) {
         User user = getUser(principal);
-        String guestIdentifier = req.guestIdentifier();
+        String guestIdentifier = resolveGuestIdentifier(req.guestIdentifier());
         validateActor(user, guestIdentifier);
 
         int deleted = likeRepository.deleteByActor(
@@ -66,6 +67,15 @@ public class LikeService {
     private User getUser(UserPrincipal principal) {
         if (principal == null) return null;
         return userService.getLoginUserById(principal.getUserId());
+    }
+
+    /**
+     * guestIdentifier가 "uuid.signature" 형태면 서명 검증 후 UUID만 반환.
+     * 서명이 없는 구형 값이거나 null이면 그대로 반환.
+     */
+    private String resolveGuestIdentifier(String raw) {
+        if (raw == null) return null;
+        return guestIdentifierService.extractUuid(raw).orElse(raw);
     }
 
     private void validateActor(User user, String guestIdentifier) {
