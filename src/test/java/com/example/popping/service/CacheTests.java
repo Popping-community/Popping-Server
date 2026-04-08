@@ -44,6 +44,7 @@ class CacheTests {
     @Mock UserService userService;
     @Mock CommentRepository commentRepository;
     @Mock PasswordEncoder passwordEncoder;
+    @Mock GuestIdentifierService guestIdentifierService;
 
     @InjectMocks CommentService commentService;
 

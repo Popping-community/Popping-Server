@@ -37,6 +37,9 @@ class PostControllerTest {
     @MockBean
     CommentService commentService;
 
+    @MockBean
+    com.example.popping.service.GuestIdentifierService guestIdentifierService;
+
     @BeforeEach
     void setUp() {
         when(htmlSanitizer.sanitize(anyString()))

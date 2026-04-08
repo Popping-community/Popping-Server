@@ -27,6 +27,7 @@ class LikeServiceTest {
     @Mock PostService postService;
     @Mock CommentService commentService;
     @Mock UserService userService;
+    @Mock GuestIdentifierService guestIdentifierService;
 
     @InjectMocks LikeService likeService;
 

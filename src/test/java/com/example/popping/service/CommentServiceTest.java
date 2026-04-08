@@ -48,6 +48,7 @@ class CommentServiceTest {
     @Mock Cache cache;
     @Mock TransactionTemplate readOnlyTx;
     @Mock ApplicationEventPublisher eventPublisher;
+    @Mock GuestIdentifierService guestIdentifierService;
 
     @InjectMocks CommentService commentService;
 
