@@ -66,9 +66,14 @@ class CommentCacheStampedeTest {
             }
         };
 
+        GuestIdentifierService guestIdentifierService = new GuestIdentifierService();
+        org.springframework.test.util.ReflectionTestUtils.setField(
+                guestIdentifierService, "secret", "test-secret");
+
         commentService = new CommentService(
                 postService, userService, commentRepository,
-                likeRepository, guestPasswordEncoder, cacheManager, readOnlyTx, eventPublisher
+                likeRepository, guestPasswordEncoder, cacheManager, readOnlyTx, eventPublisher,
+                guestIdentifierService
         );
     }
 
