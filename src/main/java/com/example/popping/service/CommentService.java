@@ -42,6 +42,7 @@ public class CommentService {
     private final CacheManager cacheManager;
     private final TransactionTemplate readOnlyTx;
     private final ApplicationEventPublisher eventPublisher;
+    private final GuestIdentifierService guestIdentifierService;
 
     public Long createMemberComment(Long postId,
                                     MemberCommentCreateRequest dto,
@@ -126,7 +127,12 @@ public class CommentService {
             base = mergeLikeCounts(base);
         }
 
-        return mergePersonalReaction(base, principal, guestIdentifier);
+        return mergePersonalReaction(base, principal, resolveGuestIdentifier(guestIdentifier));
+    }
+
+    private String resolveGuestIdentifier(String raw) {
+        if (raw == null) return null;
+        return guestIdentifierService.extractUuid(raw).orElse(raw);
     }
 
     @Transactional(readOnly = true)
