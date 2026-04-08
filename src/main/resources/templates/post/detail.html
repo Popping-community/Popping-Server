@@ -693,18 +693,10 @@
     }
 
     function getGuestIdentifier() {
-        let guestId = localStorage.getItem('guestIdentifier');
-        if (!guestId) {
-            guestId = 'guest-' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-            localStorage.setItem('guestIdentifier', guestId);
-        }
-        return guestId;
-    }
-
-    function syncGuestIdentifierCookie() {
-        const guestId = getGuestIdentifier();
-        document.cookie = `guestIdentifier=${encodeURIComponent(guestId)}; path=/; max-age=31536000; SameSite=Lax`;
-        return guestId;
+        const match = document.cookie.split(';')
+            .map(c => c.trim())
+            .find(c => c.startsWith('guestIdentifier='));
+        return match ? decodeURIComponent(match.split('=')[1]) : null;
     }
 
     // 댓글 관련 함수들
@@ -1122,7 +1114,6 @@
 
     // 이벤트 리스너 등록
     document.addEventListener('DOMContentLoaded', function() {
-        syncGuestIdentifierCookie();
         // WebSocket 연결
         connect();
 
