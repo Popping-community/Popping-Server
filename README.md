@@ -44,3 +44,43 @@
 - 여기서는 **네이버 핵 데이 컨벤션**을 사용합니다.
     - 출처: https://naver.github.io/hackday-conventions-java/
 - 가능하면, 다른 분들의 PR도 코멘트를 달아보도록 노력해보세요. 상대방의 코드를 지적하는 것만이 코드 리뷰가 아닙니다. 코드를 보고 배울 점이 있다고 생각해도, 가감없이 코멘트를 달아주세요.
+
+---
+
+## 성능 테스트 재현
+
+### 테스트 환경
+
+| 항목 | 사양 |
+|------|------|
+| 서버 | EC2 t2.micro (1 vCPU, 1GB RAM) — MySQL + Spring Boot 공유 |
+| JVM | -Xms200m -Xmx240m |
+| HikariCP | pool=30 |
+| 부하 도구 | Apache JMeter 5.6.3 |
+| 부하 기준 | 100 VUser, 평균 응답시간(avg) 기준 |
+| 테스트 데이터 | 게시글 100만 건 · 댓글 1,000만 건 · 좋아요 450만 건 |
+
+### JMeter 테스트 파일
+
+테스트 스크립트는 [`docs/load-test/`](docs/load-test/) 에 있습니다.
+
+| 파일 | 대상 시나리오 | 관련 개선 |
+|------|-------------|----------|
+| `popping-load-test.jmx` | 게시글 상세 조회 (댓글 포함) 100 VUser, 10분 | 댓글 첫 페이지 캐싱 |
+| `popping-stampede-test.jmx` | evict 직후 동일 postId 50 동시 요청 (ramp 0s) | 캐시 스탬피드 방지 |
+| `Like Concurrency Test.jmx` | 동일 사용자 좋아요 동시 요청 20 VUser (ramp 1s) | 좋아요 멱등 처리 |
+
+### 실행 방법
+
+1. [Apache JMeter 5.6.3](https://jmeter.apache.org/download_jmeter.cgi) 설치
+2. 로컬 또는 EC2에서 서버 실행 (`./gradlew bootRun`, 포트 9091)
+3. JMeter에서 `.jmx` 파일 열기 → 서버 주소·포트 확인 후 실행
+
+### 주요 측정 결과
+
+| 개선 항목 | 개선 전 | 개선 후 |
+|----------|--------|--------|
+| likes 풀스캔 제거 | 평균 10,460ms / 에러율 15.53% | 평균 167ms / 에러율 0% |
+| 댓글 첫 페이지 캐싱 | 인기 게시글 152ms | 43ms |
+| 캐시 스탬피드 방지 | CTE 10~17건 중복 실행 | CTE 1건 실행, 나머지 49건 캐시 히트 |
+| 좋아요 멱등 처리 | 동시 요청 시 유니크 제약 예외 다수 발생 | 예외 없이 멱등하게 처리 |
