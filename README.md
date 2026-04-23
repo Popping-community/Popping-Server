@@ -2,7 +2,7 @@
 
 주제: 게시판 만들기 (사용자가 많은 커뮤니티)
 
-​	일반적인 게시판 기능 및 커뮤니티에서 지원하는 다양한 기능을 제공하는 커뮤니티를 개발할 예정(단, 데이터의 양이 많고, 트래픽이 많은 커뮤니티)
+​	일반적인 게시판 기능 및 커뮤니티에서 지원하는 다양한 기능을 제공하는 커뮤니티(단, 데이터의 양이 많고, 트래픽이 많은 커뮤니티)
 
 ## Git Convention
 
@@ -74,7 +74,7 @@ Client
 - PoppingOps가 주기적으로 actuator/exporter 지표를 수집해 서버 상태 snapshot을 만들고, WARN/CRITICAL/복구 알림을 Discord로 전송한다.
 - 정기 장애 감지는 threshold 기반으로 처리하고, LLM은 Daily/Full Report와 사용자 분석 요청처럼 해석이 필요한 구간에만 사용한다.
 
-운영 모니터링 봇은 [PoppingOps](https://github.com/Popping-community/popping-ops-railway)에서 관리한다.
+운영 모니터링 봇은 [PoppingOps](https://github.com/Popping-community/popping-openclaw-ops-agent/)에서 관리한다.
 
 ---
 
