@@ -47,6 +47,37 @@
 
 ---
 
+## 배포 및 모니터링 환경
+
+Popping-community는 단일 EC2 인스턴스에서 Docker Compose 기반으로 운영된다.
+
+```text
+Client
+  -> HTTPS 443
+  -> Nginx TLS reverse proxy
+  -> Spring Boot app container:8080
+  -> MySQL container
+```
+
+### 배포 구조
+
+- Spring Boot 애플리케이션과 MySQL은 같은 EC2 인스턴스에서 실행되며 CPU, memory, disk 자원을 공유한다.
+- Nginx가 HTTPS 요청을 수신하고 TLS termination 후 Spring Boot `localhost:8080`으로 reverse proxy한다.
+- GitHub Actions와 Jib를 사용해 Docker image를 빌드하고, EC2에서 Docker Compose로 배포한다.
+- 민감 정보와 환경별 설정은 GitHub Secrets와 EC2 환경변수로 분리한다.
+
+### 모니터링 구조
+
+- Spring Boot actuator는 별도 management port에서 `health`와 `prometheus` endpoint를 제공한다.
+- node-exporter로 EC2 host의 memory, load, disk, network, uptime을 수집한다.
+- mysqld-exporter로 MySQL connection, query count, slow query, lock 관련 지표를 수집한다.
+- PoppingOps가 주기적으로 actuator/exporter 지표를 수집해 서버 상태 snapshot을 만들고, WARN/CRITICAL/복구 알림을 Discord로 전송한다.
+- 정기 장애 감지는 threshold 기반으로 처리하고, LLM은 Daily/Full Report와 사용자 분석 요청처럼 해석이 필요한 구간에만 사용한다.
+
+운영 모니터링 봇은 [PoppingOps](https://github.com/Popping-community/popping-ops-railway)에서 관리한다.
+
+---
+
 ## 성능 테스트 재현
 
 ### 테스트 환경
