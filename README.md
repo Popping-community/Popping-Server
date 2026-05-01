@@ -1,117 +1,122 @@
-# Popping-Server
+# Popping Community
 
-주제: 게시판 만들기 (사용자가 많은 커뮤니티)
+대용량 조회, 동시성, 운영 자동화를 직접 다룬 Spring Boot 커뮤니티 서비스입니다.
 
-​	일반적인 게시판 기능 및 커뮤니티에서 지원하는 다양한 기능을 제공하는 커뮤니티(단, 데이터의 양이 많고, 트래픽이 많은 커뮤니티)
+## 핵심 결과
 
-## Git Convention
+- 댓글 첫 페이지 캐싱으로 인기 게시글 댓글 조회 시간을 `152ms -> 43ms`로 줄였습니다.
+- 좋아요 집계와 개인화 조회를 분리해 평균 응답시간을 `10,460ms -> 167ms`, 에러율을 `15.53% -> 0%`로 개선했습니다.
+- 좋아요 중복 insert 경쟁을 멱등 처리로 바꿔 동일 사용자 동시 요청 `20건`에서 예외 `0건`을 확인했습니다.
+- 게시글 목록 조회를 `Page -> Slice`로 전환해 COUNT 쿼리를 `2,173건 -> 0건`으로 제거하고, 목록 조회 응답시간을 `662ms -> 34ms`로 줄였습니다.
+- 캐시 스탬피드 구간을 per-key 로딩으로 제어해 evict 직후 동시 요청에서도 CTE 실행을 `1회`로 고정했습니다.
 
-#### type
+## 프로젝트 소개
 
-- 하나의 커밋에 여러 타입이 존재하는 경우 상위 우선순위의 타입을 사용한다.
-- fix: 버스 픽스
-- feat: 새로운 기능 추가
-- refactor: 리팩토링 (버그픽스나 기능추가없는 코드변화)
-- docs: 문서만 변경
-- style: 코드의 의미가 변경 안 되는 경우 (띄어쓰기, 포맷팅, 줄바꿈 등)
-- test: 테스트코드 추가/수정
-- chore: 빌드 테스트 업데이트, 패키지 매니저를 설정하는 경우 (프로덕션 코드 변경 X)
+Popping Community는 게시글, 댓글, 좋아요/싫어요, 게스트 기능을 포함한 커뮤니티 백엔드입니다.  
+단순 CRUD 구현보다 다음 문제를 실제로 검증하고 해결하는 데 초점을 맞췄습니다.
 
-#### subject
+- 작은 서버에서 트래픽이 몰릴 때 어디서 병목이 생기는가
+- 동시 요청이 들어오면 어떤 데이터 정합성 문제가 터지는가
+- 구조를 바꿨을 때 응답시간, 에러율, 쿼리 수가 실제로 얼마나 개선되는가
+- 배포와 모니터링까지 포함해 운영 가능한 상태를 만들 수 있는가
 
-- 제목은 50글자를 넘지 않도록 한다.
-- 개조식 구문 사용
-    - 중요하고 핵심적인 요소만 간추려서 (항목별로 나열하듯이) 표현
-- 마지막에 특수문자를 넣지 않는다. (마침표, 느낌표, 물음표 등)
+## 기술 스택
 
-#### body (optional)
+- `Java 21`
+- `Spring Boot`
+- `Spring Data JPA`
+- `Spring Security`
+- `MySQL 8`
+- `Caffeine Cache`
+- `Docker Compose`
+- `GitHub Actions`
+- `JMeter`
+- `Prometheus`, `Grafana`
 
-- 각 라인별로 balled list로 표시한다.
-    - 예시) - AA
-- 가능하면 한줄당 72자를 넘지 않도록 한다.
-- 본문의 양에 구애받지 않고 최대한 상세히 작성
-- “어떻게” 보다는 “무엇을" “왜” 변경했는지 설명한다.
+## 아키텍처
 
-## Additional Requirement
+![Popping Community architecture](docs/images/readme/architecture.png)
 
-각 PR의 요구사항과 더불어, 해당 명세를 **반드시** 만족해야 합니다.
+## 핵심 문제 해결
 
-- 매 Step 마다 테스트 코드를 작성해보세요.
-    - 커버리지 80% 이상을 맞추지 못할 경우, PR이 제한됩니다.
-- Code Smell을 최소화 하세요.
-    - SonarQube를 사용합니다. PR 과정에서 SonarQube Major Issue 발견 시, PR이 제한됩니다.
-- Code Convention 을 사용하여 코드를 작성해 주세요.
-- 여기서는 **네이버 핵 데이 컨벤션**을 사용합니다.
-    - 출처: https://naver.github.io/hackday-conventions-java/
-- 가능하면, 다른 분들의 PR도 코멘트를 달아보도록 노력해보세요. 상대방의 코드를 지적하는 것만이 코드 리뷰가 아닙니다. 코드를 보고 배울 점이 있다고 생각해도, 가감없이 코멘트를 달아주세요.
+### 1. 댓글 첫 페이지 캐싱
 
----
+게시글 상세 조회마다 계층형 댓글 CTE를 다시 실행하던 구조를 `Cache-Aside`로 바꿨습니다.  
+캐시에는 공통 데이터만 저장하고, `likedByMe` 같은 사용자별 값은 조회 시점에 합성하도록 분리했습니다.
 
-## 배포 및 모니터링 환경
+- 인기 게시글 댓글 조회: `152ms -> 43ms`
+- 동일 댓글 트리 생성 쿼리 10분 기준: `6,642건 -> 458건`
+- 캐시 무효화는 `AFTER_COMMIT` 시점으로 옮겨 커밋 전 stale write-back을 방지했습니다.
 
-Popping-community는 단일 EC2 인스턴스에서 Docker Compose 기반으로 운영된다.
+![댓글 캐시 전후 비교](docs/images/readme/comment-cache-slowquery-before-after.png)
 
-```text
-Client
-  -> HTTPS 443
-  -> Nginx TLS reverse proxy
-  -> Spring Boot app container:8080
-  -> MySQL container
-```
+### 2. 좋아요 중복 insert 경쟁 해결
 
-### 배포 구조
+초기 구현은 `check-then-act` 구조라서 동시 요청에서 unique 제약 예외가 노출됐습니다.  
+이를 `ON DUPLICATE KEY UPDATE` 기반 멱등 처리로 바꾸고, 실제 반영된 경우에만 count를 증가시키도록 수정했습니다.
 
-- Spring Boot 애플리케이션과 MySQL은 같은 EC2 인스턴스에서 실행되며 CPU, memory, disk 자원을 공유한다.
-- Nginx가 HTTPS 요청을 수신하고 TLS termination 후 Spring Boot `localhost:8080`으로 reverse proxy한다.
-- GitHub Actions와 Jib를 사용해 Docker image를 빌드하고, EC2에서 Docker Compose로 배포한다.
-- 민감 정보와 환경별 설정은 GitHub Secrets와 EC2 환경변수로 분리한다.
+- 동일 사용자 동시 요청 `20건` 테스트에서 예외 `17건 -> 0건`
+- row 생성과 `like_count` 증가가 각각 1회만 반영되도록 보장
 
-### 모니터링 구조
+![좋아요 동시성 테스트](docs/images/readme/like-concurrency-test.png)
 
-- Spring Boot actuator는 별도 management port에서 `health`와 `prometheus` endpoint를 제공한다.
-- node-exporter로 EC2 host의 memory, load, disk, network, uptime을 수집한다.
-- mysqld-exporter로 MySQL connection, query count, slow query, lock 관련 지표를 수집한다.
-- PoppingOps가 주기적으로 actuator/exporter 지표를 수집해 서버 상태 snapshot을 만들고, WARN/CRITICAL/복구 알림을 Discord로 전송한다.
-- 정기 장애 감지는 threshold 기반으로 처리하고, LLM은 Daily/Full Report와 사용자 분석 요청처럼 해석이 필요한 구간에만 사용한다.
+### 3. likes 풀스캔 제거와 집계 쿼리 분리
 
-운영 모니터링 봇은 [PoppingOps](https://github.com/Popping-community/popping-openclaw-ops-agent/)에서 관리한다.
+좋아요 수 집계와 개인화 조회를 likes 테이블 한 쿼리에서 함께 처리하던 구조 때문에 450만 건에서 풀스캔이 발생했습니다.  
+집계는 comment 테이블의 비정규화 count를 사용하고, 개인화는 기존 unique index를 활용하는 별도 쿼리로 분리했습니다.
 
----
+- 평균 응답시간: `10,460ms -> 167ms`
+- 에러율: `15.53% -> 0%`
+- 별도 집계 인덱스 없이 기존 UK 기반으로 해결
 
-## 성능 테스트 재현
+![좋아요 쿼리 구조 비교](docs/images/readme/like-query-comparison.png)
 
-### 테스트 환경
+### 4. 게시글 목록 COUNT 쿼리 제거
 
-| 항목 | 사양 |
-|------|------|
-| 서버 | EC2 t2.micro (1 vCPU, 1GB RAM) — MySQL + Spring Boot 공유 |
-| JVM | -Xms200m -Xmx240m |
-| HikariCP | pool=30 |
-| 부하 도구 | Apache JMeter 5.6.3 |
-| 부하 기준 | 100 VUser, 평균 응답시간(avg) 기준 |
-| 테스트 데이터 | 게시글 100만 건 · 댓글 1,000만 건 · 좋아요 450만 건 |
+게시글 목록 API가 `Page<T>`를 반환하면서 요청마다 `COUNT(post)`를 자동 실행하고 있었습니다.  
+총 페이지 수가 꼭 필요하지 않은 화면이어서 `Slice<T>`로 바꾸고 COUNT 쿼리를 구조적으로 제거했습니다.
 
-### JMeter 테스트 파일
+- COUNT 쿼리 10분 기준: `2,173건 -> 0건`
+- 게시글 목록 조회 평균 응답시간: `662ms -> 34ms`
+- 처리 가능한 총 요청 수: `52,096건 -> 63,596건`
 
-테스트 스크립트는 [`docs/load-test/`](docs/load-test/) 에 있습니다.
+![게시글 목록 COUNT 제거 후 대시보드](docs/images/readme/board-slice-dashboard.png)
 
-| 파일 | 대상 시나리오 | 관련 개선 |
-|------|-------------|----------|
-| `popping-load-test.jmx` | 게시글 상세 조회 (댓글 포함) 100 VUser, 10분 | 댓글 첫 페이지 캐싱 |
-| `popping-stampede-test.jmx` | evict 직후 동일 postId 50 동시 요청 (ramp 0s) | 캐시 스탬피드 방지 |
-| `Like Concurrency Test.jmx` | 동일 사용자 좋아요 동시 요청 20 VUser (ramp 1s) | 좋아요 멱등 처리 |
+### 5. 캐시 스탬피드 방지
 
-### 실행 방법
+`cache.get -> build -> cache.put` 구조는 evict 직후 동시 요청에서 같은 CTE를 여러 번 실행했습니다.  
+이를 `cache.get(key, Callable)` 기반 per-key 로딩으로 바꿔 같은 `postId`에 대한 최초 로딩을 1회로 제한했습니다.
 
-1. [Apache JMeter 5.6.3](https://jmeter.apache.org/download_jmeter.cgi) 설치
-2. 로컬 또는 EC2에서 서버 실행 (`./gradlew bootRun`, 포트 9091)
-3. JMeter에서 `.jmx` 파일 열기 → 서버 주소·포트 확인 후 실행
+- evict 직후 50개 동시 요청에서도 CTE 실행 `10~17회 -> 1회`
+- 나머지 요청은 캐시 hit로 처리
 
-### 주요 측정 결과
+![캐시 스탬피드 방지 테스트](docs/images/readme/cache-stampede-test.png)
 
-| 개선 항목 | 개선 전 | 개선 후 |
-|----------|--------|--------|
-| likes 풀스캔 제거 | 평균 10,460ms / 에러율 15.53% | 평균 167ms / 에러율 0% |
-| 댓글 첫 페이지 캐싱 | 인기 게시글 152ms | 43ms |
-| 캐시 스탬피드 방지 | CTE 10~17건 중복 실행 | CTE 1건 실행, 나머지 49건 캐시 히트 |
-| 좋아요 멱등 처리 | 동시 요청 시 유니크 제약 예외 다수 발생 | 예외 없이 멱등하게 처리 |
+## 부하 테스트 환경
+
+| 항목 | 값 |
+| --- | --- |
+| 서버 | `EC2 t2.micro` |
+| 실행 환경 | `Spring Boot + MySQL` 동일 인스턴스 |
+| DB 풀 | `HikariCP 30` |
+| 부하 도구 | `Apache JMeter 5.6.3` |
+| 데이터 규모 | 게시글 `100만`, 댓글 `1,000만+`, 좋아요 `450만` |
+
+테스트 스크립트는 [docs/load-test](docs/load-test)에 포함되어 있습니다.
+
+- [popping-load-test.jmx](docs/load-test/popping-load-test.jmx)
+- [Like Concurrency Test.jmx](docs/load-test/Like%20Concurrency%20Test.jmx)
+- [popping-stampede-test.jmx](docs/load-test/popping-stampede-test.jmx)
+
+## 운영과 배포
+
+- `GitHub Actions`로 빌드, 이미지 생성, 배포를 자동화했습니다.
+- `Jib`를 사용해 Dockerfile 없이 컨테이너 이미지를 만들고 EC2에 배포합니다.
+- `Actuator`, `node-exporter`, `mysqld-exporter`를 통해 애플리케이션, 서버, MySQL 메트릭을 수집합니다.
+- 운영 모니터링과 장애 알림 자동화는 [PoppingOps](https://github.com/Popping-community/popping-openclaw-ops-agent)에서 담당합니다.
+
+## 문서
+
+- [부하 테스트 스크립트](docs/load-test)
+- [운영 모니터링 저장소](https://github.com/Popping-community/popping-openclaw-ops-agent)
+- [포트폴리오](https://chooh1010.github.io/resume/portfolio.html)
