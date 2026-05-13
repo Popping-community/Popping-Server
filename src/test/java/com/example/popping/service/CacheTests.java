@@ -18,7 +18,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.support.TransactionTemplate;
 
-import com.example.popping.event.CommentCacheEvictEvent;
+import com.example.popping.event.CacheEvictEvent;
 
 import com.example.popping.domain.Comment;
 import com.example.popping.domain.Post;
@@ -135,7 +135,7 @@ class CacheTests {
         commentService.createMemberComment(postId, dto, principal, null);
 
         // then: evict는 AFTER_COMMIT 리스너에서 실행되므로, 이벤트 발행 여부만 검증한다
-        verify(eventPublisher).publishEvent(any(CommentCacheEvictEvent.class));
+        verify(eventPublisher).publishEvent(any(CacheEvictEvent.class));
         verify(cache, never()).evict(any());
     }
 
