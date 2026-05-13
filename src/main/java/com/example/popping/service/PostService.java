@@ -151,8 +151,17 @@ public class PostService {
         viewCountService.increaseView(postId);
 
         PostResponse base = getPostDetailFromCache(postId);
+        base = mergePendingViewCount(base);
 
         return mergePostReactions(base, principal, guestIdentifier);
+    }
+
+    private PostResponse mergePendingViewCount(PostResponse base) {
+        long pending = viewCountService.getPendingCount(base.id());
+        if (pending == 0) {
+            return base;
+        }
+        return base.withViewCount(base.viewCount() + pending);
     }
 
     // viewCount/likeCount are stale until TTL expiry (30 min) — acceptable for detail page.

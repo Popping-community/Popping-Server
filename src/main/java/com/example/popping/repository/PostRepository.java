@@ -32,6 +32,10 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     void increaseViewCount(@Param("postId") Long postId);
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("UPDATE Post p SET p.viewCount = p.viewCount + :delta WHERE p.id = :postId")
+    void increaseViewCountBy(@Param("postId") Long postId, @Param("delta") long delta);
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("UPDATE Post p SET p.likeCount = p.likeCount + :delta WHERE p.id = :postId")
     void updateLikeCount(@Param("postId") Long postId, @Param("delta") int delta);
 
