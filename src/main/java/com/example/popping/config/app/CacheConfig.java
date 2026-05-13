@@ -1,5 +1,6 @@
 package com.example.popping.config.app;
 
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import org.springframework.cache.CacheManager;
@@ -22,7 +23,7 @@ public class CacheConfig {
 	@Bean
 	public CacheManager cacheManager() {
 		SimpleCacheManager cacheManager = new SimpleCacheManager();
-		cacheManager.setCaches(java.util.List.of(
+		cacheManager.setCaches(List.of(
 				buildCache(BOARD_FIRST_PAGE_CACHE, 50, 5),   // TODO: used by PostService (Story 2-7)
 				buildCache(POST_DETAIL_CACHE, 1000, 30),     // TODO: used by PostService (Story 3)
 				buildCache(COMMENT_FIRST_PAGE_CACHE, 500, 10)
