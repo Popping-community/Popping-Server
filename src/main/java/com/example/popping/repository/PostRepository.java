@@ -22,7 +22,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     @Query(
         value = "SELECT new com.example.popping.dto.PostListItemResponse(" +
                 "p.id, p.title, COALESCE(u.nickname, p.guestNickname), u.id, p.guestNickname, " +
-                "p.viewCount, p.commentCount, p.likeCount, p.dislikeCount, false, false) " +
+                "p.viewCount, p.commentCount, p.likeCount, p.dislikeCount) " +
                 "FROM Post p LEFT JOIN p.author u WHERE p.board = :board"
     )
     Slice<PostListItemResponse> findPostListByBoard(@Param("board") Board board, Pageable pageable);
@@ -30,6 +30,10 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("UPDATE Post p SET p.viewCount = p.viewCount + 1 WHERE p.id = :postId")
     void increaseViewCount(@Param("postId") Long postId);
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("UPDATE Post p SET p.viewCount = p.viewCount + :delta WHERE p.id = :postId")
+    void increaseViewCountBy(@Param("postId") Long postId, @Param("delta") long delta);
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("UPDATE Post p SET p.likeCount = p.likeCount + :delta WHERE p.id = :postId")

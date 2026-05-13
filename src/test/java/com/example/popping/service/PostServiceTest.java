@@ -11,9 +11,14 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
+import org.springframework.cache.CacheManager;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.SliceImpl;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import com.example.popping.domain.Board;
 import com.example.popping.domain.Post;
@@ -38,6 +43,9 @@ class PostServiceTest {
     @Mock PasswordEncoder guestPasswordEncoder;
     @Mock PostRepository postRepository;
     @Mock LikeRepository likeRepository;
+    @Mock CacheManager cacheManager;
+    @Mock TransactionTemplate readOnlyTx;
+    @Mock ApplicationEventPublisher eventPublisher;
 
     @InjectMocks PostService postService;
 
@@ -135,8 +143,10 @@ class PostServiceTest {
         when(userService.getLoginUserById(1L)).thenReturn(user);
 
         Post post = mock(Post.class);
+        Board board = mock(Board.class);
         when(postRepository.findById(postId)).thenReturn(Optional.of(post));
         when(post.isAuthor(user)).thenReturn(true);
+        when(post.getBoard()).thenReturn(board);
 
         // when
         postService.updatePost(postId, dto, principal);
@@ -186,8 +196,10 @@ class PostServiceTest {
         );
 
         Post post = mock(Post.class);
+        Board board = mock(Board.class);
         when(postRepository.findById(postId)).thenReturn(Optional.of(post));
         when(post.isGuest()).thenReturn(true);
+        when(post.getBoard()).thenReturn(board);
 
         when(guestPasswordEncoder.encode("9999")).thenReturn("ENC2");
 
@@ -241,8 +253,10 @@ class PostServiceTest {
         when(userService.getLoginUserById(1L)).thenReturn(user);
 
         Post post = mock(Post.class);
+        Board board = mock(Board.class);
         when(postRepository.findById(postId)).thenReturn(Optional.of(post));
         when(post.isAuthor(user)).thenReturn(true);
+        when(post.getBoard()).thenReturn(board);
 
         // when
         postService.deletePost(postId, principal);
@@ -288,8 +302,10 @@ class PostServiceTest {
         Long postId = 40L;
 
         Post post = mock(Post.class);
+        Board board = mock(Board.class);
         when(postRepository.findById(postId)).thenReturn(Optional.of(post));
         when(post.isGuest()).thenReturn(true);
+        when(post.getBoard()).thenReturn(board);
 
         // when
         postService.deletePostAsGuest(postId);
@@ -417,14 +433,14 @@ class PostServiceTest {
         Board board = mock(Board.class);
         when(boardService.getBoard(slug)).thenReturn(board);
 
-        PostListItemResponse r1 = new PostListItemResponse(1L, "t1", "u1", 1L, null, 0L, 0, 0, 0, false, false);
-        PostListItemResponse r2 = new PostListItemResponse(2L, "t2", "u2", 2L, null, 0L, 0, 0, 0, false, false);
+        PostListItemResponse r1 = new PostListItemResponse(1L, "t1", "u1", 1L, null, 0L, 0, 0, 0);
+        PostListItemResponse r2 = new PostListItemResponse(2L, "t2", "u2", 2L, null, 0L, 0, 0, 0);
 
         when(postRepository.findPostListByBoard(board, PageRequest.of(0, 20)))
                 .thenReturn(new SliceImpl<>(List.of(r1, r2), PageRequest.of(0, 20), false));
 
         // when
-        PostPageResponse page = postService.getPostPage(slug, 0, 20, null, null);
+        PostPageResponse page = postService.getPostPage(slug, 0, 20);
 
         // then
         assertEquals(2, page.posts().size());

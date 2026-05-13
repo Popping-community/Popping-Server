@@ -14,4 +14,9 @@ public class AppConfig {
         tx.setReadOnly(true);
         return tx;
     }
+
+    @Bean
+    public TransactionTemplate txTemplate(PlatformTransactionManager transactionManager) {
+        return new TransactionTemplate(transactionManager);
+    }
 }

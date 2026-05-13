@@ -12,7 +12,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
 import lombok.RequiredArgsConstructor;
 
-import com.example.popping.event.CommentCacheEvictEvent;
+import com.example.popping.config.app.CacheConfig;
+import com.example.popping.event.CacheEvictEvent;
 
 import com.example.popping.domain.*;
 import com.example.popping.dto.CommentPageResponse;
@@ -32,7 +33,8 @@ import com.example.popping.repository.LikeRepository;
 public class CommentService {
 
     public static final int COMMENTS_SIZE = 100;
-    private static final String COMMENT_FIRST_PAGE_CACHE = "commentFirstPage";
+    private static final String COMMENT_FIRST_PAGE_CACHE = CacheConfig.COMMENT_FIRST_PAGE_CACHE;
+    private static final String POST_DETAIL_CACHE = CacheConfig.POST_DETAIL_CACHE;
 
     private final PostService postService;
     private final UserService userService;
@@ -59,6 +61,7 @@ public class CommentService {
 
         post.increaseCommentCount();
         evictFirstPageCacheByPostId(postId);
+        evictPostDetailCacheByPostId(postId);
         return comment.getId();
     }
 
@@ -82,6 +85,7 @@ public class CommentService {
 
         post.increaseCommentCount();
         evictFirstPageCacheByPostId(postId);
+        evictPostDetailCacheByPostId(postId);
         return comment.getId();
     }
 
@@ -95,6 +99,7 @@ public class CommentService {
         comment.getPost().decreaseCommentCount();
         commentRepository.delete(comment);
         evictFirstPageCacheByPostId(postId);
+        evictPostDetailCacheByPostId(postId);
     }
 
     public void deleteCommentAsGuest(Long commentId, String password) {
@@ -107,6 +112,7 @@ public class CommentService {
         comment.getPost().decreaseCommentCount();
         commentRepository.delete(comment);
         evictFirstPageCacheByPostId(postId);
+        evictPostDetailCacheByPostId(postId);
     }
 
     public void updateLikeCount(Long targetId, int delta) {
@@ -364,7 +370,12 @@ public class CommentService {
 
     private void evictFirstPageCacheByPostId(Long postId) {
         if (postId == null) return;
-        eventPublisher.publishEvent(new CommentCacheEvictEvent(postId));
+        eventPublisher.publishEvent(new CacheEvictEvent(COMMENT_FIRST_PAGE_CACHE, postId));
+    }
+
+    private void evictPostDetailCacheByPostId(Long postId) {
+        if (postId == null) return;
+        eventPublisher.publishEvent(new CacheEvictEvent(POST_DETAIL_CACHE, postId));
     }
 
     private static final class CommentNode {

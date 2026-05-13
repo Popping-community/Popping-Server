@@ -10,16 +10,7 @@ public record PostListItemResponse(
         Long viewCount,
         int commentCount,
         int likeCount,
-        int dislikeCount,
-        boolean likedByMe,
-        boolean dislikedByMe
+        int dislikeCount
 
 ) {
-    public PostListItemResponse withReactions(boolean likedByMe, boolean dislikedByMe) {
-        return new PostListItemResponse(
-                id, title, authorName, authorId, guestNickname,
-                viewCount, commentCount, likeCount, dislikeCount,
-                likedByMe, dislikedByMe
-        );
-    }
 }
