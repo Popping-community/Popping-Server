@@ -22,7 +22,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     @Query(
         value = "SELECT new com.example.popping.dto.PostListItemResponse(" +
                 "p.id, p.title, COALESCE(u.nickname, p.guestNickname), u.id, p.guestNickname, " +
-                "p.viewCount, p.commentCount, p.likeCount, p.dislikeCount, false, false) " +
+                "p.viewCount, p.commentCount, p.likeCount, p.dislikeCount) " +
                 "FROM Post p LEFT JOIN p.author u WHERE p.board = :board"
     )
     Slice<PostListItemResponse> findPostListByBoard(@Param("board") Board board, Pageable pageable);

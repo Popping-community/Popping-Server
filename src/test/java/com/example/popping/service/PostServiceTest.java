@@ -417,14 +417,14 @@ class PostServiceTest {
         Board board = mock(Board.class);
         when(boardService.getBoard(slug)).thenReturn(board);
 
-        PostListItemResponse r1 = new PostListItemResponse(1L, "t1", "u1", 1L, null, 0L, 0, 0, 0, false, false);
-        PostListItemResponse r2 = new PostListItemResponse(2L, "t2", "u2", 2L, null, 0L, 0, 0, 0, false, false);
+        PostListItemResponse r1 = new PostListItemResponse(1L, "t1", "u1", 1L, null, 0L, 0, 0, 0);
+        PostListItemResponse r2 = new PostListItemResponse(2L, "t2", "u2", 2L, null, 0L, 0, 0, 0);
 
         when(postRepository.findPostListByBoard(board, PageRequest.of(0, 20)))
                 .thenReturn(new SliceImpl<>(List.of(r1, r2), PageRequest.of(0, 20), false));
 
         // when
-        PostPageResponse page = postService.getPostPage(slug, 0, 20, null, null);
+        PostPageResponse page = postService.getPostPage(slug, 0, 20);
 
         // then
         assertEquals(2, page.posts().size());

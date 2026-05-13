@@ -150,29 +150,14 @@ public class PostService {
     }
 
     @Transactional(readOnly = true)
-    public PostPageResponse getPostPage(String slug, int page, int size, UserPrincipal principal, String guestIdentifier) {
+    public PostPageResponse getPostPage(String slug, int page, int size) {
 
         Board board = getBoard(slug);
 
         Slice<PostListItemResponse> postPage = postRepository.findPostListByBoard(board, PageRequest.of(page, size));
 
-        List<Long> postIds = postPage.getContent().stream()
-                .map(PostListItemResponse::id)
-                .toList();
-
-        Map<Long, MyReactionView> reactionMap = getPostReaction(postIds, principal, guestIdentifier);
-
-        List<PostListItemResponse> posts = postPage.getContent().stream()
-                .map(item -> {
-                    MyReactionView s = reactionMap.get(item.id());
-                    boolean likedByMe    = s != null && s.getLikedByMe()    == 1;
-                    boolean dislikedByMe = s != null && s.getDislikedByMe() == 1;
-                    return item.withReactions(likedByMe, dislikedByMe);
-                })
-                .toList();
-
         return new PostPageResponse(
-                posts,
+                postPage.getContent(),
                 postPage.getNumber(),
                 postPage.hasNext(),
                 postPage.hasPrevious()
