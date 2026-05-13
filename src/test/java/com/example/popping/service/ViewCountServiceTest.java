@@ -11,25 +11,41 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import com.example.popping.repository.PostRepository;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 class ViewCountServiceTest {
 
     @Mock
     PostRepository postRepository;
+
+    @Mock
+    TransactionTemplate txTemplate;
 
     @InjectMocks
     ViewCountService viewCountService;
 
     @BeforeEach
     void setUp() {
+        // Make txTemplate.executeWithoutResult actually run the callback
+        doAnswer(inv -> {
+            java.util.function.Consumer<org.springframework.transaction.TransactionStatus> cb = inv.getArgument(0);
+            cb.accept(null);
+            return null;
+        }).when(txTemplate).executeWithoutResult(any());
+
         viewCountService.flushViewCounts();
         clearInvocations(postRepository);
+        clearInvocations(txTemplate);
     }
 
     @Test
@@ -70,6 +86,7 @@ class ViewCountServiceTest {
         viewCountService.flushViewCounts();
 
         verifyNoInteractions(postRepository);
+        verifyNoInteractions(txTemplate);
     }
 
     @Test

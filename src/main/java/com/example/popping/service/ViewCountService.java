@@ -10,7 +10,7 @@ import jakarta.annotation.PreDestroy;
 
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -22,6 +22,7 @@ import com.example.popping.repository.PostRepository;
 public class ViewCountService {
 
     private final PostRepository postRepository;
+    private final TransactionTemplate txTemplate;
 
     private final ConcurrentHashMap<Long, LongAdder> pendingCounts = new ConcurrentHashMap<>();
 
@@ -62,7 +63,8 @@ public class ViewCountService {
         int flushed = 0;
         for (Map.Entry<Long, Long> entry : batch) {
             try {
-                flushSingle(entry.getKey(), entry.getValue());
+                txTemplate.executeWithoutResult(status ->
+                        postRepository.increaseViewCountBy(entry.getKey(), entry.getValue()));
                 flushed++;
             } catch (Exception e) {
                 log.warn("Failed to flush viewCount for postId={}", entry.getKey(), e);
@@ -74,11 +76,6 @@ public class ViewCountService {
         if (flushed > 0) {
             log.info("viewCount flush: updated {} posts", flushed);
         }
-    }
-
-    @Transactional
-    public void flushSingle(Long postId, long delta) {
-        postRepository.increaseViewCountBy(postId, delta);
     }
 
     @PreDestroy
