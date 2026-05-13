@@ -32,6 +32,7 @@ import com.example.popping.repository.MyReactionView;
 public class PostService {
 
     private static final String BOARD_FIRST_PAGE_CACHE = CacheConfig.BOARD_FIRST_PAGE_CACHE;
+    private static final String POST_DETAIL_CACHE = CacheConfig.POST_DETAIL_CACHE;
     private static final int DEFAULT_PAGE_SIZE = 20;
 
     private final BoardService boardService;
@@ -94,6 +95,7 @@ public class PostService {
 
         linkImages(dto.content(), post);
         evictBoardFirstPageCache(post.getBoard().getId());
+        evictPostDetailCache(postId);
     }
 
     public void updatePostAsGuest(Long postId, GuestPostUpdateRequest dto) {
@@ -107,6 +109,7 @@ public class PostService {
 
         linkImages(dto.content(), post);
         evictBoardFirstPageCache(post.getBoard().getId());
+        evictPostDetailCache(postId);
     }
 
     public void deletePost(Long postId, UserPrincipal principal) {
@@ -120,6 +123,7 @@ public class PostService {
         deleteImages(post);
         postRepository.delete(post);
         evictBoardFirstPageCache(boardId);
+        evictPostDetailCache(postId);
     }
 
     public void deletePostAsGuest(Long postId) {
@@ -131,6 +135,7 @@ public class PostService {
         deleteImages(post);
         postRepository.delete(post);
         evictBoardFirstPageCache(boardId);
+        evictPostDetailCache(postId);
     }
 
     public void updateLikeCount(Long targetId, int delta) {
@@ -144,18 +149,37 @@ public class PostService {
     @Transactional(readOnly = true)
     public PostResponse getPostResponse(Long postId, UserPrincipal principal, String guestIdentifier) {
         viewCountService.increaseView(postId);
-        Post post = getPost(postId);
-        boolean likedByMe = false;
-        boolean dislikedByMe = false;
 
-        if (principal != null || (guestIdentifier != null && !guestIdentifier.isBlank())) {
-            MyReactionView s = getPostReaction(List.of(postId), principal, guestIdentifier)
-                    .get(postId);
-            likedByMe    = s != null && s.getLikedByMe()    == 1;
-            dislikedByMe = s != null && s.getDislikedByMe() == 1;
+        PostResponse base = getPostDetailFromCache(postId);
+
+        return mergePostReactions(base, principal, guestIdentifier);
+    }
+
+    // viewCount/likeCount are stale until TTL expiry (30 min) — acceptable for detail page.
+    // Personal reactions are always merged fresh.
+    private PostResponse getPostDetailFromCache(Long postId) {
+        Cache cache = cacheManager.getCache(POST_DETAIL_CACHE);
+        if (cache == null) {
+            return buildPostDetail(postId);
         }
+        return cache.get(postId, () -> readOnlyTx.execute(
+                status -> buildPostDetail(postId)));
+    }
 
-        return PostResponse.from(post, likedByMe, dislikedByMe);
+    private PostResponse buildPostDetail(Long postId) {
+        Post post = getPost(postId);
+        return PostResponse.from(post, false, false);
+    }
+
+    private PostResponse mergePostReactions(PostResponse base, UserPrincipal principal, String guestIdentifier) {
+        if (principal == null && (guestIdentifier == null || guestIdentifier.isBlank())) {
+            return base;
+        }
+        MyReactionView s = getPostReaction(List.of(base.id()), principal, guestIdentifier)
+                .get(base.id());
+        boolean likedByMe    = s != null && s.getLikedByMe()    == 1;
+        boolean dislikedByMe = s != null && s.getDislikedByMe() == 1;
+        return base.withReactions(likedByMe, dislikedByMe);
     }
 
     @Transactional(readOnly = true)
@@ -247,6 +271,11 @@ public class PostService {
     private void evictBoardFirstPageCache(Long boardId) {
         if (boardId == null) return;
         eventPublisher.publishEvent(new CacheEvictEvent(BOARD_FIRST_PAGE_CACHE, boardId));
+    }
+
+    private void evictPostDetailCache(Long postId) {
+        if (postId == null) return;
+        eventPublisher.publishEvent(new CacheEvictEvent(POST_DETAIL_CACHE, postId));
     }
 
     private Board getBoard(String slug) {

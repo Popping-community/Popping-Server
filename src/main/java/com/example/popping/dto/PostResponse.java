@@ -39,5 +39,13 @@ public record PostResponse(
                 dislikedByMe
         );
     }
+
+    public PostResponse withReactions(boolean likedByMe, boolean dislikedByMe) {
+        return new PostResponse(
+                id, title, content, authorName, boardName, authorId, guestNickname,
+                viewCount, commentCount, likeCount, dislikeCount,
+                likedByMe, dislikedByMe
+        );
+    }
 }
 

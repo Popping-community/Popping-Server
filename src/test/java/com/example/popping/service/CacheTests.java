@@ -135,7 +135,8 @@ class CacheTests {
         commentService.createMemberComment(postId, dto, principal, null);
 
         // then: evict는 AFTER_COMMIT 리스너에서 실행되므로, 이벤트 발행 여부만 검증한다
-        verify(eventPublisher).publishEvent(any(CacheEvictEvent.class));
+        // commentFirstPage + postDetail 캐시 각각 evict 이벤트 발행
+        verify(eventPublisher, times(2)).publishEvent(any(CacheEvictEvent.class));
         verify(cache, never()).evict(any());
     }
 
