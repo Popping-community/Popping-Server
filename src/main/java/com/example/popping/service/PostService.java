@@ -5,15 +5,21 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 import lombok.RequiredArgsConstructor;
 
+import com.example.popping.config.app.CacheConfig;
 import com.example.popping.domain.*;
 import com.example.popping.dto.*;
+import com.example.popping.event.CacheEvictEvent;
 import com.example.popping.exception.CustomAppException;
 import com.example.popping.exception.ErrorType;
 import com.example.popping.repository.LikeRepository;
@@ -25,6 +31,9 @@ import com.example.popping.repository.MyReactionView;
 @RequiredArgsConstructor
 public class PostService {
 
+    private static final String BOARD_FIRST_PAGE_CACHE = CacheConfig.BOARD_FIRST_PAGE_CACHE;
+    private static final int DEFAULT_PAGE_SIZE = 20;
+
     private final BoardService boardService;
     private final ImageService imageService;
     private final UserService userService;
@@ -32,6 +41,9 @@ public class PostService {
     private final PasswordEncoder guestPasswordEncoder;
     private final PostRepository postRepository;
     private final LikeRepository likeRepository;
+    private final CacheManager cacheManager;
+    private final TransactionTemplate readOnlyTx;
+    private final ApplicationEventPublisher eventPublisher;
 
     public Long createMemberPost(String slug,
                                  MemberPostCreateRequest dto,
@@ -44,6 +56,7 @@ public class PostService {
         post = postRepository.save(post);
 
         linkImages(dto.content(), post);
+        evictBoardFirstPageCache(board.getId());
 
         return post.getId();
     }
@@ -65,6 +78,7 @@ public class PostService {
         post = postRepository.save(post);
 
         linkImages(dto.content(), post);
+        evictBoardFirstPageCache(board.getId());
 
         return post.getId();
     }
@@ -79,6 +93,7 @@ public class PostService {
         post.updateAsMember(dto.title(), dto.content());
 
         linkImages(dto.content(), post);
+        evictBoardFirstPageCache(post.getBoard().getId());
     }
 
     public void updatePostAsGuest(Long postId, GuestPostUpdateRequest dto) {
@@ -91,6 +106,7 @@ public class PostService {
         post.changeGuestPasswordHash(guestPasswordEncoder.encode(dto.guestPassword()));
 
         linkImages(dto.content(), post);
+        evictBoardFirstPageCache(post.getBoard().getId());
     }
 
     public void deletePost(Long postId, UserPrincipal principal) {
@@ -100,8 +116,10 @@ public class PostService {
 
         validateAuthor(post, user);
 
+        Long boardId = post.getBoard().getId();
         deleteImages(post);
         postRepository.delete(post);
+        evictBoardFirstPageCache(boardId);
     }
 
     public void deletePostAsGuest(Long postId) {
@@ -109,8 +127,10 @@ public class PostService {
         Post post = getPost(postId);
         validateGuestPost(post);
 
+        Long boardId = post.getBoard().getId();
         deleteImages(post);
         postRepository.delete(post);
+        evictBoardFirstPageCache(boardId);
     }
 
     public void updateLikeCount(Long targetId, int delta) {
@@ -151,9 +171,32 @@ public class PostService {
 
     @Transactional(readOnly = true)
     public PostPageResponse getPostPage(String slug, int page, int size) {
+        if (page == 0 && size == DEFAULT_PAGE_SIZE) {
+            return getFirstPageFromCache(slug);
+        }
+        return buildPostPage(slug, page, size);
+    }
 
+    // likeCount/dislikeCount changes do NOT evict this cache.
+    // Stale counts are acceptable until TTL expiry (5 min).
+    // Evicting on every like would negate caching benefits.
+    private PostPageResponse getFirstPageFromCache(String slug) {
         Board board = getBoard(slug);
+        Cache cache = cacheManager.getCache(BOARD_FIRST_PAGE_CACHE);
+        if (cache == null) {
+            return buildPostPage(board, 0, DEFAULT_PAGE_SIZE);
+        }
+        // readOnlyTx joins the outer @Transactional(readOnly=true) — intentional.
+        return cache.get(board.getId(), () -> readOnlyTx.execute(
+                status -> buildPostPage(board, 0, DEFAULT_PAGE_SIZE)));
+    }
 
+    private PostPageResponse buildPostPage(String slug, int page, int size) {
+        Board board = getBoard(slug);
+        return buildPostPage(board, page, size);
+    }
+
+    private PostPageResponse buildPostPage(Board board, int page, int size) {
         Slice<PostListItemResponse> postPage = postRepository.findPostListByBoard(board, PageRequest.of(page, size));
 
         return new PostPageResponse(
@@ -199,6 +242,11 @@ public class PostService {
 
         return myReactionViews.stream()
                 .collect(Collectors.toMap(MyReactionView::getTargetId, s -> s));
+    }
+
+    private void evictBoardFirstPageCache(Long boardId) {
+        if (boardId == null) return;
+        eventPublisher.publishEvent(new CacheEvictEvent(BOARD_FIRST_PAGE_CACHE, boardId));
     }
 
     private Board getBoard(String slug) {
