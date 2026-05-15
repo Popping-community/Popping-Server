@@ -8,12 +8,15 @@ import java.util.concurrent.atomic.LongAdder;
 
 import jakarta.annotation.PreDestroy;
 
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import com.example.popping.config.app.CacheConfig;
 import com.example.popping.repository.PostRepository;
 
 @Slf4j
@@ -23,6 +26,7 @@ public class ViewCountService {
 
     private final PostRepository postRepository;
     private final TransactionTemplate txTemplate;
+    private final CacheManager cacheManager;
 
     private final ConcurrentHashMap<Long, LongAdder> pendingCounts = new ConcurrentHashMap<>();
 
@@ -74,7 +78,18 @@ public class ViewCountService {
         }
 
         if (flushed > 0) {
+            evictPostDetailCache(batch);
             log.info("viewCount flush: updated {} posts", flushed);
+        }
+    }
+
+    private void evictPostDetailCache(List<Map.Entry<Long, Long>> batch) {
+        Cache cache = cacheManager.getCache(CacheConfig.POST_DETAIL_CACHE);
+        if (cache == null) {
+            return;
+        }
+        for (Map.Entry<Long, Long> entry : batch) {
+            cache.evict(entry.getKey());
         }
     }
 

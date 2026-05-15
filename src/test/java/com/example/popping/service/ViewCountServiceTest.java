@@ -13,12 +13,16 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
+import com.example.popping.config.app.CacheConfig;
 import com.example.popping.repository.PostRepository;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -30,6 +34,9 @@ class ViewCountServiceTest {
 
     @Mock
     TransactionTemplate txTemplate;
+
+    @Mock
+    CacheManager cacheManager;
 
     @InjectMocks
     ViewCountService viewCountService;
@@ -147,5 +154,48 @@ class ViewCountServiceTest {
 
         verify(postRepository).increaseViewCountBy(1L, 1L);
         assertThat(viewCountService.getPendingCount(1L)).isEqualTo(0);
+    }
+
+    @Test
+    @DisplayName("flushViewCounts: flush 후 postDetail 캐시를 evict한다")
+    void flushViewCounts_evictsPostDetailCache() {
+        Cache mockCache = mock(Cache.class);
+        when(cacheManager.getCache(CacheConfig.POST_DETAIL_CACHE)).thenReturn(mockCache);
+
+        viewCountService.increaseView(1L);
+        viewCountService.increaseView(2L);
+
+        viewCountService.flushViewCounts();
+
+        verify(mockCache).evict(1L);
+        verify(mockCache).evict(2L);
+    }
+
+    @Test
+    @DisplayName("flushViewCounts: 캐시가 없으면 evict를 건너뛴다")
+    void flushViewCounts_noCacheAvailable_skipsEviction() {
+        when(cacheManager.getCache(CacheConfig.POST_DETAIL_CACHE)).thenReturn(null);
+
+        viewCountService.increaseView(1L);
+
+        viewCountService.flushViewCounts();
+
+        verify(postRepository).increaseViewCountBy(1L, 1L);
+        verify(cacheManager).getCache(CacheConfig.POST_DETAIL_CACHE);
+    }
+
+    @Test
+    @DisplayName("flushViewCounts: DB 오류 시 캐시를 evict하지 않는다")
+    void flushViewCounts_dbError_doesNotEvictCache() {
+        Cache mockCache = mock(Cache.class);
+        when(cacheManager.getCache(CacheConfig.POST_DETAIL_CACHE)).thenReturn(mockCache);
+        doThrow(new RuntimeException("DB error")).when(postRepository).increaseViewCountBy(1L, 2L);
+
+        viewCountService.increaseView(1L);
+        viewCountService.increaseView(1L);
+
+        viewCountService.flushViewCounts();
+
+        verify(mockCache, never()).evict(1L);
     }
 }
