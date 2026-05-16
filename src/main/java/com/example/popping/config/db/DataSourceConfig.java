@@ -34,12 +34,19 @@ public class DataSourceConfig {
 	}
 
 	@Bean
+	public StickyAwareRoutingDataSource routingReadDataSource(
+			@Qualifier("writeDataSource") DataSource writeDataSource,
+			@Qualifier("readDataSource") DataSource readDataSource) {
+		return new StickyAwareRoutingDataSource(writeDataSource, readDataSource);
+	}
+
+	@Bean
 	@Primary
 	public DataSource dataSource(
 			@Qualifier("writeDataSource") DataSource writeDataSource,
-			@Qualifier("readDataSource") DataSource readDataSource) {
+			StickyAwareRoutingDataSource routingReadDataSource) {
 		LazyConnectionDataSourceProxy proxy = new LazyConnectionDataSourceProxy(writeDataSource);
-		proxy.setReadOnlyDataSource(readDataSource);
+		proxy.setReadOnlyDataSource(routingReadDataSource);
 		return proxy;
 	}
 }
