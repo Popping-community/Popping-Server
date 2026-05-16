@@ -2,6 +2,7 @@ package com.example.popping.config.db;
 
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
@@ -28,6 +29,9 @@ public class StickyPrimaryAspect {
 
 	private static final String COOKIE_NAME = "STICKY_PRIMARY";
 	private static final int STICKY_DURATION_SECONDS = 3;
+
+	@Value("${guest.identifier.secure-cookie:false}")
+	private boolean secureCookie;
 
 	@Before("@within(org.springframework.transaction.annotation.Transactional) "
 			+ "&& !@annotation(org.springframework.transaction.annotation.Transactional)")
@@ -72,6 +76,7 @@ public class StickyPrimaryAspect {
 		cookie.setPath("/");
 		cookie.setMaxAge(STICKY_DURATION_SECONDS);
 		cookie.setHttpOnly(true);
+		cookie.setSecure(secureCookie);
 		response.addCookie(cookie);
 	}
 }
