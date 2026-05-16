@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.context.annotation.Bean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.jdbc.datasource.LazyConnectionDataSourceProxy;
@@ -13,6 +14,7 @@ import org.springframework.jdbc.datasource.LazyConnectionDataSourceProxy;
 import com.zaxxer.hikari.HikariDataSource;
 
 @Configuration
+@ConditionalOnProperty(prefix = "app.datasource.write", name = "jdbc-url")
 public class DataSourceConfig {
 
 	@Bean
