@@ -129,11 +129,7 @@ public class CommentService {
                 ? getFirstPageCommon(postId)
                 : buildCommentPage(postId, page);
 
-        if (page == 0) {
-            base = mergeLikeCounts(base);
-        }
-
-        return mergePersonalReaction(base, principal, resolveGuestIdentifier(guestIdentifier));
+        return enrichComments(base, page == 0, principal, resolveGuestIdentifier(guestIdentifier));
     }
 
     private String resolveGuestIdentifier(String raw) {
@@ -225,22 +221,34 @@ public class CommentService {
                 .toList();
     }
 
-    private CommentPageResponse mergeLikeCounts(CommentPageResponse page) {
+    private CommentPageResponse enrichComments(CommentPageResponse page,
+                                               boolean refreshLikeCounts,
+                                               UserPrincipal principal,
+                                               String guestIdentifier) {
         if (page == null || page.comments().isEmpty()) return page;
+        if (!refreshLikeCounts && principal == null
+                && (guestIdentifier == null || guestIdentifier.isBlank())) {
+            return page;
+        }
 
         Set<Long> commentIds = new LinkedHashSet<>();
         collectCommentIds(page.comments(), commentIds);
 
-        Map<Long, CommentRepository.LikeCount> countMap = commentRepository.findLikeCountsByIds(commentIds)
-                .stream()
-                .collect(Collectors.toMap(CommentRepository.LikeCount::getId, c -> c));
+        Map<Long, CommentRepository.LikeCount> countMap = refreshLikeCounts
+                ? commentRepository.findLikeCountsByIds(commentIds).stream()
+                        .collect(Collectors.toMap(CommentRepository.LikeCount::getId, c -> c))
+                : Collections.emptyMap();
 
-        List<CommentResponse> updated = page.comments().stream()
-                .map(comment -> applyLikeCount(comment, countMap))
+        Map<Long, MyReactionView> reactionMap = buildReactionMap(commentIds, principal, guestIdentifier);
+
+        if (countMap.isEmpty() && reactionMap.isEmpty()) return page;
+
+        List<CommentResponse> enriched = page.comments().stream()
+                .map(comment -> applyMetadata(comment, countMap, reactionMap))
                 .toList();
 
         return new CommentPageResponse(
-                updated,
+                enriched,
                 page.totalComments(),
                 page.currentPage(),
                 page.totalPages(),
@@ -249,13 +257,35 @@ public class CommentService {
         );
     }
 
-    private CommentResponse applyLikeCount(CommentResponse comment, Map<Long, CommentRepository.LikeCount> countMap) {
+    private Map<Long, MyReactionView> buildReactionMap(Set<Long> commentIds,
+                                                        UserPrincipal principal,
+                                                        String guestIdentifier) {
+        if (principal == null && (guestIdentifier == null || guestIdentifier.isBlank())) {
+            return Collections.emptyMap();
+        }
+
+        String targetType = Like.TargetType.COMMENT.name();
+        List<MyReactionView> reactions = (principal != null)
+                ? likeRepository.findReactionForMember(commentIds, targetType, principal.getUserId())
+                : likeRepository.findReactionForGuest(commentIds, targetType, guestIdentifier);
+
+        return reactions.stream()
+                .collect(Collectors.toMap(MyReactionView::getTargetId, r -> r));
+    }
+
+    private CommentResponse applyMetadata(CommentResponse comment,
+                                           Map<Long, CommentRepository.LikeCount> countMap,
+                                           Map<Long, MyReactionView> reactionMap) {
         CommentRepository.LikeCount counts = countMap.get(comment.id());
-        int likeCount    = counts != null ? counts.getLikeCount()    : comment.likeCount();
+        int likeCount = counts != null ? counts.getLikeCount() : comment.likeCount();
         int dislikeCount = counts != null ? counts.getDislikeCount() : comment.dislikeCount();
 
-        List<CommentResponse> updatedChildren = comment.children().stream()
-                .map(child -> applyLikeCount(child, countMap))
+        MyReactionView reaction = reactionMap.get(comment.id());
+        boolean likedByMe = reaction != null && reaction.getLikedByMe() == 1;
+        boolean dislikedByMe = reaction != null && reaction.getDislikedByMe() == 1;
+
+        List<CommentResponse> enrichedChildren = comment.children().stream()
+                .map(child -> applyMetadata(child, countMap, reactionMap))
                 .toList();
 
         return new CommentResponse(
@@ -266,69 +296,11 @@ public class CommentService {
                 comment.guestNickname(),
                 likeCount,
                 dislikeCount,
-                comment.likedByMe(),
-                comment.dislikedByMe(),
-                comment.parentId(),
-                comment.depth(),
-                updatedChildren
-        );
-    }
-
-    private CommentPageResponse mergePersonalReaction(CommentPageResponse page,
-                                                     UserPrincipal principal,
-                                                     String guestIdentifier) {
-        if (page == null || page.comments().isEmpty()) return page;
-        if (principal == null && (guestIdentifier == null || guestIdentifier.isBlank())) return page;
-
-        Set<Long> commentIds = new LinkedHashSet<>();
-        collectCommentIds(page.comments(), commentIds);
-
-        String targetType = Like.TargetType.COMMENT.name();
-        List<MyReactionView> myReactionViews = (principal != null)
-                ? likeRepository.findReactionForMember(commentIds, targetType, principal.getUserId())
-                : likeRepository.findReactionForGuest(commentIds, targetType, guestIdentifier);
-
-        Map<Long, MyReactionView> myReactionViewMap = myReactionViews.stream()
-                .collect(Collectors.toMap(MyReactionView::getTargetId, s -> s));
-
-        List<CommentResponse> merged = page.comments().stream()
-                .map(comment -> applyPersonalReaction(comment, myReactionViewMap))
-                .toList();
-
-        return new CommentPageResponse(
-                merged,
-                page.totalComments(),
-                page.currentPage(),
-                page.totalPages(),
-                page.hasNext(),
-                page.hasPrevious()
-        );
-    }
-
-    private CommentResponse applyPersonalReaction(CommentResponse comment,
-                                                  Map<Long, MyReactionView> myReactionViewMap) {
-        MyReactionView s = myReactionViewMap.get(comment.id());
-
-        boolean likedByMe    = s != null && s.getLikedByMe()    == 1;
-        boolean dislikedByMe = s != null && s.getDislikedByMe() == 1;
-
-        List<CommentResponse> mergedChildren = comment.children().stream()
-                .map(child -> applyPersonalReaction(child, myReactionViewMap))
-                .toList();
-
-        return new CommentResponse(
-                comment.id(),
-                comment.content(),
-                comment.authorName(),
-                comment.authorId(),
-                comment.guestNickname(),
-                comment.likeCount(),
-                comment.dislikeCount(),
                 likedByMe,
                 dislikedByMe,
                 comment.parentId(),
                 comment.depth(),
-                mergedChildren
+                enrichedChildren
         );
     }
 

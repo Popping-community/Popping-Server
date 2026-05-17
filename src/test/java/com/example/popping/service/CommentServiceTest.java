@@ -529,6 +529,84 @@ class CommentServiceTest {
     }
 
     @Test
+    @DisplayName("댓글 페이지 조회(page>0, 미식별 사용자): principal과 guestIdentifier 모두 없으면 enrichment를 건너뛰고 CTE 값 그대로 반환한다")
+    void getCommentPage_pageGreaterThanZero_noAuth_skipsAllEnrichment() {
+
+        // given
+        Long postId = 10L;
+        int page = 1;
+
+        Post post = mock(Post.class);
+        when(postService.getPost(postId)).thenReturn(post);
+        when(post.getCommentCount()).thenReturn(150);
+
+        CommentTreeRowView r1 = rowView(101L, null, "page1 comment", 0, 100L, null, 7, 2);
+        when(commentRepository.findPagedCommentTree(postId, CommentService.COMMENTS_SIZE, 100))
+                .thenReturn(List.of(r1));
+        when(userService.getUserIdToNicknameMap(Set.of(100L)))
+                .thenReturn(Map.of(100L, "nick"));
+
+        // when
+        CommentPageResponse res = commentService.getCommentPage(postId, page, null, null);
+
+        // then — no enrichment queries fired
+        verify(commentRepository, never()).findLikeCountsByIds(any());
+        verify(likeRepository, never()).findReactionForMember(any(), any(), any());
+        verify(likeRepository, never()).findReactionForGuest(any(), any(), any());
+
+        // CTE values preserved
+        CommentResponse comment = res.comments().get(0);
+        assertEquals(7, comment.likeCount());
+        assertEquals(2, comment.dislikeCount());
+        assertFalse(comment.likedByMe());
+        assertFalse(comment.dislikedByMe());
+
+        // page metadata
+        assertEquals(1, res.currentPage());
+        assertTrue(res.hasPrevious());
+        assertFalse(res.hasNext());
+    }
+
+    @Test
+    @DisplayName("댓글 페이지 조회(page>0, 회원): reaction만 적용하고 likeCount는 갱신하지 않는다")
+    void getCommentPage_pageGreaterThanZero_member_reactionOnlyNoLikeCountRefresh() {
+
+        // given
+        Long postId = 10L;
+        int page = 1;
+        UserPrincipal principal = principal(42L);
+
+        Post post = mock(Post.class);
+        when(postService.getPost(postId)).thenReturn(post);
+        when(post.getCommentCount()).thenReturn(150);
+
+        CommentTreeRowView r1 = rowView(101L, null, "page1", 0, 100L, null, 5, 1);
+        when(commentRepository.findPagedCommentTree(postId, CommentService.COMMENTS_SIZE, 100))
+                .thenReturn(List.of(r1));
+        when(userService.getUserIdToNicknameMap(Set.of(100L)))
+                .thenReturn(Map.of(100L, "nick"));
+
+        MyReactionView rv = myReaction(101L, 0, 1);
+        when(likeRepository.findReactionForMember(anyCollection(), any(), eq(42L)))
+                .thenReturn(List.of(rv));
+
+        // when
+        CommentPageResponse res = commentService.getCommentPage(postId, page, principal, null);
+
+        // then — likeCount refresh NOT called (page > 0)
+        verify(commentRepository, never()).findLikeCountsByIds(any());
+
+        // reaction IS applied
+        verify(likeRepository).findReactionForMember(anyCollection(), any(), eq(42L));
+
+        CommentResponse comment = res.comments().get(0);
+        assertEquals(5, comment.likeCount());    // CTE value kept (no refresh)
+        assertEquals(1, comment.dislikeCount()); // CTE value kept
+        assertFalse(comment.likedByMe());
+        assertTrue(comment.dislikedByMe());      // reaction applied
+    }
+
+    @Test
     @DisplayName("댓글 조회: 없으면 COMMENT_NOT_FOUND 예외를 던진다")
     void getComment_fail_notFound() {
 
