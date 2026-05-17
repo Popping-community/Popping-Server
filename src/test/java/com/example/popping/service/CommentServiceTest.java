@@ -529,7 +529,7 @@ class CommentServiceTest {
     }
 
     @Test
-    @DisplayName("댓글 페이지 조회(page>0, 비로그인): enrichment를 전부 건너뛰고 CTE 값 그대로 반환한다")
+    @DisplayName("댓글 페이지 조회(page>0, 미식별 사용자): principal과 guestIdentifier 모두 없으면 enrichment를 건너뛰고 CTE 값 그대로 반환한다")
     void getCommentPage_pageGreaterThanZero_noAuth_skipsAllEnrichment() {
 
         // given
