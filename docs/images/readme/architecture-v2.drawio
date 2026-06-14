@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="drawio" version="26.0.0">
+  <diagram name="Page-1">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="1600" pageHeight="1000" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- Title -->
+        <mxCell id="title" value="Local Docker Compose Test Architecture" style="text;html=1;fontSize=16;fontStyle=1;align=center;verticalAlign=middle;fillColor=none;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry x="370" y="10" width="400" height="30" as="geometry" />
+        </mxCell>
+
+        <!-- JMeter (external) -->
+        <mxCell id="jmeter" value="JMeter&#xa;(500~750 VUser)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="30" y="100" width="140" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- Docker Compose boundary -->
+        <mxCell id="docker" value="Docker Compose (popping-net bridge)" style="swimlane;startSize=28;fillColor=#f8f9fa;strokeColor=#999999;dashed=1;dashPattern=8 4;fontSize=12;fontStyle=1;rounded=1;" vertex="1" parent="1">
+          <mxGeometry x="220" y="50" width="920" height="680" as="geometry" />
+        </mxCell>
+
+        <!-- HAProxy -->
+        <mxCell id="haproxy" value="HAProxy 2.8&#xa;cookie insert LB&#xa;:9091 / :8404(stats)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontStyle=1;fontSize=11;" vertex="1" parent="docker">
+          <mxGeometry x="340" y="40" width="200" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- App tier label -->
+        <mxCell id="app-tier" value="Application Tier (cpus=2.0, mem=2G each)" style="text;html=1;fontSize=9;fontColor=#666666;fontStyle=2;align=center;" vertex="1" parent="docker">
+          <mxGeometry x="200" y="120" width="480" height="20" as="geometry" />
+        </mxCell>
+
+        <!-- App 1 -->
+        <mxCell id="app1" value="app-1&#xa;Spring Boot :9091&#xa;Actuator :8081&#xa;Caffeine Cache&#xa;Sticky Primary" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontSize=10;" vertex="1" parent="docker">
+          <mxGeometry x="140" y="145" width="200" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- App 2 -->
+        <mxCell id="app2" value="app-2&#xa;Spring Boot :9091&#xa;Actuator :8081&#xa;Caffeine Cache&#xa;Sticky Primary" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontSize=10;" vertex="1" parent="docker">
+          <mxGeometry x="540" y="145" width="200" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- Sticky Primary annotation -->
+        <mxCell id="sticky-label" value="Sticky Primary (cookie 3s TTL)&#xa;Write 커밋 후 3초간 Primary 직접 조회" style="text;html=1;fontSize=9;fontColor=#1a73e8;align=center;verticalAlign=middle;fontStyle=2;" vertex="1" parent="docker">
+          <mxGeometry x="280" y="248" width="320" height="30" as="geometry" />
+        </mxCell>
+
+        <!-- DB tier label -->
+        <mxCell id="db-tier" value="Data Tier (cpus=1.0, mem=1G each)" style="text;html=1;fontSize=9;fontColor=#666666;fontStyle=2;align=right;" vertex="1" parent="docker">
+          <mxGeometry x="640" y="290" width="250" height="20" as="geometry" />
+        </mxCell>
+
+        <!-- MySQL Primary -->
+        <mxCell id="mysql-primary" value="MySQL Primary&#xa;:3306 (host :3307)&#xa;GTID + binlog-format=ROW" style="shape=cylinder3;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;fontSize=10;size=10;" vertex="1" parent="docker">
+          <mxGeometry x="140" y="310" width="200" height="90" as="geometry" />
+        </mxCell>
+
+        <!-- MySQL Replica -->
+        <mxCell id="mysql-replica" value="MySQL Replica&#xa;:3306 (host :3308)&#xa;parallel-workers=1" style="shape=cylinder3;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;fontSize=10;size=10;" vertex="1" parent="docker">
+          <mxGeometry x="540" y="310" width="200" height="90" as="geometry" />
+        </mxCell>
+
+        <!-- Replication -->
+        <mxCell id="e-replication" value="GTID Replication&#xa;(SOURCE_AUTO_POSITION=1)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;fontSize=9;strokeColor=#1a73e8;fontColor=#1a73e8;strokeWidth=2;" edge="1" parent="docker" source="mysql-primary" target="mysql-replica">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Monitoring tier label -->
+        <mxCell id="mon-tier" value="Monitoring Tier" style="text;html=1;fontSize=9;fontColor=#666666;fontStyle=2;align=center;" vertex="1" parent="docker">
+          <mxGeometry x="200" y="425" width="480" height="20" as="geometry" />
+        </mxCell>
+
+        <!-- mysqld-exporter (master) -->
+        <mxCell id="mysql-exp" value="mysqld-exporter&#xa;(master) :9104" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=9;" vertex="1" parent="docker">
+          <mxGeometry x="40" y="455" width="150" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- mysqld-exporter (replica) -->
+        <mxCell id="mysql-exp-r" value="mysqld-exporter&#xa;(replica) :9105" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=9;" vertex="1" parent="docker">
+          <mxGeometry x="220" y="455" width="150" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- cadvisor -->
+        <mxCell id="cadvisor" value="cAdvisor&#xa;:8084" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=9;" vertex="1" parent="docker">
+          <mxGeometry x="400" y="455" width="150" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- docker-stats-exporter -->
+        <mxCell id="docker-stats" value="docker-stats&#xa;exporter :9487" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=9;" vertex="1" parent="docker">
+          <mxGeometry x="580" y="455" width="150" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- replica-setup (init only) -->
+        <mxCell id="replica-setup" value="replica-setup&#xa;(init container)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#999999;fontSize=9;dashed=1;" vertex="1" parent="docker">
+          <mxGeometry x="770" y="340" width="120" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- Edges: HAProxy to Apps -->
+        <mxCell id="e-ha-app1" value="round-robin&#xa;+ cookie" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.25;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=9;strokeWidth=2;" edge="1" parent="docker" source="haproxy" target="app1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e-ha-app2" value="round-robin&#xa;+ cookie" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.75;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=9;strokeWidth=2;" edge="1" parent="docker" source="haproxy" target="app2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- App1 Write to Primary -->
+        <mxCell id="e-app1-w" value="Write" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=9;fontStyle=1;" edge="1" parent="docker" source="app1" target="mysql-primary">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- App2 Write to Primary -->
+        <mxCell id="e-app2-w" value="Write" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.25;exitY=1;exitDx=0;exitDy=0;entryX=0.75;entryY=0;entryDx=0;entryDy=0;fontSize=9;dashed=1;fontStyle=1;" edge="1" parent="docker" source="app2" target="mysql-primary">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="590" y="280" />
+              <mxPoint x="290" y="280" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- App1 Read from Replica -->
+        <mxCell id="e-app1-r" value="Read" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.75;exitY=1;exitDx=0;exitDy=0;entryX=0.25;entryY=0;entryDx=0;entryDy=0;fontSize=9;dashed=1;fontStyle=1;" edge="1" parent="docker" source="app1" target="mysql-replica">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="290" y="296" />
+              <mxPoint x="590" y="296" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- App2 Read from Replica -->
+        <mxCell id="e-app2-r" value="Read" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=9;fontStyle=1;" edge="1" parent="docker" source="app2" target="mysql-replica">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- replica-setup to replica -->
+        <mxCell id="e-setup-replica" value="CHANGE REPLICATION&#xa;SOURCE" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.75;entryDx=0;entryDy=0;fontSize=8;dashed=1;strokeColor=#999999;" edge="1" parent="docker" source="replica-setup" target="mysql-replica">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Grafana (external) -->
+        <mxCell id="grafana" value="Grafana&#xa;(localhost:3000)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontStyle=1;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="30" y="560" width="140" height="45" as="geometry" />
+        </mxCell>
+
+        <!-- Prometheus (external) -->
+        <mxCell id="prometheus" value="Prometheus&#xa;(localhost:9090)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontStyle=1;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="30" y="630" width="140" height="45" as="geometry" />
+        </mxCell>
+
+        <!-- JMeter to HAProxy -->
+        <mxCell id="e-jmeter-ha" value="HTTP :9091" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;fontSize=10;fontStyle=1;strokeWidth=2;" edge="1" parent="1" source="jmeter" target="haproxy">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Prometheus scrapes monitoring -->
+        <mxCell id="e-prom-scrape" value="scrape" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;fontSize=9;dashed=1;strokeColor=#999999;" edge="1" parent="1" source="prometheus" target="mysql-exp">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Grafana to Prometheus -->
+        <mxCell id="e-graf-prom" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;dashed=1;strokeColor=#999999;" edge="1" parent="1" source="grafana" target="prometheus">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

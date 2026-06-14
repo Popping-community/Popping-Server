@@ -9,6 +9,8 @@
 - 좋아요 중복 insert 경쟁을 멱등 처리로 바꿔 동일 사용자 동시 요청 `20건`에서 예외 `0건`을 확인했습니다.
 - 게시글 목록 조회를 `Page -> Slice`로 전환해 COUNT 쿼리를 `2,173건 -> 0건`으로 제거하고, 목록 조회 응답시간을 `662ms -> 34ms`로 줄였습니다.
 - 캐시 스탬피드 구간을 per-key 로딩으로 제어해 evict 직후 동시 요청에서도 CTE 실행을 `1회`로 고정했습니다.
+- App CPU 포화로 정체된 TPS를 HAProxy 기반 수평 확장으로 `274/s -> 527/s`, 응답시간 `867ms -> 32ms`로 개선했습니다.
+- Scale Out 후 MySQL CPU 병목을 Read Replica + Sticky Primary로 완화해 응답시간 `32ms -> 10ms`, Replication Lag `104s -> 26s`로 줄였습니다.
 
 ## 프로젝트 소개
 
@@ -35,7 +37,13 @@ Popping Community는 게시글, 댓글, 좋아요/싫어요, 게스트 기능을
 
 ## 아키텍처
 
+### 운영 환경 (EC2)
+
 ![Popping Community architecture](docs/images/readme/architecture.png)
+
+### 부하 테스트 환경 (Local Docker Compose)
+
+![Local Docker Compose Test Architecture](docs/images/readme/architecture-v2.png)
 
 ## 핵심 문제 해결
 
@@ -92,6 +100,35 @@ Popping Community는 게시글, 댓글, 좋아요/싫어요, 게스트 기능을
 
 ![캐시 스탬피드 방지 테스트](docs/images/readme/cache-stampede-test.png)
 
+### 6. HAProxy 기반 App 수평 확장
+
+App CPU가 200%로 포화되어 TPS가 274/s에서 정체되는 상황이었습니다.  
+HAProxy `cookie insert` 기반 세션 고정으로 App을 2대로 수평 확장하고, 요청을 분산 처리했습니다.
+
+- TPS: `274/s -> 527/s`
+- 평균 응답시간: `867ms -> 32ms`
+- App CPU 포화 해소, 병목이 MySQL CPU(100%)로 이동 확인
+
+| | Before (App 1대) | After (App 2대) |
+| --- | --- | --- |
+| ![응답시간 Before](docs/images/readme/scaleout/response-time-before.png) | ![응답시간 After](docs/images/readme/scaleout/response-time-after.png) |
+
+### 7. Read Replica + Sticky Primary
+
+Scale Out 후 MySQL 단일 인스턴스가 CPU 100%로 포화되어 병목이 이동했습니다.  
+읽기 트래픽이 90%를 차지하는 커뮤니티 특성에 맞춰 Read Replica로 읽기/쓰기를 분리하고, 쓰기 직후 정합성 문제를 Sticky Primary(쿠키 3초 TTL)로 해결했습니다.
+
+- 평균 응답시간: `32ms -> 10ms`
+- Replication Lag 평균: `104s -> 26s`
+- Sticky Primary: `TransactionSynchronization.afterCommit` 콜백으로 커밋 성공 시에만 쿠키 발급
+- 병렬 복제(`replica-parallel-workers=2`, `LOGICAL_CLOCK`)로 Lag 자체를 감소
+
+| | Before (단일 DB) | After (Replica) |
+| --- | --- | --- |
+| ![응답시간 Before](docs/images/readme/replica/response-time-before.png) | ![응답시간 After](docs/images/readme/replica/response-time-after.png) |
+
+![Replication Lag](docs/images/readme/replica/replication-lag.png)
+
 ## 부하 테스트 환경
 
 | 항목 | 값 |
@@ -119,4 +156,4 @@ Popping Community는 게시글, 댓글, 좋아요/싫어요, 게스트 기능을
 
 - [부하 테스트 스크립트](docs/load-test)
 - [운영 모니터링 저장소](https://github.com/Popping-community/popping-openclaw-ops-agent)
-- [포트폴리오](https://chooh1010.github.io/resume/portfolio.html)
+- [포트폴리오](https://chooh1010.github.io/resume/portfolio_v2.html)
