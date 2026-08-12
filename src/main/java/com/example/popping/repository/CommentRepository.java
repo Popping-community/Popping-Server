@@ -25,6 +25,9 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
            "FROM Comment c WHERE c.id IN :ids")
     List<LikeCount> findLikeCountsByIds(@Param("ids") Collection<Long> ids);
 
+    @Query("SELECT c.likeCount AS likeCount, c.dislikeCount AS dislikeCount FROM Comment c WHERE c.id = :commentId")
+    LikeCountView findLikeCountsById(@Param("commentId") Long commentId);
+
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("UPDATE Comment c SET c.likeCount = c.likeCount + :delta WHERE c.id = :commentId")
     int updateLikeCount(@Param("commentId") Long commentId, @Param("delta") int delta);

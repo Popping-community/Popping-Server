@@ -11,6 +11,7 @@ import com.example.popping.dto.LikeRequest;
 import com.example.popping.dto.LikeResponse;
 import com.example.popping.exception.CustomAppException;
 import com.example.popping.exception.ErrorType;
+import com.example.popping.repository.LikeCountView;
 import com.example.popping.repository.LikeRepository;
 
 @Service
@@ -29,7 +30,7 @@ public class LikeService {
         String guestIdentifier = resolveGuestIdentifier(req.guestIdentifier());
         validateActor(user, guestIdentifier);
 
-        int inserted = likeRepository.insertIgnore(
+        int inserted = likeRepository.upsertLike(
                 req.targetType().name(),
                 req.targetId(),
                 req.type().name(),
@@ -41,7 +42,7 @@ public class LikeService {
             applyDelta(req.targetType(), req.type(), req.targetId(), 1);
         }
 
-        return new LikeResponse(req.targetId(), req.targetType(), addedAction(req.type()));
+        return buildResponse(req, addedAction(req.type()));
     }
 
     public LikeResponse removeLike(LikeRequest req, UserPrincipal principal) {
@@ -61,7 +62,30 @@ public class LikeService {
             applyDelta(req.targetType(), req.type(), req.targetId(), -1);
         }
 
-        return new LikeResponse(req.targetId(), req.targetType(), removedAction(req.type()));
+        return buildResponse(req, removedAction(req.type()));
+    }
+
+    /**
+     * Reads the counters back after the delta so the broadcast carries absolute state.
+     * A no-op request therefore reports the unchanged counts instead of implying a change.
+     */
+    private LikeResponse buildResponse(LikeRequest req, LikeResponse.LikeAction action) {
+        LikeCountView counts = readCounts(req.targetType(), req.targetId());
+        return new LikeResponse(
+                req.targetId(),
+                req.targetType(),
+                action,
+                counts.getLikeCount(),
+                counts.getDislikeCount()
+        );
+    }
+
+    private LikeCountView readCounts(Like.TargetType targetType, Long targetId) {
+        return switch (targetType) {
+            case POST -> postService.getLikeCounts(targetId);
+            case COMMENT -> commentService.getLikeCounts(targetId);
+            default -> throw new CustomAppException(ErrorType.INVALID_TARGET_TYPE);
+        };
     }
 
     private User getUser(UserPrincipal principal) {
