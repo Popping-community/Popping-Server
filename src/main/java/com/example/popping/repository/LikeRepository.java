@@ -46,13 +46,26 @@ public interface LikeRepository extends JpaRepository<Like, Long> {
     long countByTargetIdAndTargetTypeAndTypeAndUser_Id(
             Long targetId, Like.TargetType targetType, Like.Type type, Long userId);
 
+    /**
+     * Inserts a like row, treating an existing row as a no-op.
+     *
+     * <p>Uses {@code ON DUPLICATE KEY UPDATE id = id} rather than {@code INSERT IGNORE}:
+     * {@code INSERT IGNORE} downgrades every error to a warning (truncation, NOT NULL,
+     * FK violations), not just duplicate keys.
+     *
+     * <p><b>Returns affected rows: 1 when inserted, 0 when the row already existed.</b>
+     * The zero-on-duplicate contract depends on the JDBC URL setting
+     * {@code useAffectedRows=true}. Without it Connector/J enables {@code CLIENT_FOUND_ROWS},
+     * which reports <em>found</em> rows instead of <em>changed</em> rows, so a duplicate
+     * would return 1 and callers would double-count. See {@code LikeConcurrencyTest}.
+     */
     @Modifying
     @Query(value = """
     insert into likes (target_type, target_id, type, user_id, guest_identifier)
     values (:targetType, :targetId, :type, :userId, :guestIdentifier)
     on duplicate key update id = id
     """, nativeQuery = true)
-    int insertIgnore(
+    int upsertLike(
             @Param("targetType") String targetType,
             @Param("targetId") Long targetId,
             @Param("type") String type,

@@ -22,6 +22,7 @@ import com.example.popping.dto.*;
 import com.example.popping.event.CacheEvictEvent;
 import com.example.popping.exception.CustomAppException;
 import com.example.popping.exception.ErrorType;
+import com.example.popping.repository.LikeCountView;
 import com.example.popping.repository.LikeRepository;
 import com.example.popping.repository.PostRepository;
 import com.example.popping.repository.MyReactionView;
@@ -144,6 +145,14 @@ public class PostService {
 
     public void updateDislikeCount(Long targetId, int delta) {
         postRepository.updateDislikeCount(targetId, delta);
+    }
+
+    public LikeCountView getLikeCounts(Long targetId) {
+        LikeCountView counts = postRepository.findLikeCountsById(targetId);
+        if (counts == null) {
+            throw new CustomAppException(ErrorType.POST_NOT_FOUND);
+        }
+        return counts;
     }
 
     @Transactional(readOnly = true)

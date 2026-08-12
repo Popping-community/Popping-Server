@@ -664,7 +664,6 @@
     function updateReaction(response) {
         const targetType = response.targetType.toLowerCase();
         const targetId = response.targetId;
-        const action = response.action;
 
         const likeCountElement = document.getElementById(`like-count-${targetType}-${targetId}`);
         const dislikeCountElement = document.getElementById(`dislike-count-${targetType}-${targetId}`);
@@ -673,23 +672,11 @@
             return;
         }
 
-        let likeCount = parseInt(likeCountElement.textContent, 10);
-        let dislikeCount = parseInt(dislikeCountElement.textContent, 10);
-
-        switch (action) {
-            case 'LIKED':
-                likeCountElement.textContent = likeCount + 1;
-                break;
-            case 'UNLIKED':
-                likeCountElement.textContent = Math.max(0, likeCount - 1);
-                break;
-            case 'DISLIKED':
-                dislikeCountElement.textContent = dislikeCount + 1;
-                break;
-            case 'UNDISLIKED':
-                dislikeCountElement.textContent = Math.max(0, dislikeCount - 1);
-                break;
-        }
+        // Assign the absolute counts the server sent; never increment.
+        // The broadcast can arrive more than once, or describe a request that was a no-op
+        // (liking something already liked), so incrementing drifts away from the database.
+        likeCountElement.textContent = response.likeCount;
+        dislikeCountElement.textContent = response.dislikeCount;
     }
 
     function getGuestIdentifier() {

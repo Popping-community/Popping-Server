@@ -14,6 +14,7 @@ import com.example.popping.dto.LikeRequest;
 import com.example.popping.dto.LikeResponse;
 import com.example.popping.exception.CustomAppException;
 import com.example.popping.exception.ErrorType;
+import com.example.popping.repository.LikeCountView;
 import com.example.popping.repository.LikeRepository;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -43,8 +44,9 @@ class LikeServiceTest {
         when(userService.getLoginUserById(1L)).thenReturn(user);
         when(user.getId()).thenReturn(1L);
 
-        when(likeRepository.insertIgnore("POST", 10L, "LIKE", 1L, null))
+        when(likeRepository.upsertLike("POST", 10L, "LIKE", 1L, null))
                 .thenReturn(1);
+        when(postService.getLikeCounts(10L)).thenReturn(counts(6, 2));
 
         // when
         LikeResponse res = likeService.addLike(req, principal);
@@ -54,6 +56,8 @@ class LikeServiceTest {
         verify(postService, never()).updateDislikeCount(anyLong(), anyInt());
 
         assertEquals(LikeResponse.LikeAction.LIKED, res.action());
+        assertEquals(6, res.likeCount());
+        assertEquals(2, res.dislikeCount());
     }
 
     @Test
@@ -63,8 +67,9 @@ class LikeServiceTest {
         // given
         LikeRequest req = new LikeRequest(10L, Like.TargetType.POST, Like.Type.LIKE, "guest-1");
 
-        when(likeRepository.insertIgnore("POST", 10L, "LIKE", null, "guest-1"))
+        when(likeRepository.upsertLike("POST", 10L, "LIKE", null, "guest-1"))
                 .thenReturn(0);
+        when(postService.getLikeCounts(10L)).thenReturn(counts(5, 2));
 
         // when
         LikeResponse res = likeService.addLike(req, null);
@@ -72,6 +77,47 @@ class LikeServiceTest {
         // then
         verify(postService, never()).updateLikeCount(anyLong(), anyInt());
         assertEquals(LikeResponse.LikeAction.LIKED, res.action());
+    }
+
+    @Test
+    @DisplayName("중복 좋아요: 응답이 DB의 현재 카운트를 그대로 실어 화면 드리프트를 막는다")
+    void addLike_duplicate_reportsUnchangedAbsoluteCounts() {
+
+        // given — DB already holds this like, so the row insert is a no-op
+        LikeRequest req = new LikeRequest(10L, Like.TargetType.POST, Like.Type.LIKE, "guest-1");
+
+        when(likeRepository.upsertLike("POST", 10L, "LIKE", null, "guest-1"))
+                .thenReturn(0);
+        when(postService.getLikeCounts(10L)).thenReturn(counts(5, 2));
+
+        // when
+        LikeResponse res = likeService.addLike(req, null);
+
+        // then — the payload must be the unchanged DB state, not an implied increment.
+        // Clients assign these values, so a duplicate request leaves the display untouched.
+        assertEquals(5, res.likeCount());
+        assertEquals(2, res.dislikeCount());
+        verify(postService, never()).updateLikeCount(anyLong(), anyInt());
+    }
+
+    @Test
+    @DisplayName("중복 취소: 응답이 DB의 현재 카운트를 그대로 실어 화면 드리프트를 막는다")
+    void removeLike_duplicate_reportsUnchangedAbsoluteCounts() {
+
+        // given — nothing to delete, so the counters must not move
+        LikeRequest req = new LikeRequest(20L, Like.TargetType.COMMENT, Like.Type.LIKE, "guest-1");
+
+        when(likeRepository.deleteByActor(Like.TargetType.COMMENT, 20L, Like.Type.LIKE, null, "guest-1"))
+                .thenReturn(0);
+        when(commentService.getLikeCounts(20L)).thenReturn(counts(3, 1));
+
+        // when
+        LikeResponse res = likeService.removeLike(req, null);
+
+        // then
+        assertEquals(3, res.likeCount());
+        assertEquals(1, res.dislikeCount());
+        verify(commentService, never()).updateLikeCount(anyLong(), anyInt());
     }
 
     @Test
@@ -87,6 +133,7 @@ class LikeServiceTest {
 
         when(likeRepository.deleteByActor(Like.TargetType.COMMENT, 20L, Like.Type.DISLIKE, user, null))
                 .thenReturn(1);
+        when(commentService.getLikeCounts(20L)).thenReturn(counts(3, 0));
 
         // when
         LikeResponse res = likeService.removeLike(req, principal);
@@ -96,6 +143,8 @@ class LikeServiceTest {
         verify(commentService, never()).updateLikeCount(anyLong(), anyInt());
 
         assertEquals(LikeResponse.LikeAction.UNDISLIKED, res.action());
+        assertEquals(3, res.likeCount());
+        assertEquals(0, res.dislikeCount());
     }
 
     @Test
@@ -107,6 +156,7 @@ class LikeServiceTest {
 
         when(likeRepository.deleteByActor(Like.TargetType.COMMENT, 20L, Like.Type.LIKE, null, "guest-1"))
                 .thenReturn(0);
+        when(commentService.getLikeCounts(20L)).thenReturn(counts(3, 1));
 
         // when
         LikeResponse res = likeService.removeLike(req, null);
@@ -138,6 +188,28 @@ class LikeServiceTest {
         assertEquals(ErrorType.ACCESS_DENIED, ex2.getErrorType());
     }
 
+    @Test
+    @DisplayName("대상이 사라진 경우: 카운트를 읽지 못하면 예외를 던져 롤백한다")
+    void addLike_fail_whenTargetMissing() {
+
+        // given
+        LikeRequest req = new LikeRequest(99L, Like.TargetType.POST, Like.Type.LIKE, "guest-1");
+
+        when(likeRepository.upsertLike("POST", 99L, "LIKE", null, "guest-1"))
+                .thenReturn(1);
+        when(postService.getLikeCounts(99L))
+                .thenThrow(new CustomAppException(ErrorType.POST_NOT_FOUND));
+
+        // when
+        CustomAppException ex = assertThrows(
+                CustomAppException.class,
+                () -> likeService.addLike(req, null)
+        );
+
+        // then
+        assertEquals(ErrorType.POST_NOT_FOUND, ex.getErrorType());
+    }
+
     private UserPrincipal principal(Long userId) {
         UserPrincipal p = mock(UserPrincipal.class);
         when(p.getUserId()).thenReturn(userId);
@@ -146,5 +218,19 @@ class LikeServiceTest {
 
     private User userAuthOnly() {
         return mock(User.class);
+    }
+
+    private static LikeCountView counts(int likeCount, int dislikeCount) {
+        return new LikeCountView() {
+            @Override
+            public int getLikeCount() {
+                return likeCount;
+            }
+
+            @Override
+            public int getDislikeCount() {
+                return dislikeCount;
+            }
+        };
     }
 }

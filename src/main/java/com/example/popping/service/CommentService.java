@@ -23,6 +23,7 @@ import com.example.popping.dto.MemberCommentCreateRequest;
 import com.example.popping.exception.CustomAppException;
 import com.example.popping.exception.ErrorType;
 import com.example.popping.repository.CommentRepository;
+import com.example.popping.repository.LikeCountView;
 import com.example.popping.repository.MyReactionView;
 import com.example.popping.repository.CommentTreeRowView;
 import com.example.popping.repository.LikeRepository;
@@ -121,6 +122,14 @@ public class CommentService {
 
     public void updateDislikeCount(Long targetId, int delta) {
         commentRepository.updateDislikeCount(targetId, delta);
+    }
+
+    public LikeCountView getLikeCounts(Long targetId) {
+        LikeCountView counts = commentRepository.findLikeCountsById(targetId);
+        if (counts == null) {
+            throw new CustomAppException(ErrorType.COMMENT_NOT_FOUND);
+        }
+        return counts;
     }
 
     @Transactional(readOnly = true)
