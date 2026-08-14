@@ -36,3 +36,31 @@ out/
 
 ### VS Code ###
 .vscode/
+
+### Secrets ###
+# Local docker-compose env: DB root password, HMAC secret. Never commit.
+.env
+
+### Personal documents ###
+# Resumes and portfolios live in this working tree for convenience. This is a
+# public repo - they carry a name, contact details and employment history.
+이력서*
+포트폴리오*
+*resume*
+*portfolio*
+*.docx
+
+### Load test artifacts ###
+# Tooling and the protocol doc are committed; the outputs are not.
+# A single run produces 40-100MB of .jtl, and the seed dump is over 1GB -
+# past GitHub's 100MB file limit, in a public repo.
+# JMeter raw results, anywhere. The listener writes popping_results.jtl into
+# whatever directory JMeter was launched from, so this is not confined to
+# docs/load-test - a 1.5GB one was sitting in the repo root.
+*.jtl
+docs/load-test/dump.sql
+# Generated JMeter HTML reports: ~3.9MB each, mostly vendored JS/CSS.
+# The evidence worth keeping is small and textual (metrics CSV, steady verdict,
+# run metadata) - commit those explicitly instead.
+docs/load-test/*report*/
+jmeter.log
