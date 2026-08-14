@@ -139,6 +139,25 @@
                     아직 게시글이 없습니다. 첫 번째 글을 작성해보세요!
                 </div>
 
+                <!-- Icon sprite: each icon is defined once here and referenced by every post row. -->
+                <svg style="display:none" aria-hidden="true">
+                    <symbol id="ic-view" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                    </symbol>
+                    <symbol id="ic-comment" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                    </symbol>
+                    <symbol id="ic-like" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M7 10v12"></path>
+                        <path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2h0a3.13 3.13 0 0 1 3 3.88Z"></path>
+                    </symbol>
+                    <symbol id="ic-dislike" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M17 14V2"></path>
+                        <path d="M9 18.12 10 14H4.17a2 2 0 0 1-1.92-2.56l2.33-8A2 2 0 0 1 6.5 2H20a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2.76a2 2 0 0 0-1.79 1.11L12 22h0a3.13 3.13 0 0 1-3-3.88Z"></path>
+                    </symbol>
+                </svg>
+
                 <!-- 게시글 목록 -->
                 <div th:if="${not #lists.isEmpty(postPage.posts())}" class="space-y-2">
                     <div th:each="post : ${postPage.posts()}" class="bg-background rounded-md p-4 hover:shadow transition-shadow">
@@ -152,30 +171,19 @@
                                     <!-- 조회수와 댓글 수 표시 (닉네임 옆) -->
                                     <span>•</span>
                                     <div class="flex items-center gap-1">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-3 w-3">
-                                            <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
-                                            <circle cx="12" cy="12" r="3"></circle>
-                                        </svg>
+                                        <svg class="h-3 w-3"><use href="#ic-view"></use></svg>
                                         <span th:text="${post.viewCount}">0</span>
                                     </div>
                                     <div class="flex items-center gap-1">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-3 w-3">
-                                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-                                        </svg>
+                                        <svg class="h-3 w-3"><use href="#ic-comment"></use></svg>
                                         <span th:text="${post.commentCount}">0</span>
                                     </div>
                                     <div class="flex items-center gap-1">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-3 w-3">
-                                            <path d="M7 10v12"></path>
-                                            <path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2h0a3.13 3.13 0 0 1 3 3.88Z"></path>
-                                        </svg>
+                                        <svg class="h-3 w-3"><use href="#ic-like"></use></svg>
                                         <span th:text="${post.likeCount ?: 0}">0</span>
                                     </div>
                                     <div class="flex items-center gap-1">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-3 w-3">
-                                            <path d="M17 14V2"></path>
-                                            <path d="M9 18.12 10 14H4.17a2 2 0 0 1-1.92-2.56l2.33-8A2 2 0 0 1 6.5 2H20a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2.76a2 2 0 0 0-1.79 1.11L12 22h0a3.13 3.13 0 0 1-3-3.88Z"></path>
-                                        </svg>
+                                        <svg class="h-3 w-3"><use href="#ic-dislike"></use></svg>
                                         <span th:text="${post.dislikeCount ?: 0}">0</span>
                                     </div>
                                 </div>
