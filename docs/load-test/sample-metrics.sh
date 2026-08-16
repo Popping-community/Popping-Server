@@ -5,9 +5,18 @@
 #
 # Beyond CPU and replication lag, this records the signals needed to decide
 # objectively whether the system has finished warming up:
-#   - app*_jit_ms : cumulative JIT compilation time. Warm-up is over once this
-#                   stops growing; a still-climbing value means C2 is competing
-#                   with request threads for the container's CPU quota.
+#   - app*_jit_ms : cumulative JIT compilation time, from
+#                   CompilationMXBean.getTotalCompilationTime(). It is the summed
+#                   elapsed time of compile tasks (failed ones included) across
+#                   compiler threads - not CPU time, and not wall-clock time, so
+#                   it must not be read as a share of the container's CPU quota.
+#                   It also cannot separate first-time compilation from
+#                   recompilation: tier escalation, later-hot methods and
+#                   recompiles after deoptimisation all land in the same number.
+#                   Flattening therefore only says compilation went quiet during
+#                   that window under a steady, representative load - supporting
+#                   evidence that warm-up has progressed, not proof it finished.
+#                   The actual gate is the measured pass coming out STEADY.
 #   - app*_gc_s   : cumulative GC pause time.
 #   - app*_busy   : busy Tomcat threads (server-side saturation).
 #   - jmeter_cpu_s: cumulative CPU seconds consumed by JMeter on the host.

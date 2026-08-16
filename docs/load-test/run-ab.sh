@@ -20,8 +20,9 @@
 #
 # Known limitations, deliberately not handled here:
 #   - The DB is not restored between arms, so writes accumulate across runs
-#     (~24k rows per arm against 1M posts / 5M comments - negligible in size,
-#     but not zero).
+#     (measured: ~10k rows per arm against 1.1M posts / 5.1M comments, about 1%
+#     over a full day of runs - negligible in size, but not zero, and there is
+#     no step here that undoes it).
 #   - Waiting for lag 0 costs more wall time for the faster arm, since it
 #     generated more writes. Not waiting is worse: the replica would then spend
 #     its CPU on backlog instead of reads, which is the larger distortion.
