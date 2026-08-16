@@ -62,9 +62,14 @@ WARMUP_SKIP="${WARMUP_SKIP:-0}"
 # cumulative compile time added during the pass's final 120s.
 JIT_SETTLED_RATIO="${JIT_SETTLED_RATIO:-0.02}"
 JIT_TAIL_SAMPLES=8
-# The warm-up pass ends with a large replication backlog, which drains far
-# slower than the initial catch-up (past runs peaked near 450s). Budget more.
-LAG_WAIT_TRIES="${LAG_WAIT_TRIES:-100}"
+# Both waits budget 30 minutes because both start from a backlog a full pass
+# built up. The pre-warm-up wait used to budget 500s on the assumption that an
+# arm starts from an idle replica - true only for the first arm of a session.
+# Every later one starts on what the previous arm's measured pass left behind,
+# which aborted an arm at 523s while the replica reached GTID parity about a
+# minute later. Waiting longer costs wall time; not waiting spends the replica's
+# CPU on backlog instead of reads, which is the larger distortion.
+LAG_WAIT_TRIES="${LAG_WAIT_TRIES:-360}"
 LAG_WAIT_TRIES_POST_WARMUP="${LAG_WAIT_TRIES_POST_WARMUP:-360}"
 SETTLE_SECONDS=20
 

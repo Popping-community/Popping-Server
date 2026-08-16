@@ -127,7 +127,12 @@ bash docs/load-test/run-ab.sh stage1-after-2  stage1-svg-20260813
 
 arm 1회 = 워밍업 600초 + 복제 배출 대기 + 본 측정 600초 ≈ **27~45분**. 종료 코드는 0(사용 가능) / 1(셋업 실패) / 2(돌긴 했으나 비교 불가).
 
-환경 변수로 조절 가능: `WARMUP_SKIP=1`(이미 데워진 JVM 재사용), `WARMUP_MAX_PASSES`, `JIT_SETTLED_RATIO`, `LAG_WAIT_TRIES_POST_WARMUP`.
+환경 변수로 조절 가능: `WARMUP_SKIP=1`(이미 데워진 JVM 재사용), `WARMUP_MAX_PASSES`, `JIT_SETTLED_RATIO`, `LAG_WAIT_TRIES`, `LAG_WAIT_TRIES_POST_WARMUP`.
+
+**복제 지연 대기 예산은 두 지점 모두 기본 30분(`360 × 5초`)이다.** 워밍업 전 예산이 500초였을 때
+2026-08-16 실행에서 arm 2가 523초 만에 중단됐는데, 복제는 정상이었고 약 1분 뒤 GTID가 일치했다.
+**세션의 첫 arm만 지연 0에서 출발하고, 두 번째 이후는 직전 arm의 본 측정이 남긴 백로그에서 출발한다**
+— 이번 경우 1.85만 트랜잭션이었다. 연속 실행에서는 짧은 예산이 구조적으로 부족하다.
 
 ### 분석
 
