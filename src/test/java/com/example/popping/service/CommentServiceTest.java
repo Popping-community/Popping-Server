@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.Callable;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -51,6 +52,30 @@ class CommentServiceTest {
     @Mock GuestIdentifierService guestIdentifierService;
 
     @InjectMocks CommentService commentService;
+
+    /**
+     * Serve the first page straight from cache, without running the loader — a genuine hit.
+     * Re-reading like counts only matters on this path: a page built during the request already
+     * carries counts read from the same row in the same transaction, and
+     * {@code findLikeCountsByIds} reads that very column.
+     */
+    private void givenCachedFirstPage(CommentResponse... comments) {
+        List<CommentResponse> cached = List.of(comments);
+        CommentPageResponse page = new CommentPageResponse(cached, cached.size(), 0, 1, false, false);
+
+        when(cacheManager.getCache(anyString())).thenReturn(cache);
+        when(cache.get(any(), any(Callable.class))).thenReturn(page);
+    }
+
+    private CommentResponse cachedComment(Long id, int likeCount, int dislikeCount) {
+        return new CommentResponse(id, "content", "nick", 100L, null,
+                likeCount, dislikeCount, false, false, null, 0, List.of());
+    }
+
+    private CommentResponse cachedParent(Long id, CommentResponse... children) {
+        return new CommentResponse(id, "content", "nick", 100L, null,
+                0, 0, false, false, null, 0, List.of(children));
+    }
 
     @Test
     @DisplayName("회원 댓글 생성: Comment를 올바르게 생성하고 저장 후 commentCount를 증가시킨다")
@@ -346,18 +371,10 @@ class CommentServiceTest {
         Long postId = 10L;
         UserPrincipal principal = principal(42L);
 
-        Post post = mock(Post.class);
-        when(postService.getPost(postId)).thenReturn(post);
-        when(post.getCommentCount()).thenReturn(1);
+        // 캐시에 담긴 페이지는 likeCount=2, dislikeCount=0인 과거 값이다
+        givenCachedFirstPage(cachedComment(1L, 2, 0));
 
-        // CTE 기준 likeCount=2, dislikeCount=0
-        CommentTreeRowView r1 = rowView(1L, null, "hi", 0, 100L, null, 2, 0);
-        when(commentRepository.findPagedCommentTree(postId, CommentService.COMMENTS_SIZE, 0))
-                .thenReturn(List.of(r1));
-        when(userService.getUserIdToNicknameMap(Set.of(100L)))
-                .thenReturn(Map.of(100L, "nick"));
-
-        // likeCount 갱신: 5로 업데이트
+        // 그 사이 DB는 5/1로 움직였다
         CommentRepository.LikeCount lc = likeCount(1L, 5, 1);
         when(commentRepository.findLikeCountsByIds(anyCollection()))
                 .thenReturn(List.of(lc));
@@ -379,6 +396,7 @@ class CommentServiceTest {
 
         verify(likeRepository).findReactionForMember(anyCollection(), any(), eq(42L));
         verify(likeRepository, never()).findReactionForGuest(any(), any(), any());
+        verify(commentRepository, never()).findPagedCommentTree(any(), anyInt(), anyInt());
     }
 
     @Test
@@ -421,15 +439,7 @@ class CommentServiceTest {
         Long postId = 10L;
         String guestId = "guest-abc";
 
-        Post post = mock(Post.class);
-        when(postService.getPost(postId)).thenReturn(post);
-        when(post.getCommentCount()).thenReturn(1);
-
-        CommentTreeRowView r1 = rowView(1L, null, "hello", 0, 100L, null, 0, 0);
-        when(commentRepository.findPagedCommentTree(postId, CommentService.COMMENTS_SIZE, 0))
-                .thenReturn(List.of(r1));
-        when(userService.getUserIdToNicknameMap(Set.of(100L)))
-                .thenReturn(Map.of(100L, "nick"));
+        givenCachedFirstPage(cachedComment(1L, 0, 0));
 
         CommentRepository.LikeCount lc = likeCount(1L, 2, 0);
         when(commentRepository.findLikeCountsByIds(anyCollection()))
@@ -491,17 +501,8 @@ class CommentServiceTest {
         Long postId = 10L;
         UserPrincipal principal = principal(42L);
 
-        Post post = mock(Post.class);
-        when(postService.getPost(postId)).thenReturn(post);
-        when(post.getCommentCount()).thenReturn(2);
-
-        // root(id=1) + child(id=2)
-        CommentTreeRowView r1 = rowView(1L, null, "root",  0, 100L, null, 0, 0);
-        CommentTreeRowView r2 = rowView(2L, 1L,   "child", 1, 100L, null, 0, 0);
-        when(commentRepository.findPagedCommentTree(postId, CommentService.COMMENTS_SIZE, 0))
-                .thenReturn(List.of(r1, r2));
-        when(userService.getUserIdToNicknameMap(Set.of(100L)))
-                .thenReturn(Map.of(100L, "nick"));
+        // 캐시된 페이지: root(id=1) + child(id=2), 둘 다 0/0
+        givenCachedFirstPage(cachedParent(1L, cachedComment(2L, 0, 0)));
 
         // child(id=2): dislikeCount=3 갱신
         CommentRepository.LikeCount childLc = likeCount(2L, 0, 3);

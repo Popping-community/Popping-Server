@@ -36,6 +36,7 @@ import com.example.popping.dto.PostListItemResponse;
 import com.example.popping.dto.PostResponse;
 import com.example.popping.dto.MemberPostCreateRequest;
 import com.example.popping.repository.CommentRepository;
+import com.example.popping.repository.CommentTreeRowView;
 import com.example.popping.repository.LikeRepository;
 import com.example.popping.repository.PostRepository;
 
@@ -88,6 +89,20 @@ class CacheTests {
         UserPrincipal p = mock(UserPrincipal.class);
         when(p.getUserId()).thenReturn(userId);
         return p;
+    }
+
+    /** Guest-authored root comment row. Build these before when(...), never inside it. */
+    static CommentTreeRowView commentRow(Long id) {
+        CommentTreeRowView row = mock(CommentTreeRowView.class);
+        when(row.getId()).thenReturn(id);
+        when(row.getParentId()).thenReturn(null);
+        when(row.getContent()).thenReturn("content-" + id);
+        when(row.getDepth()).thenReturn(0);
+        when(row.getUserId()).thenReturn(null);
+        when(row.getGuestNickname()).thenReturn("guest-" + id);
+        when(row.getLikeCount()).thenReturn(0);
+        when(row.getDislikeCount()).thenReturn(0);
+        return row;
     }
 
     // ─── Comment First Page Cache ───
@@ -170,6 +185,80 @@ class CacheTests {
             commentService.getCommentPage(postId, 0, null, null);
             verify(commentRepository, times(1))
                     .findPagedCommentTree(postId, CommentService.COMMENTS_SIZE, 0);
+        }
+
+        @Test
+        @DisplayName("좋아요 카운트: 캐시 미스로 트리를 방금 읽었으면 카운트를 다시 조회하지 않는다")
+        void likeCounts_notRefetchedWhenPageWasJustBuilt() {
+            Long postId = 10L;
+            Post post = mock(Post.class);
+            when(postService.getPost(postId)).thenReturn(post);
+            List<CommentTreeRowView> rows = List.of(commentRow(1L));
+            when(commentRepository.findPagedCommentTree(postId, CommentService.COMMENTS_SIZE, 0))
+                    .thenReturn(rows);
+            when(userService.getUserIdToNicknameMap(any())).thenReturn(Map.of());
+
+            commentService.getCommentPage(postId, 0, null, null);
+
+            verify(commentRepository, never()).findLikeCountsByIds(any());
+        }
+
+        @Test
+        @DisplayName("좋아요 카운트: 캐시 히트로 받은 페이지는 카운트를 다시 조회한다")
+        void likeCounts_refetchedWhenPageCameFromCache() {
+            Long postId = 10L;
+            Post post = mock(Post.class);
+            when(postService.getPost(postId)).thenReturn(post);
+            List<CommentTreeRowView> rows = List.of(commentRow(1L));
+            when(commentRepository.findPagedCommentTree(postId, CommentService.COMMENTS_SIZE, 0))
+                    .thenReturn(rows);
+            when(userService.getUserIdToNicknameMap(any())).thenReturn(Map.of());
+            when(commentRepository.findLikeCountsByIds(any())).thenReturn(List.of());
+
+            commentService.getCommentPage(postId, 0, null, null);   // miss - builds
+            commentService.getCommentPage(postId, 0, null, null);   // hit
+            commentService.getCommentPage(postId, 0, null, null);   // hit
+
+            verify(commentRepository, times(1))
+                    .findPagedCommentTree(postId, CommentService.COMMENTS_SIZE, 0);
+            verify(commentRepository, times(2)).findLikeCountsByIds(any());
+        }
+
+        @Test
+        @DisplayName("좋아요 카운트: 캐시가 비활성이면(nocache) 트리 값을 쓰고 재조회하지 않는다")
+        void likeCounts_noCache_usesTreeCounts() {
+            Long postId = 10L;
+            when(cacheManager.getCache(anyString())).thenReturn(null);
+            Post post = mock(Post.class);
+            when(postService.getPost(postId)).thenReturn(post);
+            List<CommentTreeRowView> rows = List.of(commentRow(1L));
+            when(commentRepository.findPagedCommentTree(postId, CommentService.COMMENTS_SIZE, 0))
+                    .thenReturn(rows);
+            when(userService.getUserIdToNicknameMap(any())).thenReturn(Map.of());
+
+            commentService.getCommentPage(postId, 0, null, null);
+            commentService.getCommentPage(postId, 0, null, null);
+
+            verify(commentRepository, times(2))
+                    .findPagedCommentTree(postId, CommentService.COMMENTS_SIZE, 0);
+            verify(commentRepository, never()).findLikeCountsByIds(any());
+        }
+
+        @Test
+        @DisplayName("좋아요 카운트: 두 번째 페이지는 캐시를 쓰지 않으므로 재조회하지 않는다")
+        void likeCounts_secondPage_notRefetched() {
+            Long postId = 10L;
+            Post post = mock(Post.class);
+            when(post.getCommentCount()).thenReturn(300);
+            when(postService.getPost(postId)).thenReturn(post);
+            List<CommentTreeRowView> rows = List.of(commentRow(1L));
+            when(commentRepository.findPagedCommentTree(postId, CommentService.COMMENTS_SIZE,
+                    CommentService.COMMENTS_SIZE)).thenReturn(rows);
+            when(userService.getUserIdToNicknameMap(any())).thenReturn(Map.of());
+
+            commentService.getCommentPage(postId, 1, null, null);
+
+            verify(commentRepository, never()).findLikeCountsByIds(any());
         }
 
         @Test

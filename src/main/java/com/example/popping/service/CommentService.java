@@ -1,6 +1,7 @@
 package com.example.popping.service;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 import org.springframework.cache.Cache;
@@ -134,11 +135,22 @@ public class CommentService {
 
     @Transactional(readOnly = true)
     public CommentPageResponse getCommentPage(Long postId, int page, UserPrincipal principal, String guestIdentifier) {
-        CommentPageResponse base = (page == 0)
-                ? getFirstPageCommon(postId)
-                : buildCommentPage(postId, page);
+        String actor = resolveGuestIdentifier(guestIdentifier);
 
-        return enrichComments(base, page == 0, principal, resolveGuestIdentifier(guestIdentifier));
+        if (page != 0) {
+            return enrichComments(buildCommentPage(postId, page), false, principal, actor);
+        }
+
+        // The tree query already selects like_count/dislike_count - the same columns
+        // findLikeCountsByIds reads - so a page we just built carries counts from this same
+        // transaction. Only a cached page, up to the cache's TTL old, needs them re-read.
+        //
+        // This is a pure de-duplication under REPEATABLE READ, where both statements see one
+        // snapshot (verified: MySQL default, not overridden here or in mysql/my.cnf). Under
+        // READ COMMITTED the second read could pick up a newer snapshot, which would make
+        // this a - sub-millisecond - staleness trade rather than a no-op.
+        FirstPage first = getFirstPageCommon(postId);
+        return enrichComments(first.page(), !first.builtNow(), principal, actor);
     }
 
     private String resolveGuestIdentifier(String raw) {
@@ -160,13 +172,31 @@ public class CommentService {
         return getComment(parentId);
     }
 
-    private CommentPageResponse getFirstPageCommon(Long postId) {
+    /**
+     * The first page plus whether this call is the one that built it. Threads that waited on
+     * another thread's load report {@code false}: correct but conservative, since they also
+     * hold freshly read counts.
+     *
+     * <p>Reading the flag after {@code cache.get} relies on Caffeine running the loader on the
+     * calling thread. Spring's {@code Cache} contract does not promise that, so a different
+     * cache implementation would need a different signal here.
+     */
+    private record FirstPage(CommentPageResponse page, boolean builtNow) {
+    }
+
+    private FirstPage getFirstPageCommon(Long postId) {
         Cache cache = cacheManager.getCache(COMMENT_FIRST_PAGE_CACHE);
         if (cache == null) {
-            return buildCommentPage(postId, 0);
+            return new FirstPage(buildCommentPage(postId, 0), true);
         }
 
-        return cache.get(postId, () -> readOnlyTx.execute(status -> buildCommentPage(postId, 0)));
+        AtomicBoolean builtNow = new AtomicBoolean(false);
+        CommentPageResponse page = cache.get(postId, () -> {
+            builtNow.set(true);
+            return readOnlyTx.execute(status -> buildCommentPage(postId, 0));
+        });
+
+        return new FirstPage(page, builtNow.get());
     }
 
     private CommentPageResponse buildCommentPage(Long postId, int page) {
