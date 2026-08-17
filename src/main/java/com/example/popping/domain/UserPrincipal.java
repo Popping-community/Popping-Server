@@ -5,6 +5,7 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.Collections;
 
+import org.springframework.security.core.CredentialsContainer;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -17,7 +18,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class UserPrincipal implements UserDetails, Serializable {
+public class UserPrincipal implements UserDetails, CredentialsContainer, Serializable {
 
     @Serial
     private static final long serialVersionUID = 1L;
@@ -44,6 +45,18 @@ public class UserPrincipal implements UserDetails, Serializable {
     @Override
     public String getPassword() {
         return passwordHash;
+    }
+
+    /**
+     * Spring Security calls this once authentication succeeds, so the hash lives only
+     * as long as the password check needs it. Without this it rides along in the
+     * session - and the session is now in Redis, which would put every logged-in
+     * user's BCrypt hash in a second store that has no reason to hold credentials.
+     * Nothing reads {@link #getPassword()} after authentication.
+     */
+    @Override
+    public void eraseCredentials() {
+        this.passwordHash = null;
     }
 
     @Override
