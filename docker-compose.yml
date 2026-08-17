@@ -1,33 +1,145 @@
 services:
-  mysql:
+  mysql-master:
     image: mysql:8
-    container_name: mysql
+    container_name: popping-mysql-master
     restart: always
+    cpus: 1.0
+    mem_limit: 1024m
+    command:
+      - "--server-id=1"
+      - "--gtid-mode=ON"
+      - "--enforce-gtid-consistency=ON"
+      - "--log-bin=mysql-bin"
+      - "--binlog-format=ROW"
+      - "--performance-schema=ON"
+      - "--slow-query-log=1"
+      - "--long-query-time=1"
+      - "--max-connections=200"
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: ${MYSQL_DATABASE}
     ports:
-      - "3306:3306"
+      - "3307:3306"
     volumes:
-      - mysql-data:/var/lib/mysql
-      - ./mysql/my.cnf:/etc/mysql/conf.d/monitoring.cnf:ro
+      - mysql-master-data:/var/lib/mysql
+      - ./mysql/init-master.sql:/docker-entrypoint-initdb.d/init-master.sql:ro
     networks:
       - popping-net
 
-  app:
-    image: chooh1010/popping-community:latest
-    container_name: popping-community
+  mysql-replica:
+    image: mysql:8
+    container_name: popping-mysql-replica
     restart: always
-    depends_on:
-      - mysql
-    ports:
-      - "8080:8080"
-      - "127.0.0.1:8081:8081"
+    cpus: 1.0
+    mem_limit: 1024m
+    command:
+      - "--server-id=2"
+      - "--gtid-mode=ON"
+      - "--enforce-gtid-consistency=ON"
+      - "--performance-schema=ON"
+      - "--slow-query-log=1"
+      - "--long-query-time=1"
+      - "--replica-parallel-workers=2"
+      - "--max-connections=200"
     environment:
-      SERVER_PORT: "8080"
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/${MYSQL_DATABASE}?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Seoul&zeroDateTimeBehavior=convertToNull&rewriteBatchedStatements=true
-      SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+    ports:
+      - "3308:3306"
+    volumes:
+      - mysql-replica-data:/var/lib/mysql
+    depends_on:
+      - mysql-master
+    networks:
+      - popping-net
+
+  replica-setup:
+    image: mysql:8
+    container_name: popping-replica-setup
+    depends_on:
+      - mysql-master
+      - mysql-replica
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    entrypoint: ["/bin/bash", "-c"]
+    command:
+      - |
+        echo "Waiting for master..."
+        until mysql -h mysql-master -uroot -p"$$MYSQL_ROOT_PASSWORD" -e "SELECT 1" &>/dev/null; do sleep 2; done
+        echo "Waiting for replica..."
+        until mysql -h mysql-replica -uroot -p"$$MYSQL_ROOT_PASSWORD" -e "SELECT 1" &>/dev/null; do sleep 2; done
+
+        echo "Checking replication health..."
+        IO_RUNNING=$$(mysql -h mysql-replica -uroot -p"$$MYSQL_ROOT_PASSWORD" -e "SHOW REPLICA STATUS\G" 2>/dev/null | grep "Replica_IO_Running:" | awk '{print $$2}')
+        SQL_RUNNING=$$(mysql -h mysql-replica -uroot -p"$$MYSQL_ROOT_PASSWORD" -e "SHOW REPLICA STATUS\G" 2>/dev/null | grep "Replica_SQL_Running:" | head -1 | awk '{print $$2}')
+
+        if [ "$$IO_RUNNING" = "Yes" ] && [ "$$SQL_RUNNING" = "Yes" ]; then
+          echo "Replication is healthy. Nothing to do."
+          exit 0
+        fi
+
+        echo "Replication is broken or not configured (IO=$$IO_RUNNING, SQL=$$SQL_RUNNING). Reconfiguring..."
+        mysql -h mysql-replica -uroot -p"$$MYSQL_ROOT_PASSWORD" -e "STOP REPLICA; RESET REPLICA ALL;"
+
+        mysql -h mysql-replica -uroot -p"$$MYSQL_ROOT_PASSWORD" <<EOF
+        CHANGE REPLICATION SOURCE TO
+          SOURCE_HOST='mysql-master',
+          SOURCE_USER='repl',
+          SOURCE_PASSWORD='replpassword',
+          SOURCE_AUTO_POSITION=1,
+          GET_SOURCE_PUBLIC_KEY=1;
+        START REPLICA;
+        EOF
+
+        sleep 2
+        echo "Setting read-only mode..."
+        mysql -h mysql-replica -uroot -p"$$MYSQL_ROOT_PASSWORD" -e "SET GLOBAL read_only=ON; SET GLOBAL super_read_only=ON;"
+
+        echo "Replication status:"
+        mysql -h mysql-replica -uroot -p"$$MYSQL_ROOT_PASSWORD" -e "SHOW REPLICA STATUS\G" | grep -E "Replica_IO_Running|Replica_SQL_Running|Seconds_Behind"
+        echo "Done."
+    restart: "no"
+    networks:
+      - popping-net
+
+  haproxy:
+    image: haproxy:2.8
+    container_name: popping-haproxy
+    restart: always
+    cpus: 0.5
+    mem_limit: 128m
+    ports:
+      - "9091:9091"
+      - "127.0.0.1:9404:8404"
+    volumes:
+      - ./haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+    depends_on:
+      - app-1
+      - app-2
+    networks:
+      - popping-net
+
+  app-1:
+    image: chooh1010/popping-community:redis-session-optin-20260818
+    container_name: popping-app-1
+    restart: always
+    cpus: 2.0
+    mem_limit: 2048m
+    depends_on:
+      - mysql-master
+      - redis
+    ports:
+      - "127.0.0.1:8081:8081"
+    environment: &app-env
+      SERVER_PORT: "9091"
+      APP_DATASOURCE_WRITE_JDBC_URL: jdbc:mysql://mysql-master:3306/${MYSQL_DATABASE}?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Seoul&zeroDateTimeBehavior=convertToNull&rewriteBatchedStatements=true&useAffectedRows=true
+      APP_DATASOURCE_WRITE_USERNAME: root
+      APP_DATASOURCE_WRITE_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      APP_DATASOURCE_WRITE_MAXIMUM_POOL_SIZE: "50"
+      APP_DATASOURCE_READ_JDBC_URL: jdbc:mysql://mysql-replica:3306/${MYSQL_DATABASE}?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Seoul&zeroDateTimeBehavior=convertToNull&rewriteBatchedStatements=true&useAffectedRows=true
+      APP_DATASOURCE_READ_USERNAME: root
+      APP_DATASOURCE_READ_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      APP_DATASOURCE_READ_MAXIMUM_POOL_SIZE: "80"
       MANAGEMENT_SERVER_PORT: "8081"
       MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: "health,prometheus"
       MANAGEMENT_ENDPOINT_PROMETHEUS_ENABLED: "true"
@@ -47,36 +159,130 @@ services:
             }
           }
         }
-      # Cache is configured by CacheConfig bean (per-cache settings).
-      # SPRING_CACHE_* env vars are ignored when explicit CacheManager exists.
-      SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: 30
+      SPRING_CACHE_TYPE: "caffeine"
+      GUEST_IDENTIFIER_HMAC_SECRET: ${GUEST_IDENTIFIER_HMAC_SECRET}
+      GUEST_IDENTIFIER_SECURE_COOKIE: "false"
       SPRING_DATASOURCE_HIKARI_CONNECTION_TIMEOUT: 30000
       SPRING_JPA_DATABASE_PLATFORM: org.hibernate.dialect.MySQL8Dialect
       SPRING_JPA_OPEN_IN_VIEW: "false"
       SPRING_JPA_SHOW_SQL: "false"
       SPRING_JPA_HIBERNATE_FORMAT_SQL: "false"
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
-      CLOUD_AWS_CREDENTIALS_ACCESSKEY: ${CLOUD_AWS_CREDENTIALS_ACCESSKEY}
-      CLOUD_AWS_CREDENTIALS_SECRETKEY: ${CLOUD_AWS_CREDENTIALS_SECRETKEY}
-      CLOUD_AWS_S3_BUCKETNAME: ${CLOUD_AWS_S3_BUCKETNAME}
-      CLOUD_AWS_REGION_STATIC: ${CLOUD_AWS_REGION_STATIC}
+      CLOUD_AWS_CREDENTIALS_ACCESSKEY: dummy
+      CLOUD_AWS_CREDENTIALS_SECRETKEY: dummy
+      CLOUD_AWS_S3_BUCKETNAME: dummy
+      CLOUD_AWS_REGION_STATIC: ap-northeast-2
       CLOUD_AWS_STACK_AUTO: "false"
+      APP_STICKY_PRIMARY_ENABLED: "true"
+      # Sessions live in Redis so an instance dying does not take its users'
+      # sessions with it. This is the opt-in RedisSessionConfig waits for; without
+      # it sessions stay in Tomcat's memory, which is what an environment with no
+      # Redis needs. Boot's own spring.session.store-type cannot do this - it was
+      # removed in Boot 3.x and is silently ignored.
+      APP_SESSION_STORE: "redis"
+      SPRING_DATA_REDIS_HOST: "redis"
+      SPRING_DATA_REDIS_PORT: "6379"
+      # JAVA_TOOL_OPTIONS does NOT set the heap here, whatever it looks like.
+      # jib bakes -Xms200m -Xmx240m -XX:MaxMetaspaceSize=256m into the image as
+      # command-line arguments (build.gradle jvmFlags), and command-line arguments
+      # win over this variable - the JVM logs "Picked up JAVA_TOOL_OPTIONS" and
+      # then ignores the conflicting flags. Verified 2026-08-17: G1 Old Gen max
+      # reported 240MB while this line claimed 1024m, so every load test so far
+      # has run on a 240MB heap.
+      #
+      # It is left in place because the non-conflicting flags do apply, and
+      # because removing it would quietly change what past runs were compared
+      # against. To actually change a JVM flag for this rig, override it at build
+      # time instead:
+      #   ./gradlew jibDockerBuild -Djib.container.jvmFlags=<comma,separated>
+      # MaxMetaspaceSize was first raised to 256m that way, when the Redis client
+      # pushed class loading to 112MB against the image's 128m cap and a load pass
+      # died with OutOfMemoryError: Metaspace and 98% timeouts while the container
+      # sat at 626MB of its 2GB. build.gradle now carries the 256m itself, so a
+      # plain rebuild no longer regresses to the cap that failed.
+      JAVA_TOOL_OPTIONS: "-Xms1024m -Xmx1024m -XX:+AlwaysPreTouch"
     networks:
       - popping-net
 
-  node-exporter:
-    image: prom/node-exporter:latest
-    container_name: node-exporter
+  app-2:
+    image: chooh1010/popping-community:redis-session-optin-20260818
+    container_name: popping-app-2
     restart: always
+    cpus: 2.0
+    mem_limit: 2048m
+    depends_on:
+      - mysql-master
+      - redis
     ports:
-      - "127.0.0.1:9100:9100"
+      - "127.0.0.1:8082:8081"
+    environment:
+      <<: *app-env
+    networks:
+      - popping-net
+
+  redis:
+    image: redis:7.4-alpine
+    container_name: popping-redis
+    restart: always
+    cpus: 0.5
+    mem_limit: 256m
+    # noeviction, not allkeys-lru: this instance holds sessions, and evicting a
+    # session under memory pressure logs a user out silently. maxmemory is set
+    # below mem_limit so Redis refuses writes before the container is OOM-killed.
+    command:
+      - "redis-server"
+      - "--maxmemory"
+      - "192mb"
+      - "--maxmemory-policy"
+      - "noeviction"
+      - "--save"
+      - ""
+      - "--appendonly"
+      - "no"
+    # Deliberately not published to the host. The apps reach it over the compose
+    # network, so a host port would only be for inspection - and something else
+    # already holds 6379 on this machine. Use `docker exec popping-redis
+    # redis-cli` instead.
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks:
+      - popping-net
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.49.1
+    container_name: popping-cadvisor-local
+    restart: always
+    cpus: 0.1
+    mem_limit: 64m
+    ports:
+      - "127.0.0.1:8084:8080"
+    volumes:
+      - //var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - popping-net
+
+  docker-stats-exporter:
+    image: wywywywy/docker_stats_exporter:latest
+    container_name: popping-docker-stats-exporter
+    restart: always
+    cpus: 0.05
+    mem_limit: 32m
+    ports:
+      - "127.0.0.1:9487:9487"
+    volumes:
+      - //var/run/docker.sock:/var/run/docker.sock:ro
     networks:
       - popping-net
 
   mysqld-exporter:
     image: prom/mysqld-exporter:v0.15.1
-    container_name: mysqld-exporter
+    container_name: popping-mysqld-exporter-local
     restart: always
+    cpus: 0.1
+    mem_limit: 64m
     volumes:
       - ./mysql/mysqld-exporter.my.cnf:/.my.cnf:ro
     command:
@@ -92,12 +298,39 @@ services:
     ports:
       - "127.0.0.1:9104:9104"
     depends_on:
-      - mysql
+      - mysql-master
+    networks:
+      - popping-net
+
+  mysqld-exporter-replica:
+    image: prom/mysqld-exporter:v0.16.0
+    container_name: popping-mysqld-exporter-replica
+    restart: always
+    cpus: 0.1
+    mem_limit: 64m
+    volumes:
+      - ./mysql/mysqld-exporter-replica.my.cnf:/.my.cnf:ro
+    command:
+      - "--config.my-cnf=/.my.cnf"
+      - "--collect.global_status"
+      - "--collect.global_variables"
+      - "--collect.info_schema.innodb_metrics"
+      - "--collect.perf_schema.eventsstatements"
+      - "--collect.perf_schema.eventsstatementssum"
+      - "--collect.perf_schema.tablelocks"
+      - "--collect.perf_schema.tableiowaits"
+      - "--collect.info_schema.processlist"
+      - "--collect.slave_status"
+    ports:
+      - "127.0.0.1:9105:9104"
+    depends_on:
+      - mysql-replica
     networks:
       - popping-net
 
 volumes:
-  mysql-data:
+  mysql-master-data:
+  mysql-replica-data:
 
 networks:
   popping-net:
