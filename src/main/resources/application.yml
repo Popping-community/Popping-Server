@@ -1,0 +1,16 @@
+# Defaults that must exist in every environment.
+#
+# application.properties holds the environment-specific settings and is not
+# committed (it carries credentials, and CI injects it from a secret). Anything
+# that has to be true everywhere therefore cannot live there, so it lives here.
+# Spring Boot loads both from this location and application.properties wins on
+# conflict, so nothing set there is overridden by this file.
+spring:
+  autoconfigure:
+    exclude:
+      # Boot picks the session store from the classpath: spring-session-data-redis
+      # being present is enough to move every environment's sessions to Redis, and
+      # spring.session.store-type - the property that used to turn that off - was
+      # removed in Boot 3.x. Excluding the auto-configuration hands the decision to
+      # RedisSessionConfig, which only switches when app.session.store=redis.
+      - org.springframework.boot.autoconfigure.session.SessionAutoConfiguration

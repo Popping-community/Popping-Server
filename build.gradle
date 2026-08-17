@@ -34,7 +34,11 @@ jib {
 				'-Xms200m',
 				'-Xmx240m',
 				'-XX:ReservedCodeCacheSize=64m',
-				'-XX:MaxMetaspaceSize=128m',
+				// 128m was enough until spring-session-data-redis and its Lettuce
+				// transport arrived: class loading settled at 112m before, and the
+				// first load test after the change died with OutOfMemoryError:
+				// Metaspace at 98% failed requests.
+				'-XX:MaxMetaspaceSize=256m',
 				'-XX:+UseStringDeduplication',
 				'-Dspring.profiles.active=dev',
 				'-Dfile.encoding=UTF-8',
@@ -68,6 +72,8 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-actuator'
 	implementation 'io.micrometer:micrometer-registry-prometheus'
 	implementation 'com.github.ben-manes.caffeine:caffeine'
+	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+	implementation 'org.springframework.session:spring-session-data-redis'
     testImplementation 'org.projectlombok:lombok:1.18.28'
     compileOnly 'org.projectlombok:lombok'
 	runtimeOnly 'com.mysql:mysql-connector-j'
