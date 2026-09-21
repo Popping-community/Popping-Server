@@ -1,0 +1,327 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="1080" viewBox="0 0 1500 1080" role="img">
+<title>Replica reallocation: TPS, latency, sampled lag and DB CPU</title>
+<desc>{&quot;campaign&quot;: &quot;replica-20260909-500-reallocation-01&quot;, &quot;run&quot;: &quot;replica-20260909-500-reallocation-01-100-measure&quot;, &quot;campaign_status&quot;: &quot;COMPLETED&quot;, &quot;anchor_utc&quot;: &quot;2026-09-09T01:29:31.749000+00:00&quot;, &quot;sources&quot;: [&quot;C:\\popping-community\\popping-server\\.tmp\\replica-500-reallocation\\campaigns\\replica-20260909-500-reallocation-01\\campaign.json&quot;, &quot;C:\\popping-community\\popping-server\\.tmp\\replica-500-reallocation\\runs\\replica-20260909-500-reallocation-01-100-measure\\run.json&quot;, &quot;C:\\popping-community\\popping-server\\.tmp\\replica-500-reallocation\\runs\\replica-20260909-500-reallocation-01-100-measure\\analysis.json&quot;, &quot;C:\\popping-community\\popping-server\\.tmp\\replica-500-reallocation\\runs\\replica-20260909-500-reallocation-01-100-measure\\samples.jtl&quot;, &quot;C:\\popping-community\\popping-server\\.tmp\\replica-500-reallocation\\runs\\replica-20260909-500-reallocation-01-100-measure\\metrics.jsonl&quot;], &quot;diagnostics&quot;: {&quot;raw_rows&quot;: 486225, &quot;valid_rows&quot;: 481789, &quot;redirect_children_excluded&quot;: 4436, &quot;last_request_start_relative_s&quot;: 899.716}, &quot;semantics&quot;: [&quot;Fixed [0,900) window, fifteen half-open 60-second bins; points are at bin centers.&quot;, &quot;TPS counts all valid configured sampler requests, including failures; redirect child labels are excluded.&quot;, &quot;Mean and nearest-rank p95 use all analyzed requests, including failures, binned by request-start time.&quot;, &quot;Lag mean and maximum are arithmetic mean and maximum of collected observations in each bin; not continuous peaks.&quot;, &quot;Lag uses collector epoch_s, as in the harness gate; Prom queries are not simultaneous with cgroup acquisition.&quot;, &quot;CPU = delta usage_usec / interval seconds / 10000, so 100% is one core, not container quota.&quot;, &quot;CPU averages use overlap-weighted counter intervals and each DB&#x27;s acquisition timestamp; gaps &gt;35s and resets are excluded.&quot;, &quot;Hollow CPU markers mean &lt;57/60 seconds covered. Means divide by covered seconds, not by 60; no extrapolation.&quot;, &quot;Hollow request markers mean latest request-start does not reach bin end minus 2s; TPS still divides by 60.&quot;, &quot;Hollow lag markers mean fewer than 3 valid observations. Missing bins are gaps, never zero-filled.&quot;], &quot;minutes&quot;: [{&quot;minute&quot;: 1, &quot;samples&quot;: 16945, &quot;errors&quot;: 0, &quot;request_tps&quot;: 282.4166666666667, &quot;avg_ms&quot;: 15.30835054588374, &quot;p95_ms&quot;: 61, &quot;request_boundary_covered&quot;: true, &quot;cpu&quot;: {&quot;popping-mysql-master&quot;: {&quot;covered_s&quot;: 60.0, &quot;mean_percent_one_core&quot;: 14.030941631201472}, &quot;popping-mysql-replica&quot;: {&quot;covered_s&quot;: 60.0, &quot;mean_percent_one_core&quot;: 60.524770610170066}}, &quot;lag_sample_count&quot;: 4, &quot;lag_mean_s&quot;: 0.25, &quot;lag_sample_max_s&quot;: 1.0}, {&quot;minute&quot;: 2, &quot;samples&quot;: 33293, &quot;errors&quot;: 0, &quot;request_tps&quot;: 554.8833333333333, &quot;avg_ms&quot;: 19.871985101973387, &quot;p95_ms&quot;: 67, &quot;request_boundary_covered&quot;: true, &quot;cpu&quot;: {&quot;popping-mysql-master&quot;: {&quot;covered_s&quot;: 60.0, &quot;mean_percent_one_core&quot;: 30.75399265572061}, &quot;popping-mysql-replica&quot;: {&quot;covered_s&quot;: 60.0, &quot;mean_percent_one_core&quot;: 132.23315205174052}}, &quot;lag_sample_count&quot;: 4, &quot;lag_mean_s&quot;: 3.5, &quot;lag_sample_max_s&quot;: 7.0}, {&quot;minute&quot;: 3, &quot;samples&quot;: 33331, &quot;errors&quot;: 0, &quot;request_tps&quot;: 555.5166666666667, &quot;avg_ms&quot;: 26.26701869130839, &quot;p95_ms&quot;: 87, &quot;request_boundary_covered&quot;: true, &quot;cpu&quot;: {&quot;popping-mysql-master&quot;: {&quot;covered_s&quot;: 60.0, &quot;mean_percent_one_core&quot;: 32.373022336466256}, &quot;popping-mysql-replica&quot;: {&quot;covered_s&quot;: 60.0, &quot;mean_percent_one_core&quot;: 144.1783005799466}}, &quot;lag_sample_count&quot;: 4, &quot;lag_mean_s&quot;: 8.0, &quot;lag_sample_max_s&quot;: 11.0}, {&quot;minute&quot;: 4, &quot;samples&quot;: 33253, &quot;errors&quot;: 0, &quot;request_tps&quot;: 554.2166666666667, &quot;avg_ms&quot;: 21.763419841818784, &quot;p95_ms&quot;: 73, &quot;request_boundary_covered&quot;: true, &quot;cpu&quot;: {&quot;popping-mysql-master&quot;: {&quot;covered_s&quot;: 60.0, &quot;mean_percent_one_core&quot;: 31.317824954855247}, &quot;popping-mysql-replica&quot;: {&quot;covered_s&quot;: 60.0, &quot;mean_percent_one_core&quot;: 135.48833443017958}}, &quot;lag_sample_count&quot;: 4, &quot;lag_mean_s&quot;: 6.0, &quot;lag_sample_max_s&quot;: 8.0}, {&quot;minute&quot;: 5, &quot;samples&quot;: 33395, &quot;errors&quot;: 0, &quot;request_tps&quot;: 556.5833333333334, &quot;avg_ms&quot;: 20.354903428656986, &quot;p95_ms&quot;: 67, &quot;request_boundary_covered&quot;: true, &quot;cpu&quot;: {&quot;popping-mysql-master&quot;: {&quot;covered_s&quot;: 60.0, &quot;mean_percent_one_core&quot;: 31.66430876150844}, &quot;popping-mysql-replica&quot;: {&quot;covered_s&quot;: 60.0, &quot;mean_percent_one_core&quot;: 136.68488406322714}}, &quot;lag_sample_count&quot;: 4, &quot;lag_mean_s&quot;: 5.25, &quot;lag_sample_max_s&quot;: 8.0}, {&quot;minute&quot;: 6, &quot;samples&quot;: 33391, &quot;errors&quot;: 0, &quot;request_tps&quot;: 556.5166666666667, &quot;avg_ms&quot;: 23.134197837740707, &quot;p95_ms&quot;: 76, &quot;request_boundary_covered&quot;: true, &quot;cpu&quot;: {&quot;popping-mysql-master&quot;: {&quot;covered_s&quot;: 60.0, &quot;mean_percent_one_core&quot;: 31.267746354955996}, &quot;popping-mysql-replica&quot;: {&quot;covered_s&quot;: 60.0, &quot;mean_percent_one_core&quot;: 139.12575685239474}}, &quot;lag_sample_count&quot;: 4, &quot;lag_mean_s&quot;: 6.25, &quot;lag_sample_max_s&quot;: 10.0}, {&quot;minute&quot;: 7, &quot;samples&quot;: 33278, &quot;errors&quot;: 0, &quot;request_tps&quot;: 554.6333333333333, &quot;avg_ms&quot;: 21.32676242562654, &quot;p95_ms&quot;: 71, &quot;request_boundary_covered&quot;: true, &quot;cpu&quot;: {&quot;popping-mysql-master&quot;: {&quot;covered_s&quot;: 60.0, &quot;mean_percent_one_core&quot;: 31.47438840251017}, &quot;popping-mysql-replica&quot;: {&quot;covered_s&quot;: 60.0, &quot;mean_percent_one_core&quot;: 137.6900886135365}}, &quot;lag_sample_count&quot;: 4, &quot;lag_mean_s&quot;: 5.5, &quot;lag_sample_max_s&quot;: 10.0}, {&quot;minute&quot;: 8, &quot;samples&quot;: 33226, &quot;errors&quot;: 0, &quot;request_tps&quot;: 553.7666666666667, &quot;avg_ms&quot;: 23.77776440137242, &quot;p95_ms&quot;: 82, &quot;request_boundary_covered&quot;: true, &quot;cpu&quot;: {&quot;popping-mysql-master&quot;: {&quot;covered_s&quot;: 60.0, &quot;mean_percent_one_core&quot;: 31.426360398450274}, &quot;popping-mysql-replica&quot;: {&quot;covered_s&quot;: 60.0, &quot;mean_percent_one_core&quot;: 136.3569722783126}}, &quot;lag_sample_count&quot;: 4, &quot;lag_mean_s&quot;: 5.25, &quot;lag_sample_max_s&quot;: 7.0}, {&quot;minute&quot;: 9, &quot;samples&quot;: 33465, &quot;errors&quot;: 0, &quot;request_tps&quot;: 557.75, &quot;avg_ms&quot;: 21.167159719109517, &quot;p95_ms&quot;: 68, &quot;request_boundary_covered&quot;: true, &quot;cpu&quot;: {&quot;popping-mysql-master&quot;: {&quot;covered_s&quot;: 60.0, &quot;mean_percent_one_core&quot;: 31.847330667032633}, &quot;popping-mysql-replica&quot;: {&quot;covered_s&quot;: 60.0, &quot;mean_percent_one_core&quot;: 139.86680899243007}}, &quot;lag_sample_count&quot;: 4, &quot;lag_mean_s&quot;: 7.0, &quot;lag_sample_max_s&quot;: 10.0}, {&quot;minute&quot;: 10, &quot;samples&quot;: 33026, &quot;errors&quot;: 0, &quot;request_tps&quot;: 550.4333333333333, &quot;avg_ms&quot;: 23.109489493126627, &quot;p95_ms&quot;: 78, &quot;request_boundary_covered&quot;: true, &quot;cpu&quot;: {&quot;popping-mysql-master&quot;: {&quot;covered_s&quot;: 60.0, &quot;mean_percent_one_core&quot;: 31.67544725996057}, &quot;popping-mysql-replica&quot;: {&quot;covered_s&quot;: 60.0, &quot;mean_percent_one_core&quot;: 138.43024965884192}}, &quot;lag_sample_count&quot;: 4, &quot;lag_mean_s&quot;: 7.0, &quot;lag_sample_max_s&quot;: 10.0}, {&quot;minute&quot;: 11, &quot;samples&quot;: 33111, &quot;errors&quot;: 0, &quot;request_tps&quot;: 551.85, &quot;avg_ms&quot;: 24.387726133309172, &quot;p95_ms&quot;: 82, &quot;request_boundary_covered&quot;: true, &quot;cpu&quot;: {&quot;popping-mysql-master&quot;: {&quot;covered_s&quot;: 60.0, &quot;mean_percent_one_core&quot;: 31.512413289836477}, &quot;popping-mysql-replica&quot;: {&quot;covered_s&quot;: 60.0, &quot;mean_percent_one_core&quot;: 138.54989503693852}}, &quot;lag_sample_count&quot;: 4, &quot;lag_mean_s&quot;: 6.5, &quot;lag_sample_max_s&quot;: 9.0}, {&quot;minute&quot;: 12, &quot;samples&quot;: 33249, &quot;errors&quot;: 0, &quot;request_tps&quot;: 554.15, &quot;avg_ms&quot;: 23.19050196998406, &quot;p95_ms&quot;: 77, &quot;request_boundary_covered&quot;: true, &quot;cpu&quot;: {&quot;popping-mysql-master&quot;: {&quot;covered_s&quot;: 60.0, &quot;mean_percent_one_core&quot;: 31.41308188269386}, &quot;popping-mysql-replica&quot;: {&quot;covered_s&quot;: 60.0, &quot;mean_percent_one_core&quot;: 137.4655024369119}}, &quot;lag_sample_count&quot;: 4, &quot;lag_mean_s&quot;: 6.5, &quot;lag_sample_max_s&quot;: 9.0}, {&quot;minute&quot;: 13, &quot;samples&quot;: 32965, &quot;errors&quot;: 0, &quot;request_tps&quot;: 549.4166666666666, &quot;avg_ms&quot;: 29.01665402699833, &quot;p95_ms&quot;: 100, &quot;request_boundary_covered&quot;: true, &quot;cpu&quot;: {&quot;popping-mysql-master&quot;: {&quot;covered_s&quot;: 60.0, &quot;mean_percent_one_core&quot;: 30.119416948682986}, &quot;popping-mysql-replica&quot;: {&quot;covered_s&quot;: 60.0, &quot;mean_percent_one_core&quot;: 137.39503528906616}}, &quot;lag_sample_count&quot;: 4, &quot;lag_mean_s&quot;: 7.25, &quot;lag_sample_max_s&quot;: 12.0}, {&quot;minute&quot;: 14, &quot;samples&quot;: 33057, &quot;errors&quot;: 0, &quot;request_tps&quot;: 550.95, &quot;avg_ms&quot;: 29.10962882294219, &quot;p95_ms&quot;: 93, &quot;request_boundary_covered&quot;: true, &quot;cpu&quot;: {&quot;popping-mysql-master&quot;: {&quot;covered_s&quot;: 60.0, &quot;mean_percent_one_core&quot;: 26.419248508519157}, &quot;popping-mysql-replica&quot;: {&quot;covered_s&quot;: 60.0, &quot;mean_percent_one_core&quot;: 142.76996296273535}}, &quot;lag_sample_count&quot;: 4, &quot;lag_mean_s&quot;: 28.75, &quot;lag_sample_max_s&quot;: 41.0}, {&quot;minute&quot;: 15, &quot;samples&quot;: 32804, &quot;errors&quot;: 0, &quot;request_tps&quot;: 546.7333333333333, &quot;avg_ms&quot;: 30.318131935129863, &quot;p95_ms&quot;: 93, &quot;request_boundary_covered&quot;: true, &quot;cpu&quot;: {&quot;popping-mysql-master&quot;: {&quot;covered_s&quot;: 53.835561990737915, &quot;mean_percent_one_core&quot;: 27.473291358492304}, &quot;popping-mysql-replica&quot;: {&quot;covered_s&quot;: 54.08120322227478, &quot;mean_percent_one_core&quot;: 147.67771093080825}}, &quot;lag_sample_count&quot;: 4, &quot;lag_mean_s&quot;: 62.5, &quot;lag_sample_max_s&quot;: 76.0}]}</desc>
+<rect width="100%" height="100%" fill="white"/>
+<text x="50" y="53" font-family="Segoe UI,Arial,sans-serif" font-size="29" text-anchor="start" fill="#172B4D">Replica CPU reallocation | 15-minute diagnostic</text>
+<text x="50" y="88" font-family="Segoe UI,Arial,sans-serif" font-size="20" text-anchor="start" fill="#172B4D">replica-20260909-500-reallocation-01</text>
+<text x="50" y="117" font-family="Segoe UI,Arial,sans-serif" font-size="17" text-anchor="start" fill="#172B4D">UTC start: 2026-09-09T01:29:31.749000+00:00 | campaign: COMPLETED | single run</text>
+<text x="50" y="178" font-family="Segoe UI,Arial,sans-serif" font-size="23" text-anchor="start" fill="#172B4D">Request throughput (TPS)</text>
+<polyline points="55.000,201.000 78.000,201.000" fill="none" stroke="#2166AC" stroke-width="3"/>
+<text x="86" y="204" font-family="Segoe UI,Arial,sans-serif" font-size="16" text-anchor="start" fill="#172B4D">All analyzed requests / second</text>
+<polyline points="115.000,440.000 725.000,440.000" fill="none" stroke="#E6EAF0" stroke-width="1"/>
+<text x="105" y="443.0" font-family="Segoe UI,Arial,sans-serif" font-size="15" text-anchor="end" fill="#172B4D">0</text>
+<polyline points="115.000,386.750 725.000,386.750" fill="none" stroke="#E6EAF0" stroke-width="1"/>
+<text x="105" y="389.75" font-family="Segoe UI,Arial,sans-serif" font-size="15" text-anchor="end" fill="#172B4D">200</text>
+<polyline points="115.000,333.500 725.000,333.500" fill="none" stroke="#E6EAF0" stroke-width="1"/>
+<text x="105" y="336.5" font-family="Segoe UI,Arial,sans-serif" font-size="15" text-anchor="end" fill="#172B4D">400</text>
+<polyline points="115.000,280.250 725.000,280.250" fill="none" stroke="#E6EAF0" stroke-width="1"/>
+<text x="105" y="283.25" font-family="Segoe UI,Arial,sans-serif" font-size="15" text-anchor="end" fill="#172B4D">600</text>
+<polyline points="115.000,227.000 725.000,227.000" fill="none" stroke="#E6EAF0" stroke-width="1"/>
+<text x="105" y="230.0" font-family="Segoe UI,Arial,sans-serif" font-size="15" text-anchor="end" fill="#172B4D">800</text>
+<polyline points="115.000,227.000 115.000,440.000" fill="none" stroke="#E6EAF0" stroke-width="1"/>
+<text x="115.0" y="463" font-family="Segoe UI,Arial,sans-serif" font-size="15" text-anchor="middle" fill="#172B4D">0</text>
+<polyline points="237.000,227.000 237.000,440.000" fill="none" stroke="#E6EAF0" stroke-width="1"/>
+<text x="237.0" y="463" font-family="Segoe UI,Arial,sans-serif" font-size="15" text-anchor="middle" fill="#172B4D">3</text>
+<polyline points="359.000,227.000 359.000,440.000" fill="none" stroke="#E6EAF0" stroke-width="1"/>
+<text x="359.0" y="463" font-family="Segoe UI,Arial,sans-serif" font-size="15" text-anchor="middle" fill="#172B4D">6</text>
+<polyline points="481.000,227.000 481.000,440.000" fill="none" stroke="#E6EAF0" stroke-width="1"/>
+<text x="481.0" y="463" font-family="Segoe UI,Arial,sans-serif" font-size="15" text-anchor="middle" fill="#172B4D">9</text>
+<polyline points="603.000,227.000 603.000,440.000" fill="none" stroke="#E6EAF0" stroke-width="1"/>
+<text x="603.0" y="463" font-family="Segoe UI,Arial,sans-serif" font-size="15" text-anchor="middle" fill="#172B4D">12</text>
+<polyline points="725.000,227.000 725.000,440.000" fill="none" stroke="#E6EAF0" stroke-width="1"/>
+<text x="725.0" y="463" font-family="Segoe UI,Arial,sans-serif" font-size="15" text-anchor="middle" fill="#172B4D">15</text>
+<text x="420.0" y="487" font-family="Segoe UI,Arial,sans-serif" font-size="15" text-anchor="middle" fill="#172B4D">Minutes from first request (60-second bins)</text>
+<circle cx="135.333" cy="364.807" r="4" fill="#2166AC" stroke="#2166AC" stroke-width="2"><title>[0,60)s: 16945 requests; 0 failures</title></circle>
+<polyline points="135.333,364.807 176.000,292.262" fill="none" stroke="#2166AC" stroke-width="3"/>
+<circle cx="176.000" cy="292.262" r="4" fill="#2166AC" stroke="#2166AC" stroke-width="2"><title>[60,120)s: 33293 requests; 0 failures</title></circle>
+<polyline points="176.000,292.262 216.667,292.094" fill="none" stroke="#2166AC" stroke-width="3"/>
+<circle cx="216.667" cy="292.094" r="4" fill="#2166AC" stroke="#2166AC" stroke-width="2"><title>[120,180)s: 33331 requests; 0 failures</title></circle>
+<polyline points="216.667,292.094 257.333,292.440" fill="none" stroke="#2166AC" stroke-width="3"/>
+<circle cx="257.333" cy="292.440" r="4" fill="#2166AC" stroke="#2166AC" stroke-width="2"><title>[180,240)s: 33253 requests; 0 failures</title></circle>
+<polyline points="257.333,292.440 298.000,291.810" fill="none" stroke="#2166AC" stroke-width="3"/>
+<circle cx="298.000" cy="291.810" r="4" fill="#2166AC" stroke="#2166AC" stroke-width="2"><title>[240,300)s: 33395 requests; 0 failures</title></circle>
+<polyline points="298.000,291.810 338.667,291.827" fill="none" stroke="#2166AC" stroke-width="3"/>
+<circle cx="338.667" cy="291.827" r="4" fill="#2166AC" stroke="#2166AC" stroke-width="2"><title>[300,360)s: 33391 requests; 0 failures</title></circle>
+<polyline points="338.667,291.827 379.333,292.329" fill="none" stroke="#2166AC" stroke-width="3"/>
+<circle cx="379.333" cy="292.329" r="4" fill="#2166AC" stroke="#2166AC" stroke-width="2"><title>[360,420)s: 33278 requests; 0 failures</title></circle>
+<polyline points="379.333,292.329 420.000,292.560" fill="none" stroke="#2166AC" stroke-width="3"/>
+<circle cx="420.000" cy="292.560" r="4" fill="#2166AC" stroke="#2166AC" stroke-width="2"><title>[420,480)s: 33226 requests; 0 failures</title></circle>
+<polyline points="420.000,292.560 460.667,291.499" fill="none" stroke="#2166AC" stroke-width="3"/>
+<circle cx="460.667" cy="291.499" r="4" fill="#2166AC" stroke="#2166AC" stroke-width="2"><title>[480,540)s: 33465 requests; 0 failures</title></circle>
+<polyline points="460.667,291.499 501.333,293.447" fill="none" stroke="#2166AC" stroke-width="3"/>
+<circle cx="501.333" cy="293.447" r="4" fill="#2166AC" stroke="#2166AC" stroke-width="2"><title>[540,600)s: 33026 requests; 0 failures</title></circle>
+<polyline points="501.333,293.447 542.000,293.070" fill="none" stroke="#2166AC" stroke-width="3"/>
+<circle cx="542.000" cy="293.070" r="4" fill="#2166AC" stroke="#2166AC" stroke-width="2"><title>[600,660)s: 33111 requests; 0 failures</title></circle>
+<polyline points="542.000,293.070 582.667,292.458" fill="none" stroke="#2166AC" stroke-width="3"/>
+<circle cx="582.667" cy="292.458" r="4" fill="#2166AC" stroke="#2166AC" stroke-width="2"><title>[660,720)s: 33249 requests; 0 failures</title></circle>
+<polyline points="582.667,292.458 623.333,293.718" fill="none" stroke="#2166AC" stroke-width="3"/>
+<circle cx="623.333" cy="293.718" r="4" fill="#2166AC" stroke="#2166AC" stroke-width="2"><title>[720,780)s: 32965 requests; 0 failures</title></circle>
+<polyline points="623.333,293.718 664.000,293.310" fill="none" stroke="#2166AC" stroke-width="3"/>
+<circle cx="664.000" cy="293.310" r="4" fill="#2166AC" stroke="#2166AC" stroke-width="2"><title>[780,840)s: 33057 requests; 0 failures</title></circle>
+<polyline points="664.000,293.310 704.667,294.432" fill="none" stroke="#2166AC" stroke-width="3"/>
+<circle cx="704.667" cy="294.432" r="4" fill="#2166AC" stroke="#2166AC" stroke-width="2"><title>[840,900)s: 32804 requests; 0 failures</title></circle>
+<text x="780" y="178" font-family="Segoe UI,Arial,sans-serif" font-size="23" text-anchor="start" fill="#172B4D">Response time (ms)</text>
+<polyline points="785.000,201.000 808.000,201.000" fill="none" stroke="#2166AC" stroke-width="3"/>
+<text x="816" y="204" font-family="Segoe UI,Arial,sans-serif" font-size="16" text-anchor="start" fill="#172B4D">Mean (including failures)</text>
+<polyline points="1115.000,201.000 1138.000,201.000" fill="none" stroke="#D6604D" stroke-width="3"/>
+<text x="1146" y="204" font-family="Segoe UI,Arial,sans-serif" font-size="16" text-anchor="start" fill="#172B4D">p95 (nearest rank)</text>
+<polyline points="845.000,440.000 1455.000,440.000" fill="none" stroke="#E6EAF0" stroke-width="1"/>
+<text x="835" y="443.0" font-family="Segoe UI,Arial,sans-serif" font-size="15" text-anchor="end" fill="#172B4D">0</text>
+<polyline points="845.000,386.750 1455.000,386.750" fill="none" stroke="#E6EAF0" stroke-width="1"/>
+<text x="835" y="389.75" font-family="Segoe UI,Arial,sans-serif" font-size="15" text-anchor="end" fill="#172B4D">50</text>
+<polyline points="845.000,333.500 1455.000,333.500" fill="none" stroke="#E6EAF0" stroke-width="1"/>
+<text x="835" y="336.5" font-family="Segoe UI,Arial,sans-serif" font-size="15" text-anchor="end" fill="#172B4D">100</text>
+<polyline points="845.000,280.250 1455.000,280.250" fill="none" stroke="#E6EAF0" stroke-width="1"/>
+<text x="835" y="283.25" font-family="Segoe UI,Arial,sans-serif" font-size="15" text-anchor="end" fill="#172B4D">150</text>
+<polyline points="845.000,227.000 1455.000,227.000" fill="none" stroke="#E6EAF0" stroke-width="1"/>
+<text x="835" y="230.0" font-family="Segoe UI,Arial,sans-serif" font-size="15" text-anchor="end" fill="#172B4D">200</text>
+<polyline points="845.000,227.000 845.000,440.000" fill="none" stroke="#E6EAF0" stroke-width="1"/>
+<text x="845.0" y="463" font-family="Segoe UI,Arial,sans-serif" font-size="15" text-anchor="middle" fill="#172B4D">0</text>
+<polyline points="967.000,227.000 967.000,440.000" fill="none" stroke="#E6EAF0" stroke-width="1"/>
+<text x="967.0" y="463" font-family="Segoe UI,Arial,sans-serif" font-size="15" text-anchor="middle" fill="#172B4D">3</text>
+<polyline points="1089.000,227.000 1089.000,440.000" fill="none" stroke="#E6EAF0" stroke-width="1"/>
+<text x="1089.0" y="463" font-family="Segoe UI,Arial,sans-serif" font-size="15" text-anchor="middle" fill="#172B4D">6</text>
+<polyline points="1211.000,227.000 1211.000,440.000" fill="none" stroke="#E6EAF0" stroke-width="1"/>
+<text x="1211.0" y="463" font-family="Segoe UI,Arial,sans-serif" font-size="15" text-anchor="middle" fill="#172B4D">9</text>
+<polyline points="1333.000,227.000 1333.000,440.000" fill="none" stroke="#E6EAF0" stroke-width="1"/>
+<text x="1333.0" y="463" font-family="Segoe UI,Arial,sans-serif" font-size="15" text-anchor="middle" fill="#172B4D">12</text>
+<polyline points="1455.000,227.000 1455.000,440.000" fill="none" stroke="#E6EAF0" stroke-width="1"/>
+<text x="1455.0" y="463" font-family="Segoe UI,Arial,sans-serif" font-size="15" text-anchor="middle" fill="#172B4D">15</text>
+<text x="1150.0" y="487" font-family="Segoe UI,Arial,sans-serif" font-size="15" text-anchor="middle" fill="#172B4D">Minutes from first request (60-second bins)</text>
+<circle cx="865.333" cy="423.697" r="4" fill="#2166AC" stroke="#2166AC" stroke-width="2"><title>[0,60)s: 16945 requests; 0 failures</title></circle>
+<polyline points="865.333,423.697 906.000,418.836" fill="none" stroke="#2166AC" stroke-width="3"/>
+<circle cx="906.000" cy="418.836" r="4" fill="#2166AC" stroke="#2166AC" stroke-width="2"><title>[60,120)s: 33293 requests; 0 failures</title></circle>
+<polyline points="906.000,418.836 946.667,412.026" fill="none" stroke="#2166AC" stroke-width="3"/>
+<circle cx="946.667" cy="412.026" r="4" fill="#2166AC" stroke="#2166AC" stroke-width="2"><title>[120,180)s: 33331 requests; 0 failures</title></circle>
+<polyline points="946.667,412.026 987.333,416.822" fill="none" stroke="#2166AC" stroke-width="3"/>
+<circle cx="987.333" cy="416.822" r="4" fill="#2166AC" stroke="#2166AC" stroke-width="2"><title>[180,240)s: 33253 requests; 0 failures</title></circle>
+<polyline points="987.333,416.822 1028.000,418.322" fill="none" stroke="#2166AC" stroke-width="3"/>
+<circle cx="1028.000" cy="418.322" r="4" fill="#2166AC" stroke="#2166AC" stroke-width="2"><title>[240,300)s: 33395 requests; 0 failures</title></circle>
+<polyline points="1028.000,418.322 1068.667,415.362" fill="none" stroke="#2166AC" stroke-width="3"/>
+<circle cx="1068.667" cy="415.362" r="4" fill="#2166AC" stroke="#2166AC" stroke-width="2"><title>[300,360)s: 33391 requests; 0 failures</title></circle>
+<polyline points="1068.667,415.362 1109.333,417.287" fill="none" stroke="#2166AC" stroke-width="3"/>
+<circle cx="1109.333" cy="417.287" r="4" fill="#2166AC" stroke="#2166AC" stroke-width="2"><title>[360,420)s: 33278 requests; 0 failures</title></circle>
+<polyline points="1109.333,417.287 1150.000,414.677" fill="none" stroke="#2166AC" stroke-width="3"/>
+<circle cx="1150.000" cy="414.677" r="4" fill="#2166AC" stroke="#2166AC" stroke-width="2"><title>[420,480)s: 33226 requests; 0 failures</title></circle>
+<polyline points="1150.000,414.677 1190.667,417.457" fill="none" stroke="#2166AC" stroke-width="3"/>
+<circle cx="1190.667" cy="417.457" r="4" fill="#2166AC" stroke="#2166AC" stroke-width="2"><title>[480,540)s: 33465 requests; 0 failures</title></circle>
+<polyline points="1190.667,417.457 1231.333,415.388" fill="none" stroke="#2166AC" stroke-width="3"/>
+<circle cx="1231.333" cy="415.388" r="4" fill="#2166AC" stroke="#2166AC" stroke-width="2"><title>[540,600)s: 33026 requests; 0 failures</title></circle>
+<polyline points="1231.333,415.388 1272.000,414.027" fill="none" stroke="#2166AC" stroke-width="3"/>
+<circle cx="1272.000" cy="414.027" r="4" fill="#2166AC" stroke="#2166AC" stroke-width="2"><title>[600,660)s: 33111 requests; 0 failures</title></circle>
+<polyline points="1272.000,414.027 1312.667,415.302" fill="none" stroke="#2166AC" stroke-width="3"/>
+<circle cx="1312.667" cy="415.302" r="4" fill="#2166AC" stroke="#2166AC" stroke-width="2"><title>[660,720)s: 33249 requests; 0 failures</title></circle>
+<polyline points="1312.667,415.302 1353.333,409.097" fill="none" stroke="#2166AC" stroke-width="3"/>
+<circle cx="1353.333" cy="409.097" r="4" fill="#2166AC" stroke="#2166AC" stroke-width="2"><title>[720,780)s: 32965 requests; 0 failures</title></circle>
+<polyline points="1353.333,409.097 1394.000,408.998" fill="none" stroke="#2166AC" stroke-width="3"/>
+<circle cx="1394.000" cy="408.998" r="4" fill="#2166AC" stroke="#2166AC" stroke-width="2"><title>[780,840)s: 33057 requests; 0 failures</title></circle>
+<polyline points="1394.000,408.998 1434.667,407.711" fill="none" stroke="#2166AC" stroke-width="3"/>
+<circle cx="1434.667" cy="407.711" r="4" fill="#2166AC" stroke="#2166AC" stroke-width="2"><title>[840,900)s: 32804 requests; 0 failures</title></circle>
+<circle cx="865.333" cy="375.035" r="4" fill="#D6604D" stroke="#D6604D" stroke-width="2"><title>[0,60)s: 16945 requests; 0 failures</title></circle>
+<polyline points="865.333,375.035 906.000,368.645" fill="none" stroke="#D6604D" stroke-width="3"/>
+<circle cx="906.000" cy="368.645" r="4" fill="#D6604D" stroke="#D6604D" stroke-width="2"><title>[60,120)s: 33293 requests; 0 failures</title></circle>
+<polyline points="906.000,368.645 946.667,347.345" fill="none" stroke="#D6604D" stroke-width="3"/>
+<circle cx="946.667" cy="347.345" r="4" fill="#D6604D" stroke="#D6604D" stroke-width="2"><title>[120,180)s: 33331 requests; 0 failures</title></circle>
+<polyline points="946.667,347.345 987.333,362.255" fill="none" stroke="#D6604D" stroke-width="3"/>
+<circle cx="987.333" cy="362.255" r="4" fill="#D6604D" stroke="#D6604D" stroke-width="2"><title>[180,240)s: 33253 requests; 0 failures</title></circle>
+<polyline points="987.333,362.255 1028.000,368.645" fill="none" stroke="#D6604D" stroke-width="3"/>
+<circle cx="1028.000" cy="368.645" r="4" fill="#D6604D" stroke="#D6604D" stroke-width="2"><title>[240,300)s: 33395 requests; 0 failures</title></circle>
+<polyline points="1028.000,368.645 1068.667,359.060" fill="none" stroke="#D6604D" stroke-width="3"/>
+<circle cx="1068.667" cy="359.060" r="4" fill="#D6604D" stroke="#D6604D" stroke-width="2"><title>[300,360)s: 33391 requests; 0 failures</title></circle>
+<polyline points="1068.667,359.060 1109.333,364.385" fill="none" stroke="#D6604D" stroke-width="3"/>
+<circle cx="1109.333" cy="364.385" r="4" fill="#D6604D" stroke="#D6604D" stroke-width="2"><title>[360,420)s: 33278 requests; 0 failures</title></circle>
+<polyline points="1109.333,364.385 1150.000,352.670" fill="none" stroke="#D6604D" stroke-width="3"/>
+<circle cx="1150.000" cy="352.670" r="4" fill="#D6604D" stroke="#D6604D" stroke-width="2"><title>[420,480)s: 33226 requests; 0 failures</title></circle>
+<polyline points="1150.000,352.670 1190.667,367.580" fill="none" stroke="#D6604D" stroke-width="3"/>
+<circle cx="1190.667" cy="367.580" r="4" fill="#D6604D" stroke="#D6604D" stroke-width="2"><title>[480,540)s: 33465 requests; 0 failures</title></circle>
+<polyline points="1190.667,367.580 1231.333,356.930" fill="none" stroke="#D6604D" stroke-width="3"/>
+<circle cx="1231.333" cy="356.930" r="4" fill="#D6604D" stroke="#D6604D" stroke-width="2"><title>[540,600)s: 33026 requests; 0 failures</title></circle>
+<polyline points="1231.333,356.930 1272.000,352.670" fill="none" stroke="#D6604D" stroke-width="3"/>
+<circle cx="1272.000" cy="352.670" r="4" fill="#D6604D" stroke="#D6604D" stroke-width="2"><title>[600,660)s: 33111 requests; 0 failures</title></circle>
+<polyline points="1272.000,352.670 1312.667,357.995" fill="none" stroke="#D6604D" stroke-width="3"/>
+<circle cx="1312.667" cy="357.995" r="4" fill="#D6604D" stroke="#D6604D" stroke-width="2"><title>[660,720)s: 33249 requests; 0 failures</title></circle>
+<polyline points="1312.667,357.995 1353.333,333.500" fill="none" stroke="#D6604D" stroke-width="3"/>
+<circle cx="1353.333" cy="333.500" r="4" fill="#D6604D" stroke="#D6604D" stroke-width="2"><title>[720,780)s: 32965 requests; 0 failures</title></circle>
+<polyline points="1353.333,333.500 1394.000,340.955" fill="none" stroke="#D6604D" stroke-width="3"/>
+<circle cx="1394.000" cy="340.955" r="4" fill="#D6604D" stroke="#D6604D" stroke-width="2"><title>[780,840)s: 33057 requests; 0 failures</title></circle>
+<polyline points="1394.000,340.955 1434.667,340.955" fill="none" stroke="#D6604D" stroke-width="3"/>
+<circle cx="1434.667" cy="340.955" r="4" fill="#D6604D" stroke="#D6604D" stroke-width="2"><title>[840,900)s: 32804 requests; 0 failures</title></circle>
+<text x="50" y="568" font-family="Segoe UI,Arial,sans-serif" font-size="23" text-anchor="start" fill="#172B4D">Replication lag (seconds, sampled)</text>
+<polyline points="55.000,591.000 78.000,591.000" fill="none" stroke="#2166AC" stroke-width="3"/>
+<text x="86" y="594" font-family="Segoe UI,Arial,sans-serif" font-size="16" text-anchor="start" fill="#172B4D">Sample mean</text>
+<polyline points="385.000,591.000 408.000,591.000" fill="none" stroke="#D6604D" stroke-width="3"/>
+<text x="416" y="594" font-family="Segoe UI,Arial,sans-serif" font-size="16" text-anchor="start" fill="#172B4D">Sample maximum</text>
+<polyline points="115.000,830.000 725.000,830.000" fill="none" stroke="#E6EAF0" stroke-width="1"/>
+<text x="105" y="833.0" font-family="Segoe UI,Arial,sans-serif" font-size="15" text-anchor="end" fill="#172B4D">0</text>
+<polyline points="115.000,776.750 725.000,776.750" fill="none" stroke="#E6EAF0" stroke-width="1"/>
+<text x="105" y="779.75" font-family="Segoe UI,Arial,sans-serif" font-size="15" text-anchor="end" fill="#172B4D">25</text>
+<polyline points="115.000,723.500 725.000,723.500" fill="none" stroke="#E6EAF0" stroke-width="1"/>
+<text x="105" y="726.5" font-family="Segoe UI,Arial,sans-serif" font-size="15" text-anchor="end" fill="#172B4D">50</text>
+<polyline points="115.000,670.250 725.000,670.250" fill="none" stroke="#E6EAF0" stroke-width="1"/>
+<text x="105" y="673.25" font-family="Segoe UI,Arial,sans-serif" font-size="15" text-anchor="end" fill="#172B4D">75</text>
+<polyline points="115.000,617.000 725.000,617.000" fill="none" stroke="#E6EAF0" stroke-width="1"/>
+<text x="105" y="620.0" font-family="Segoe UI,Arial,sans-serif" font-size="15" text-anchor="end" fill="#172B4D">100</text>
+<polyline points="115.000,617.000 115.000,830.000" fill="none" stroke="#E6EAF0" stroke-width="1"/>
+<text x="115.0" y="853" font-family="Segoe UI,Arial,sans-serif" font-size="15" text-anchor="middle" fill="#172B4D">0</text>
+<polyline points="237.000,617.000 237.000,830.000" fill="none" stroke="#E6EAF0" stroke-width="1"/>
+<text x="237.0" y="853" font-family="Segoe UI,Arial,sans-serif" font-size="15" text-anchor="middle" fill="#172B4D">3</text>
+<polyline points="359.000,617.000 359.000,830.000" fill="none" stroke="#E6EAF0" stroke-width="1"/>
+<text x="359.0" y="853" font-family="Segoe UI,Arial,sans-serif" font-size="15" text-anchor="middle" fill="#172B4D">6</text>
+<polyline points="481.000,617.000 481.000,830.000" fill="none" stroke="#E6EAF0" stroke-width="1"/>
+<text x="481.0" y="853" font-family="Segoe UI,Arial,sans-serif" font-size="15" text-anchor="middle" fill="#172B4D">9</text>
+<polyline points="603.000,617.000 603.000,830.000" fill="none" stroke="#E6EAF0" stroke-width="1"/>
+<text x="603.0" y="853" font-family="Segoe UI,Arial,sans-serif" font-size="15" text-anchor="middle" fill="#172B4D">12</text>
+<polyline points="725.000,617.000 725.000,830.000" fill="none" stroke="#E6EAF0" stroke-width="1"/>
+<text x="725.0" y="853" font-family="Segoe UI,Arial,sans-serif" font-size="15" text-anchor="middle" fill="#172B4D">15</text>
+<text x="420.0" y="877" font-family="Segoe UI,Arial,sans-serif" font-size="15" text-anchor="middle" fill="#172B4D">Minutes from first request (60-second bins)</text>
+<circle cx="135.333" cy="829.467" r="4" fill="#2166AC" stroke="#2166AC" stroke-width="2"><title>Minute 1: 4 observations; mean=0.25; sampled max=1.0</title></circle>
+<polyline points="135.333,829.467 176.000,822.545" fill="none" stroke="#2166AC" stroke-width="3"/>
+<circle cx="176.000" cy="822.545" r="4" fill="#2166AC" stroke="#2166AC" stroke-width="2"><title>Minute 2: 4 observations; mean=3.5; sampled max=7.0</title></circle>
+<polyline points="176.000,822.545 216.667,812.960" fill="none" stroke="#2166AC" stroke-width="3"/>
+<circle cx="216.667" cy="812.960" r="4" fill="#2166AC" stroke="#2166AC" stroke-width="2"><title>Minute 3: 4 observations; mean=8.0; sampled max=11.0</title></circle>
+<polyline points="216.667,812.960 257.333,817.220" fill="none" stroke="#2166AC" stroke-width="3"/>
+<circle cx="257.333" cy="817.220" r="4" fill="#2166AC" stroke="#2166AC" stroke-width="2"><title>Minute 4: 4 observations; mean=6.0; sampled max=8.0</title></circle>
+<polyline points="257.333,817.220 298.000,818.817" fill="none" stroke="#2166AC" stroke-width="3"/>
+<circle cx="298.000" cy="818.817" r="4" fill="#2166AC" stroke="#2166AC" stroke-width="2"><title>Minute 5: 4 observations; mean=5.25; sampled max=8.0</title></circle>
+<polyline points="298.000,818.817 338.667,816.688" fill="none" stroke="#2166AC" stroke-width="3"/>
+<circle cx="338.667" cy="816.688" r="4" fill="#2166AC" stroke="#2166AC" stroke-width="2"><title>Minute 6: 4 observations; mean=6.25; sampled max=10.0</title></circle>
+<polyline points="338.667,816.688 379.333,818.285" fill="none" stroke="#2166AC" stroke-width="3"/>
+<circle cx="379.333" cy="818.285" r="4" fill="#2166AC" stroke="#2166AC" stroke-width="2"><title>Minute 7: 4 observations; mean=5.5; sampled max=10.0</title></circle>
+<polyline points="379.333,818.285 420.000,818.817" fill="none" stroke="#2166AC" stroke-width="3"/>
+<circle cx="420.000" cy="818.817" r="4" fill="#2166AC" stroke="#2166AC" stroke-width="2"><title>Minute 8: 4 observations; mean=5.25; sampled max=7.0</title></circle>
+<polyline points="420.000,818.817 460.667,815.090" fill="none" stroke="#2166AC" stroke-width="3"/>
+<circle cx="460.667" cy="815.090" r="4" fill="#2166AC" stroke="#2166AC" stroke-width="2"><title>Minute 9: 4 observations; mean=7.0; sampled max=10.0</title></circle>
+<polyline points="460.667,815.090 501.333,815.090" fill="none" stroke="#2166AC" stroke-width="3"/>
+<circle cx="501.333" cy="815.090" r="4" fill="#2166AC" stroke="#2166AC" stroke-width="2"><title>Minute 10: 4 observations; mean=7.0; sampled max=10.0</title></circle>
+<polyline points="501.333,815.090 542.000,816.155" fill="none" stroke="#2166AC" stroke-width="3"/>
+<circle cx="542.000" cy="816.155" r="4" fill="#2166AC" stroke="#2166AC" stroke-width="2"><title>Minute 11: 4 observations; mean=6.5; sampled max=9.0</title></circle>
+<polyline points="542.000,816.155 582.667,816.155" fill="none" stroke="#2166AC" stroke-width="3"/>
+<circle cx="582.667" cy="816.155" r="4" fill="#2166AC" stroke="#2166AC" stroke-width="2"><title>Minute 12: 4 observations; mean=6.5; sampled max=9.0</title></circle>
+<polyline points="582.667,816.155 623.333,814.558" fill="none" stroke="#2166AC" stroke-width="3"/>
+<circle cx="623.333" cy="814.558" r="4" fill="#2166AC" stroke="#2166AC" stroke-width="2"><title>Minute 13: 4 observations; mean=7.25; sampled max=12.0</title></circle>
+<polyline points="623.333,814.558 664.000,768.763" fill="none" stroke="#2166AC" stroke-width="3"/>
+<circle cx="664.000" cy="768.763" r="4" fill="#2166AC" stroke="#2166AC" stroke-width="2"><title>Minute 14: 4 observations; mean=28.75; sampled max=41.0</title></circle>
+<polyline points="664.000,768.763 704.667,696.875" fill="none" stroke="#2166AC" stroke-width="3"/>
+<circle cx="704.667" cy="696.875" r="4" fill="#2166AC" stroke="#2166AC" stroke-width="2"><title>Minute 15: 4 observations; mean=62.5; sampled max=76.0</title></circle>
+<circle cx="135.333" cy="827.870" r="4" fill="#D6604D" stroke="#D6604D" stroke-width="2"><title>Minute 1: 4 observations; mean=0.25; sampled max=1.0</title></circle>
+<polyline points="135.333,827.870 176.000,815.090" fill="none" stroke="#D6604D" stroke-width="3"/>
+<circle cx="176.000" cy="815.090" r="4" fill="#D6604D" stroke="#D6604D" stroke-width="2"><title>Minute 2: 4 observations; mean=3.5; sampled max=7.0</title></circle>
+<polyline points="176.000,815.090 216.667,806.570" fill="none" stroke="#D6604D" stroke-width="3"/>
+<circle cx="216.667" cy="806.570" r="4" fill="#D6604D" stroke="#D6604D" stroke-width="2"><title>Minute 3: 4 observations; mean=8.0; sampled max=11.0</title></circle>
+<polyline points="216.667,806.570 257.333,812.960" fill="none" stroke="#D6604D" stroke-width="3"/>
+<circle cx="257.333" cy="812.960" r="4" fill="#D6604D" stroke="#D6604D" stroke-width="2"><title>Minute 4: 4 observations; mean=6.0; sampled max=8.0</title></circle>
+<polyline points="257.333,812.960 298.000,812.960" fill="none" stroke="#D6604D" stroke-width="3"/>
+<circle cx="298.000" cy="812.960" r="4" fill="#D6604D" stroke="#D6604D" stroke-width="2"><title>Minute 5: 4 observations; mean=5.25; sampled max=8.0</title></circle>
+<polyline points="298.000,812.960 338.667,808.700" fill="none" stroke="#D6604D" stroke-width="3"/>
+<circle cx="338.667" cy="808.700" r="4" fill="#D6604D" stroke="#D6604D" stroke-width="2"><title>Minute 6: 4 observations; mean=6.25; sampled max=10.0</title></circle>
+<polyline points="338.667,808.700 379.333,808.700" fill="none" stroke="#D6604D" stroke-width="3"/>
+<circle cx="379.333" cy="808.700" r="4" fill="#D6604D" stroke="#D6604D" stroke-width="2"><title>Minute 7: 4 observations; mean=5.5; sampled max=10.0</title></circle>
+<polyline points="379.333,808.700 420.000,815.090" fill="none" stroke="#D6604D" stroke-width="3"/>
+<circle cx="420.000" cy="815.090" r="4" fill="#D6604D" stroke="#D6604D" stroke-width="2"><title>Minute 8: 4 observations; mean=5.25; sampled max=7.0</title></circle>
+<polyline points="420.000,815.090 460.667,808.700" fill="none" stroke="#D6604D" stroke-width="3"/>
+<circle cx="460.667" cy="808.700" r="4" fill="#D6604D" stroke="#D6604D" stroke-width="2"><title>Minute 9: 4 observations; mean=7.0; sampled max=10.0</title></circle>
+<polyline points="460.667,808.700 501.333,808.700" fill="none" stroke="#D6604D" stroke-width="3"/>
+<circle cx="501.333" cy="808.700" r="4" fill="#D6604D" stroke="#D6604D" stroke-width="2"><title>Minute 10: 4 observations; mean=7.0; sampled max=10.0</title></circle>
+<polyline points="501.333,808.700 542.000,810.830" fill="none" stroke="#D6604D" stroke-width="3"/>
+<circle cx="542.000" cy="810.830" r="4" fill="#D6604D" stroke="#D6604D" stroke-width="2"><title>Minute 11: 4 observations; mean=6.5; sampled max=9.0</title></circle>
+<polyline points="542.000,810.830 582.667,810.830" fill="none" stroke="#D6604D" stroke-width="3"/>
+<circle cx="582.667" cy="810.830" r="4" fill="#D6604D" stroke="#D6604D" stroke-width="2"><title>Minute 12: 4 observations; mean=6.5; sampled max=9.0</title></circle>
+<polyline points="582.667,810.830 623.333,804.440" fill="none" stroke="#D6604D" stroke-width="3"/>
+<circle cx="623.333" cy="804.440" r="4" fill="#D6604D" stroke="#D6604D" stroke-width="2"><title>Minute 13: 4 observations; mean=7.25; sampled max=12.0</title></circle>
+<polyline points="623.333,804.440 664.000,742.670" fill="none" stroke="#D6604D" stroke-width="3"/>
+<circle cx="664.000" cy="742.670" r="4" fill="#D6604D" stroke="#D6604D" stroke-width="2"><title>Minute 14: 4 observations; mean=28.75; sampled max=41.0</title></circle>
+<polyline points="664.000,742.670 704.667,668.120" fill="none" stroke="#D6604D" stroke-width="3"/>
+<circle cx="704.667" cy="668.120" r="4" fill="#D6604D" stroke="#D6604D" stroke-width="2"><title>Minute 15: 4 observations; mean=62.5; sampled max=76.0</title></circle>
+<text x="780" y="568" font-family="Segoe UI,Arial,sans-serif" font-size="23" text-anchor="start" fill="#172B4D">DB cgroup CPU (100% = one core)</text>
+<polyline points="785.000,591.000 808.000,591.000" fill="none" stroke="#2166AC" stroke-width="3"/>
+<text x="816" y="594" font-family="Segoe UI,Arial,sans-serif" font-size="16" text-anchor="start" fill="#172B4D">Primary (one-core %)</text>
+<polyline points="1115.000,591.000 1138.000,591.000" fill="none" stroke="#D6604D" stroke-width="3"/>
+<text x="1146" y="594" font-family="Segoe UI,Arial,sans-serif" font-size="16" text-anchor="start" fill="#172B4D">Replica (one-core %)</text>
+<polyline points="845.000,830.000 1455.000,830.000" fill="none" stroke="#E6EAF0" stroke-width="1"/>
+<text x="835" y="833.0" font-family="Segoe UI,Arial,sans-serif" font-size="15" text-anchor="end" fill="#172B4D">0</text>
+<polyline points="845.000,776.750 1455.000,776.750" fill="none" stroke="#E6EAF0" stroke-width="1"/>
+<text x="835" y="779.75" font-family="Segoe UI,Arial,sans-serif" font-size="15" text-anchor="end" fill="#172B4D">50</text>
+<polyline points="845.000,723.500 1455.000,723.500" fill="none" stroke="#E6EAF0" stroke-width="1"/>
+<text x="835" y="726.5" font-family="Segoe UI,Arial,sans-serif" font-size="15" text-anchor="end" fill="#172B4D">100</text>
+<polyline points="845.000,670.250 1455.000,670.250" fill="none" stroke="#E6EAF0" stroke-width="1"/>
+<text x="835" y="673.25" font-family="Segoe UI,Arial,sans-serif" font-size="15" text-anchor="end" fill="#172B4D">150</text>
+<polyline points="845.000,617.000 1455.000,617.000" fill="none" stroke="#E6EAF0" stroke-width="1"/>
+<text x="835" y="620.0" font-family="Segoe UI,Arial,sans-serif" font-size="15" text-anchor="end" fill="#172B4D">200</text>
+<polyline points="845.000,617.000 845.000,830.000" fill="none" stroke="#E6EAF0" stroke-width="1"/>
+<text x="845.0" y="853" font-family="Segoe UI,Arial,sans-serif" font-size="15" text-anchor="middle" fill="#172B4D">0</text>
+<polyline points="967.000,617.000 967.000,830.000" fill="none" stroke="#E6EAF0" stroke-width="1"/>
+<text x="967.0" y="853" font-family="Segoe UI,Arial,sans-serif" font-size="15" text-anchor="middle" fill="#172B4D">3</text>
+<polyline points="1089.000,617.000 1089.000,830.000" fill="none" stroke="#E6EAF0" stroke-width="1"/>
+<text x="1089.0" y="853" font-family="Segoe UI,Arial,sans-serif" font-size="15" text-anchor="middle" fill="#172B4D">6</text>
+<polyline points="1211.000,617.000 1211.000,830.000" fill="none" stroke="#E6EAF0" stroke-width="1"/>
+<text x="1211.0" y="853" font-family="Segoe UI,Arial,sans-serif" font-size="15" text-anchor="middle" fill="#172B4D">9</text>
+<polyline points="1333.000,617.000 1333.000,830.000" fill="none" stroke="#E6EAF0" stroke-width="1"/>
+<text x="1333.0" y="853" font-family="Segoe UI,Arial,sans-serif" font-size="15" text-anchor="middle" fill="#172B4D">12</text>
+<polyline points="1455.000,617.000 1455.000,830.000" fill="none" stroke="#E6EAF0" stroke-width="1"/>
+<text x="1455.0" y="853" font-family="Segoe UI,Arial,sans-serif" font-size="15" text-anchor="middle" fill="#172B4D">15</text>
+<text x="1150.0" y="877" font-family="Segoe UI,Arial,sans-serif" font-size="15" text-anchor="middle" fill="#172B4D">Minutes from first request (60-second bins)</text>
+<circle cx="865.333" cy="815.057" r="4" fill="#2166AC" stroke="#2166AC" stroke-width="2"><title>Minute 1: CPU=14.030941631201472; coverage=60.000/60s</title></circle>
+<polyline points="865.333,815.057 906.000,797.247" fill="none" stroke="#2166AC" stroke-width="3"/>
+<circle cx="906.000" cy="797.247" r="4" fill="#2166AC" stroke="#2166AC" stroke-width="2"><title>Minute 2: CPU=30.75399265572061; coverage=60.000/60s</title></circle>
+<polyline points="906.000,797.247 946.667,795.523" fill="none" stroke="#2166AC" stroke-width="3"/>
+<circle cx="946.667" cy="795.523" r="4" fill="#2166AC" stroke="#2166AC" stroke-width="2"><title>Minute 3: CPU=32.373022336466256; coverage=60.000/60s</title></circle>
+<polyline points="946.667,795.523 987.333,796.647" fill="none" stroke="#2166AC" stroke-width="3"/>
+<circle cx="987.333" cy="796.647" r="4" fill="#2166AC" stroke="#2166AC" stroke-width="2"><title>Minute 4: CPU=31.317824954855247; coverage=60.000/60s</title></circle>
+<polyline points="987.333,796.647 1028.000,796.278" fill="none" stroke="#2166AC" stroke-width="3"/>
+<circle cx="1028.000" cy="796.278" r="4" fill="#2166AC" stroke="#2166AC" stroke-width="2"><title>Minute 5: CPU=31.66430876150844; coverage=60.000/60s</title></circle>
+<polyline points="1028.000,796.278 1068.667,796.700" fill="none" stroke="#2166AC" stroke-width="3"/>
+<circle cx="1068.667" cy="796.700" r="4" fill="#2166AC" stroke="#2166AC" stroke-width="2"><title>Minute 6: CPU=31.267746354955996; coverage=60.000/60s</title></circle>
+<polyline points="1068.667,796.700 1109.333,796.480" fill="none" stroke="#2166AC" stroke-width="3"/>
+<circle cx="1109.333" cy="796.480" r="4" fill="#2166AC" stroke="#2166AC" stroke-width="2"><title>Minute 7: CPU=31.47438840251017; coverage=60.000/60s</title></circle>
+<polyline points="1109.333,796.480 1150.000,796.531" fill="none" stroke="#2166AC" stroke-width="3"/>
+<circle cx="1150.000" cy="796.531" r="4" fill="#2166AC" stroke="#2166AC" stroke-width="2"><title>Minute 8: CPU=31.426360398450274; coverage=60.000/60s</title></circle>
+<polyline points="1150.000,796.531 1190.667,796.083" fill="none" stroke="#2166AC" stroke-width="3"/>
+<circle cx="1190.667" cy="796.083" r="4" fill="#2166AC" stroke="#2166AC" stroke-width="2"><title>Minute 9: CPU=31.847330667032633; coverage=60.000/60s</title></circle>
+<polyline points="1190.667,796.083 1231.333,796.266" fill="none" stroke="#2166AC" stroke-width="3"/>
+<circle cx="1231.333" cy="796.266" r="4" fill="#2166AC" stroke="#2166AC" stroke-width="2"><title>Minute 10: CPU=31.67544725996057; coverage=60.000/60s</title></circle>
+<polyline points="1231.333,796.266 1272.000,796.439" fill="none" stroke="#2166AC" stroke-width="3"/>
+<circle cx="1272.000" cy="796.439" r="4" fill="#2166AC" stroke="#2166AC" stroke-width="2"><title>Minute 11: CPU=31.512413289836477; coverage=60.000/60s</title></circle>
+<polyline points="1272.000,796.439 1312.667,796.545" fill="none" stroke="#2166AC" stroke-width="3"/>
+<circle cx="1312.667" cy="796.545" r="4" fill="#2166AC" stroke="#2166AC" stroke-width="2"><title>Minute 12: CPU=31.41308188269386; coverage=60.000/60s</title></circle>
+<polyline points="1312.667,796.545 1353.333,797.923" fill="none" stroke="#2166AC" stroke-width="3"/>
+<circle cx="1353.333" cy="797.923" r="4" fill="#2166AC" stroke="#2166AC" stroke-width="2"><title>Minute 13: CPU=30.119416948682986; coverage=60.000/60s</title></circle>
+<polyline points="1353.333,797.923 1394.000,801.864" fill="none" stroke="#2166AC" stroke-width="3"/>
+<circle cx="1394.000" cy="801.864" r="4" fill="#2166AC" stroke="#2166AC" stroke-width="2"><title>Minute 14: CPU=26.419248508519157; coverage=60.000/60s</title></circle>
+<polyline points="1394.000,801.864 1434.667,800.741" fill="none" stroke="#2166AC" stroke-width="3"/>
+<circle cx="1434.667" cy="800.741" r="4" fill="white" stroke="#2166AC" stroke-width="2"><title>Minute 15: CPU=27.473291358492304; coverage=53.836/60s</title></circle>
+<circle cx="865.333" cy="765.541" r="4" fill="#D6604D" stroke="#D6604D" stroke-width="2"><title>Minute 1: CPU=60.524770610170066; coverage=60.000/60s</title></circle>
+<polyline points="865.333,765.541 906.000,689.172" fill="none" stroke="#D6604D" stroke-width="3"/>
+<circle cx="906.000" cy="689.172" r="4" fill="#D6604D" stroke="#D6604D" stroke-width="2"><title>Minute 2: CPU=132.23315205174052; coverage=60.000/60s</title></circle>
+<polyline points="906.000,689.172 946.667,676.450" fill="none" stroke="#D6604D" stroke-width="3"/>
+<circle cx="946.667" cy="676.450" r="4" fill="#D6604D" stroke="#D6604D" stroke-width="2"><title>Minute 3: CPU=144.1783005799466; coverage=60.000/60s</title></circle>
+<polyline points="946.667,676.450 987.333,685.705" fill="none" stroke="#D6604D" stroke-width="3"/>
+<circle cx="987.333" cy="685.705" r="4" fill="#D6604D" stroke="#D6604D" stroke-width="2"><title>Minute 4: CPU=135.48833443017958; coverage=60.000/60s</title></circle>
+<polyline points="987.333,685.705 1028.000,684.431" fill="none" stroke="#D6604D" stroke-width="3"/>
+<circle cx="1028.000" cy="684.431" r="4" fill="#D6604D" stroke="#D6604D" stroke-width="2"><title>Minute 5: CPU=136.68488406322714; coverage=60.000/60s</title></circle>
+<polyline points="1028.000,684.431 1068.667,681.831" fill="none" stroke="#D6604D" stroke-width="3"/>
+<circle cx="1068.667" cy="681.831" r="4" fill="#D6604D" stroke="#D6604D" stroke-width="2"><title>Minute 6: CPU=139.12575685239474; coverage=60.000/60s</title></circle>
+<polyline points="1068.667,681.831 1109.333,683.360" fill="none" stroke="#D6604D" stroke-width="3"/>
+<circle cx="1109.333" cy="683.360" r="4" fill="#D6604D" stroke="#D6604D" stroke-width="2"><title>Minute 7: CPU=137.6900886135365; coverage=60.000/60s</title></circle>
+<polyline points="1109.333,683.360 1150.000,684.780" fill="none" stroke="#D6604D" stroke-width="3"/>
+<circle cx="1150.000" cy="684.780" r="4" fill="#D6604D" stroke="#D6604D" stroke-width="2"><title>Minute 8: CPU=136.3569722783126; coverage=60.000/60s</title></circle>
+<polyline points="1150.000,684.780 1190.667,681.042" fill="none" stroke="#D6604D" stroke-width="3"/>
+<circle cx="1190.667" cy="681.042" r="4" fill="#D6604D" stroke="#D6604D" stroke-width="2"><title>Minute 9: CPU=139.86680899243007; coverage=60.000/60s</title></circle>
+<polyline points="1190.667,681.042 1231.333,682.572" fill="none" stroke="#D6604D" stroke-width="3"/>
+<circle cx="1231.333" cy="682.572" r="4" fill="#D6604D" stroke="#D6604D" stroke-width="2"><title>Minute 10: CPU=138.43024965884192; coverage=60.000/60s</title></circle>
+<polyline points="1231.333,682.572 1272.000,682.444" fill="none" stroke="#D6604D" stroke-width="3"/>
+<circle cx="1272.000" cy="682.444" r="4" fill="#D6604D" stroke="#D6604D" stroke-width="2"><title>Minute 11: CPU=138.54989503693852; coverage=60.000/60s</title></circle>
+<polyline points="1272.000,682.444 1312.667,683.599" fill="none" stroke="#D6604D" stroke-width="3"/>
+<circle cx="1312.667" cy="683.599" r="4" fill="#D6604D" stroke="#D6604D" stroke-width="2"><title>Minute 12: CPU=137.4655024369119; coverage=60.000/60s</title></circle>
+<polyline points="1312.667,683.599 1353.333,683.674" fill="none" stroke="#D6604D" stroke-width="3"/>
+<circle cx="1353.333" cy="683.674" r="4" fill="#D6604D" stroke="#D6604D" stroke-width="2"><title>Minute 13: CPU=137.39503528906616; coverage=60.000/60s</title></circle>
+<polyline points="1353.333,683.674 1394.000,677.950" fill="none" stroke="#D6604D" stroke-width="3"/>
+<circle cx="1394.000" cy="677.950" r="4" fill="#D6604D" stroke="#D6604D" stroke-width="2"><title>Minute 14: CPU=142.76996296273535; coverage=60.000/60s</title></circle>
+<polyline points="1394.000,677.950 1434.667,672.723" fill="none" stroke="#D6604D" stroke-width="3"/>
+<circle cx="1434.667" cy="672.723" r="4" fill="white" stroke="#D6604D" stroke-width="2"><title>Minute 15: CPU=147.67771093080825; coverage=54.081/60s</title></circle>
+<text x="50" y="938" font-family="Segoe UI,Arial,sans-serif" font-size="16" text-anchor="start" fill="#172B4D">TPS = all analyzed sampler requests / 60s; redirect children excluded. Latency includes failures. Minute 1 includes the ramp.</text>
+<text x="50" y="961" font-family="Segoe UI,Arial,sans-serif" font-size="16" text-anchor="start" fill="#172B4D">Anchor = minimum JTL request-start time; bins are [0,60), ... [840,900). Missing observations are gaps, not zeros.</text>
+<text x="50" y="984" font-family="Segoe UI,Arial,sans-serif" font-size="16" text-anchor="start" fill="#172B4D">Lag = sampled mean and sampled maximum (~15s observations), not continuous maximum; bins use collector timestamps.</text>
+<text x="50" y="1007" font-family="Segoe UI,Arial,sans-serif" font-size="16" text-anchor="start" fill="#172B4D">CPU = overlap-weighted counter rates at each DB&#x27;s acquisition time; gaps &gt;35s / resets excluded. No quota normalization.</text>
+<text x="50" y="1030" font-family="Segoe UI,Arial,sans-serif" font-size="16" text-anchor="start" fill="#172B4D">CPU coverage: Primary 893.8/900s; Replica 894.1/900s. Hollow CPU points: &lt;57/60s coverage.</text>
+<text x="50" y="1053" font-family="Segoe UI,Arial,sans-serif" font-size="16" text-anchor="start" fill="#172B4D">Hollow request points: incomplete end boundary; hollow lag points: &lt;3 observations. Single diagnostic; no causal A/B claim.</text>
+</svg>

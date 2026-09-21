@@ -9,8 +9,8 @@
 - 좋아요 중복 insert 경쟁을 멱등 처리로 바꿔 동일 사용자 동시 요청 `20건`에서 예외 `0건`을 확인했습니다.
 - 게시글 목록 조회를 `Page -> Slice`로 전환해 COUNT 쿼리를 `2,173건 -> 0건`으로 제거하고, 목록 조회 응답시간을 `662ms -> 34ms`로 줄였습니다.
 - 캐시 스탬피드 구간을 per-key 로딩으로 제어해 evict 직후 동시 요청에서도 CTE 실행을 `1회`로 고정했습니다.
-- App CPU 포화로 막혀 있던 TPS를 HAProxy 기반 수평 확장으로 `350/s -> 547/s`, 응답시간 `543ms -> 42ms`로 개선했습니다.
-- Scale Out 후 MySQL CPU 병목을 Read Replica + Sticky Primary로 완화해 응답시간 `42ms -> 11ms`, Replication Lag `104s -> 26s`로 줄였습니다.
+- App 1대와 HAProxy + App 2대를 동일 부하로 3회씩 재측정해 TPS `464.89/s -> 516.08/s`, 평균 응답시간 `194.33ms -> 87.14ms`를 확인했습니다.
+- 별도 Read Replica 실험에서는 Sticky Primary를 적용해 Replication Lag `104s -> 26s`로 줄였습니다.
 
 ## 프로젝트 소개
 
@@ -102,26 +102,40 @@ Popping Community는 게시글, 댓글, 좋아요/싫어요, 게스트 기능을
 
 ### 6. HAProxy 기반 App 수평 확장
 
-App CPU가 200%로 포화되어 TPS가 350/s 수준에서 더 오르지 못하는 상황이었습니다.  
-HAProxy `cookie insert` 기반 세션 고정으로 App을 2대로 수평 확장하고, 요청을 분산 처리했습니다.
+App 1대가 2코어 상한에 도달한 조건에서 HAProxy `cookie insert` 기반 세션 고정으로 App을 2대로 수평 확장했습니다. 현재 코드와 데이터를 기준으로 워밍업과 정상상태 판정을 분리하고, `ABBAAB` 순서로 구성별 유효 측정 3회를 확보했습니다.
 
-- TPS: `350/s -> 547/s`
-- 평균 응답시간: `543ms -> 42ms`
-- App CPU 포화 해소, 병목이 MySQL CPU(100%)로 이동 확인
+- TPS 중앙값: `464.89/s -> 516.08/s` (`+11.01%`)
+- 평균 응답시간 중앙값: `194.33ms -> 87.14ms` (`-55.16%`)
+- p95: `403ms -> 238ms`, p99: `611ms -> 362ms`
+- 유효 측정 6회의 에러율 `0%`; App CPU 병목이 단일 MySQL CPU 병목으로 이동
 
 | Before (App 1대) | After (App 2대) |
 | --- | --- |
 | ![응답시간 Before](docs/images/readme/scaleout/response-time-before.png) | ![응답시간 After](docs/images/readme/scaleout/response-time-after.png) |
 
+| Container CPU Before | Container CPU After |
+| --- | --- |
+| ![CPU Before](docs/images/readme/scaleout/container-cpu-before.png) | ![CPU After](docs/images/readme/scaleout/container-cpu-after.png) |
+
+| MySQL QPS Before | MySQL QPS After |
+| --- | --- |
+| ![MySQL QPS Before](docs/images/readme/scaleout/mysql-qps-before.png) | ![MySQL QPS After](docs/images/readme/scaleout/mysql-qps-after.png) |
+
+표 수치는 각 600초 측정의 마지막 120초를 사용했고, 그래프는 대표 측정의 전체 600초를 보여줍니다. B 구성은 App 수뿐 아니라 HAProxy와 총 App 자원이 함께 늘어난 비교이므로 순수한 App 개수의 인과 효과나 최대 처리량 증명으로 해석하지 않습니다.
+
 ### 7. Read Replica + Sticky Primary
 
-Scale Out 후 MySQL 단일 인스턴스가 CPU 100%로 포화되어 병목이 이동했습니다.  
+> 2026-09-10 최종 재실험: 고정 20분 워밍업 후 A·B 각 3회를 완료했습니다. TPS 중앙값은 536.700→531.683/s(-0.93%), 평균 응답시간 중앙값은 53.573→57.244ms(+6.85%)였습니다. B 종료 복제 지연은 553·556·463초로 모두 불안정해 초기의 큰 개선을 재현하지 못했습니다. 원복·독립 검산을 완료했습니다. [최종 결과·초기 비교·Grafana](docs/load-test/replica-warm20-20260910.md). [낮 부분 결과](docs/load-test/replica-adoption-rerun-20260910.md)와 [전날 중단 이력](docs/load-test/replica-adoption-fixed-20260910.md)은 별도로 보존했습니다.
+
+별도 Read Replica 실험에서 MySQL 단일 인스턴스가 CPU 100%로 포화된 조건을 다뤘습니다.
 읽기 트래픽이 90%를 차지하는 커뮤니티 특성에 맞춰 Read Replica로 읽기/쓰기를 분리하고, 쓰기 직후 정합성 문제를 Sticky Primary(쿠키 3초 TTL)로 해결했습니다.
 
 - 평균 응답시간: `42ms -> 11ms`
 - Replication Lag 평균: `104s -> 26s`
 - Sticky Primary: `TransactionSynchronization.afterCommit` 콜백으로 커밋 성공 시에만 쿠키 발급
 - 병렬 복제(`replica-parallel-workers=2`, `LOGICAL_CLOCK`)로 Lag 자체를 감소
+
+위 수치는 과거 실험 기록입니다. 2026-09-08 동일 App 2대 구성에서 워밍업 후 GTID 동기화를 기다리고 A/B 각 3회 재측정한 결과, Primary 읽기 대비 Replica 읽기의 TPS 중앙값은 `554.79 -> 534.32/s`, 평균 응답시간 중앙값은 `22.40 -> 55.21ms`였습니다. 본 측정 중 복제 지연이 다시 증가해 이번 조건에서는 성능 개선이 재현되지 않았습니다. [재측정 조건·결과와 한계](docs/load-test/replica-20260908.md)를 별도로 기록했습니다.
 
 | Before (단일 DB) | After (Replica) |
 | --- | --- |
@@ -143,22 +157,26 @@ Scale Out 후 MySQL 단일 인스턴스가 CPU 100%로 포화되어 병목이 �
 | 부하 도구 | `Apache JMeter 5.6.3` (`100 VUser`) |
 | 데이터 규모 | 게시글 `100만`, 댓글 `1,000만+`, 좋아요 `450만` |
 
-### 6~7번: Local Docker Compose
+### 6번 재측정: Local Docker Compose
 
 | 항목 | 값 |
 | --- | --- |
-| 실행 환경 | `Docker Compose` (HAProxy + App 2대 + MySQL Primary/Replica) |
-| App | `cpus=2.0`, `mem=2G` x 2대 |
-| MySQL | `cpus=1.0`, `mem=1G` x 2대 (Primary + Replica) |
-| DB 풀 | Write `50` / Read `80` |
-| 부하 도구 | `Apache JMeter 5.6.3` (`500~750 VUser`) |
-| 데이터 규모 | 게시글 `100만`, 댓글 `505만`, 좋아요 `735만` |
-| 측정 구간 | 600초 실행 중 **마지막 120초** |
+| A / B | App 1대 직접 연결 / HAProxy + App 2대 |
+| App | 대당 `cpus=2.0`, `mem=2G`, JVM `Xmx=240MiB` |
+| HAProxy | B에만 `cpus=0.5`, `mem=128MiB` |
+| MySQL | 단일 Primary `cpus=1.0`, `mem=1G` (Replica·Redis 미사용) |
+| DB 풀 | App당 HikariCP `30` |
+| 부하 도구 | `Apache JMeter 5.6.3` (`500 VUser`, 600초) |
+| 실행 순서 | `ABBAAB`, 구성별 유효 측정 3회 |
+| 데이터 규모(시작) | 게시글 `1,173,051`, 댓글 `5,172,438`, 좋아요 `7,354,610` |
+| 측정 구간 | 각 측정의 **마지막 120초** (`[480,600)`) |
 
-6~7번 수치는 전 구간 평균이 아니라 마지막 120초 구간에서 산출했습니다.
+6번 재측정 수치는 전 구간 평균이 아니라 마지막 120초 구간에서 산출했습니다.
 JVM의 JIT 컴파일이 끝나기 전까지는 처리량이 계속 올라가기 때문에, 워밍업이 섞인 전 구간 평균을 쓰면
 Before가 실제보다 나쁘게 잡혀 개선 폭이 부풀려집니다. 판정에 사용한 스크립트는
 [check-steady-state.py](docs/load-test/check-steady-state.py)입니다.
+
+재측정의 실행 순서, 제외된 측정, JIT 판정과 한계는 [상세 결과](docs/load-test/scaleout-20260907.md)에 기록했습니다. 7번 Read Replica 수치는 별도 시기의 실험이며 이번 단일 DB Scale-out 재측정과 연속 단계로 합산하지 않습니다.
 
 테스트 스크립트는 [docs/load-test](docs/load-test)에 포함되어 있습니다.
 
