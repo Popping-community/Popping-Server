@@ -3,6 +3,7 @@ package com.example.popping.config.db;
 import javax.sql.DataSource;
 
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.context.annotation.Bean;
@@ -16,6 +17,9 @@ import com.zaxxer.hikari.HikariDataSource;
 @Configuration
 @ConditionalOnProperty(prefix = "app.datasource.write", name = "jdbc-url")
 public class DataSourceConfig {
+
+	@Value("${app.sticky-primary.enabled:true}")
+	private boolean stickyPrimaryEnabled;
 
 	@Bean
 	@ConfigurationProperties(prefix = "app.datasource.write")
@@ -34,19 +38,16 @@ public class DataSourceConfig {
 	}
 
 	@Bean
-	public StickyAwareRoutingDataSource routingReadDataSource(
-			@Qualifier("writeDataSource") DataSource writeDataSource,
-			@Qualifier("readDataSource") DataSource readDataSource) {
-		return new StickyAwareRoutingDataSource(writeDataSource, readDataSource);
-	}
-
-	@Bean
 	@Primary
 	public DataSource dataSource(
 			@Qualifier("writeDataSource") DataSource writeDataSource,
-			StickyAwareRoutingDataSource routingReadDataSource) {
+			@Qualifier("readDataSource") DataSource readDataSource) {
 		LazyConnectionDataSourceProxy proxy = new LazyConnectionDataSourceProxy(writeDataSource);
-		proxy.setReadOnlyDataSource(routingReadDataSource);
+		if (stickyPrimaryEnabled) {
+			proxy.setReadOnlyDataSource(new StickyAwareRoutingDataSource(writeDataSource, readDataSource));
+		} else {
+			proxy.setReadOnlyDataSource(readDataSource);
+		}
 		return proxy;
 	}
 }

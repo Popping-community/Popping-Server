@@ -3,6 +3,7 @@ package com.example.popping.filter;
 import java.io.IOException;
 import java.util.Arrays;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -19,6 +20,7 @@ import jakarta.servlet.http.HttpServletResponse;
  * Clears the ThreadLocal in finally to prevent leakage to the next request on the same thread.
  */
 @Component
+@ConditionalOnProperty(name = "app.sticky-primary.enabled", havingValue = "true", matchIfMissing = true)
 public class StickyPrimaryFilter extends OncePerRequestFilter {
 
 	static final String COOKIE_NAME = "STICKY_PRIMARY";

@@ -3,6 +3,7 @@ package com.example.popping.config.db;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
@@ -25,6 +26,7 @@ import jakarta.servlet.http.HttpServletResponse;
 @Aspect
 @Component
 @Order(Ordered.LOWEST_PRECEDENCE)
+@ConditionalOnProperty(name = "app.sticky-primary.enabled", havingValue = "true", matchIfMissing = true)
 public class StickyPrimaryAspect {
 
 	private static final String COOKIE_NAME = "STICKY_PRIMARY";
