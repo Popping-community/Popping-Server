@@ -6,9 +6,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import jakarta.persistence.LockModeType;
 
 import com.example.popping.domain.Board;
 import com.example.popping.domain.Post;
@@ -18,6 +20,11 @@ public interface PostRepository extends JpaRepository<Post, Long> {
 
     @EntityGraph(attributePaths = {"author", "board"})
     Optional<Post> findById(Long id);
+
+    // Lock only the parent post before a comment INSERT acquires its FK shared lock.
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT p FROM Post p WHERE p.id = :postId")
+    Optional<Post> findForUpdateById(@Param("postId") Long postId);
 
     @Query(
         value = "SELECT new com.example.popping.dto.PostListItemResponse(" +

@@ -56,6 +56,24 @@ class PostServiceTest {
     }
 
     @Test
+    void getPostForUpdate_returnsLockedPost() {
+        Post post = mock(Post.class);
+        when(postRepository.findForUpdateById(10L)).thenReturn(Optional.of(post));
+
+        assertSame(post, postService.getPostForUpdate(10L));
+        verify(postRepository, never()).findById(anyLong());
+    }
+
+    @Test
+    void getPostForUpdate_missingPostThrows() {
+        when(postRepository.findForUpdateById(10L)).thenReturn(Optional.empty());
+
+        CustomAppException error = assertThrows(CustomAppException.class,
+                () -> postService.getPostForUpdate(10L));
+        assertEquals(ErrorType.POST_NOT_FOUND, error.getErrorType());
+    }
+
+    @Test
     @DisplayName("회원 게시글 생성: Post를 올바르게 생성하고 저장 후 이미지 링크를 수행한다")
     void createMemberPost_success() {
 
@@ -530,4 +548,3 @@ class PostServiceTest {
         return p;
     }
 }
-

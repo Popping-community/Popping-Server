@@ -53,7 +53,9 @@ public class CommentService {
                                     UserPrincipal principal,
                                     Long parentId) {
 
-        Post post = postService.getPost(postId);
+        // Acquire the parent X lock before the INSERT's FK check takes an S lock.
+        // Concurrent writers then wait here instead of deadlocking during flush.
+        Post post = postService.getPostForUpdate(postId);
         Comment parent = getParentComment(parentId);
 
         User user = userService.getLoginUserById(principal.getUserId());
@@ -71,10 +73,10 @@ public class CommentService {
                                    GuestCommentCreateRequest dto,
                                    Long parentId) {
 
-        Post post = postService.getPost(postId);
-        Comment parent = getParentComment(parentId);
-
         String hashedPassword = guestPasswordEncoder.encode(dto.guestPassword());
+
+        Post post = postService.getPostForUpdate(postId);
+        Comment parent = getParentComment(parentId);
 
         Comment comment = Comment.createGuestComment(
                 dto.content(),
