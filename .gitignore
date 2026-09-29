@@ -40,6 +40,16 @@ out/
 ### Secrets ###
 # Local docker-compose env: DB root password, HMAC secret. Never commit.
 .env
+# Local credentials used by the Docker/MySQL development environment.
+/mysql/init-master.sql
+/mysql/init-replica.sh
+/mysql/mysqld-exporter*.my.cnf
+/docker-compose.test.yml
+**/session.cookies
+
+### Python tool outputs ###
+__pycache__/
+*.pyc
 
 ### Personal documents ###
 # Resumes and portfolios live in this working tree for convenience. This is a
