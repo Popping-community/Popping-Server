@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import lombok.extern.slf4j.Slf4j;
 
 import com.example.popping.dto.ApiErrorResponse;
@@ -51,6 +52,14 @@ public class ApiExceptionHandler {
                         ErrorType.VALIDATION_ERROR.getMessage(),
                         fieldErrors
                 ));
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ApiErrorResponse> handleTypeMismatch(MethodArgumentTypeMismatchException e) {
+        log.warn("Invalid API argument type: {}", e.getName());
+        ErrorType type = ErrorType.VALIDATION_ERROR;
+        return ResponseEntity.status(type.getHttpStatus())
+                .body(new ApiErrorResponse(type.name(), type.getMessage()));
     }
 
     @ExceptionHandler(IllegalArgumentException.class)

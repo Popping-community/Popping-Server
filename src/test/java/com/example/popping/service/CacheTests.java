@@ -6,7 +6,10 @@ import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -24,6 +27,7 @@ import org.springframework.transaction.support.TransactionCallback;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import com.example.popping.event.CacheEvictEvent;
+import com.example.popping.config.db.StickyPrimaryHolder;
 
 import com.example.popping.domain.Board;
 import com.example.popping.domain.Comment;
@@ -63,7 +67,7 @@ class CacheTests {
             try {
                 value = loader.call();
             } catch (Exception e) {
-                throw new RuntimeException(e);
+                throw new Cache.ValueRetrievalException(key, loader, e);
             }
             cacheStore.put(key, value);
             return value;
@@ -128,6 +132,64 @@ class CacheTests {
         @BeforeEach
         void setUp() {
             setUpCacheSimulation(cacheManager, cache, readOnlyTx, cacheStore);
+        }
+
+        @AfterEach
+        void clearStickyContext() {
+            StickyPrimaryHolder.clear();
+        }
+
+        @Test
+        void stickyReaderBypassesStalePageWithoutReplacingItForOtherReaders() {
+            Long postId = 10L;
+            Post post = mock(Post.class);
+            when(post.getCommentCount()).thenReturn(1);
+            when(postService.getPost(postId)).thenReturn(post);
+            List<CommentTreeRowView> oldRows = List.of(commentRow(1L));
+            List<CommentTreeRowView> newRows = List.of(commentRow(1L), commentRow(2L));
+            when(commentRepository.findPagedCommentTree(postId, CommentService.COMMENTS_SIZE, 0))
+                    .thenReturn(oldRows);
+            when(userService.getUserIdToNicknameMap(any())).thenReturn(Map.of());
+
+            var oldPage = commentService.getCommentPage(postId, 0, null, null);
+            Object cachedPage = cacheStore.get(postId);
+            when(post.getCommentCount()).thenReturn(2);
+            when(commentRepository.findPagedCommentTree(postId, CommentService.COMMENTS_SIZE, 0))
+                    .thenReturn(newRows);
+            StickyPrimaryHolder.markSticky();
+            var freshPage = commentService.getCommentPage(postId, 0, null, null);
+
+            assertEquals(1, oldPage.totalComments());
+            assertEquals(2, freshPage.totalComments());
+            assertEquals(List.of(1L, 2L), freshPage.comments().stream().map(c -> c.id()).toList());
+            assertSame(cachedPage, cacheStore.get(postId));
+            verify(commentRepository, never()).findLikeCountsByIds(any());
+            verify(cache, never()).put(any(), any());
+            verify(cache, never()).evict(any());
+
+            StickyPrimaryHolder.clear();
+            var otherReader = commentService.getCommentPage(postId, 0, null, null);
+            assertEquals(1, otherReader.totalComments());
+            verify(commentRepository, times(2)).findPagedCommentTree(postId, CommentService.COMMENTS_SIZE, 0);
+        }
+
+        @Test
+        void stickyCacheMissDoesNotPopulateCacheAndFailuresDoNotFallBackToStale() {
+            Long postId = 10L;
+            Post post = mock(Post.class);
+            when(postService.getPost(postId)).thenReturn(post);
+            when(commentRepository.findPagedCommentTree(postId, CommentService.COMMENTS_SIZE, 0))
+                    .thenReturn(List.of());
+            StickyPrimaryHolder.markSticky();
+
+            commentService.getCommentPage(postId, 0, null, null);
+            assertTrue(cacheStore.isEmpty());
+            cacheStore.put(postId, "stale sentinel");
+            when(postService.getPost(postId)).thenThrow(new IllegalStateException("DB unavailable"));
+            assertThrows(IllegalStateException.class,
+                    () -> commentService.getCommentPage(postId, 0, null, null));
+            assertEquals("stale sentinel", cacheStore.get(postId));
+            verifyNoInteractions(cache);
         }
 
         @Test

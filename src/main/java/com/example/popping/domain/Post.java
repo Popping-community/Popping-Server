@@ -114,8 +114,11 @@ public class Post extends BaseEntity {
         this.commentCount++;
     }
 
-    public void decreaseCommentCount() {
-        if (this.commentCount > 0) this.commentCount--;
+    public void decreaseCommentCount(int removedCount) {
+        if (removedCount < 1 || removedCount > this.commentCount) {
+            throw new IllegalStateException("삭제할 댓글 수와 게시글 댓글 수가 일치하지 않습니다.");
+        }
+        this.commentCount -= removedCount;
     }
 
     public boolean isAuthor(User user) {
