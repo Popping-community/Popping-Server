@@ -158,9 +158,8 @@ public class PostService {
 
     @Transactional(readOnly = true)
     public PostResponse getPostResponse(Long postId, UserPrincipal principal, String guestIdentifier) {
-        viewCountService.increaseView(postId);
-
         PostResponse base = getPostDetailFromCache(postId);
+        viewCountService.increaseView(postId);
         base = mergePendingViewCount(base);
 
         return mergePostReactions(base, principal, guestIdentifier);
@@ -174,15 +173,22 @@ public class PostService {
         return base.withViewCount(base.viewCount() + pending);
     }
 
-    // viewCount/likeCount are stale until TTL expiry (30 min) — acceptable for detail page.
-    // Personal reactions are always merged fresh.
+    // Detail caching is disabled by default: local eviction cannot reach other JVMs.
+    // Opt-in entries may remain stale until local eviction or expiry; DB routing is unchanged.
     private PostResponse getPostDetailFromCache(Long postId) {
         Cache cache = cacheManager.getCache(POST_DETAIL_CACHE);
         if (cache == null) {
             return buildPostDetail(postId);
         }
-        return cache.get(postId, () -> readOnlyTx.execute(
-                status -> buildPostDetail(postId)));
+        try {
+            return cache.get(postId, () -> readOnlyTx.execute(
+                    status -> buildPostDetail(postId)));
+        } catch (Cache.ValueRetrievalException e) {
+            if (e.getCause() instanceof CustomAppException appException) {
+                throw appException;
+            }
+            throw e;
+        }
     }
 
     private PostResponse buildPostDetail(Long postId) {
