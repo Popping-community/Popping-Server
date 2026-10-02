@@ -89,7 +89,7 @@ class CommentServiceTest {
         UserPrincipal principal = principal(1L);
 
         Post post = mock(Post.class);
-        when(postService.getPost(postId)).thenReturn(post);
+        when(postService.getPostForUpdate(postId)).thenReturn(post);
 
         User user = userAuthOnly();
         when(userService.getLoginUserById(1L)).thenReturn(user);
@@ -114,6 +114,9 @@ class CommentServiceTest {
         assertEquals(0, captured.getDepth());
 
         verify(post).increaseCommentCount();
+        var order = inOrder(postService, commentRepository);
+        order.verify(postService).getPostForUpdate(postId);
+        order.verify(commentRepository).save(any(Comment.class));
     }
 
     @Test
@@ -128,7 +131,7 @@ class CommentServiceTest {
         UserPrincipal principal = principal(1L);
 
         Post post = mock(Post.class);
-        when(postService.getPost(postId)).thenReturn(post);
+        when(postService.getPostForUpdate(postId)).thenReturn(post);
 
         User user = userAuthOnly();
         when(userService.getLoginUserById(1L)).thenReturn(user);
@@ -157,6 +160,9 @@ class CommentServiceTest {
         assertEquals(3, captured.getDepth()); // parent(2)+1
 
         verify(post).increaseCommentCount();
+        var order = inOrder(postService, commentRepository);
+        order.verify(postService).getPostForUpdate(postId);
+        order.verify(commentRepository).save(any(Comment.class));
     }
 
     @Test
@@ -171,7 +177,7 @@ class CommentServiceTest {
                 new GuestCommentCreateRequest("hi", "guestNick", "1234");
 
         Post post = mock(Post.class);
-        when(postService.getPost(postId)).thenReturn(post);
+        when(postService.getPostForUpdate(postId)).thenReturn(post);
 
         when(guestPasswordEncoder.encode("1234")).thenReturn("ENC");
 
@@ -197,6 +203,9 @@ class CommentServiceTest {
 
         verify(guestPasswordEncoder).encode("1234");
         verify(post).increaseCommentCount();
+        var order = inOrder(postService, commentRepository);
+        order.verify(postService).getPostForUpdate(postId);
+        order.verify(commentRepository).save(any(Comment.class));
     }
 
     @Test

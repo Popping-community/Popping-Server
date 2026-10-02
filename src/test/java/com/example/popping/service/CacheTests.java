@@ -151,7 +151,7 @@ class CacheTests {
         void createComment_shouldPublishCacheEvictEvent() {
             Long postId = 10L;
             Post post = mock(Post.class);
-            when(postService.getPost(postId)).thenReturn(post);
+            when(postService.getPostForUpdate(postId)).thenReturn(post);
 
             MemberCommentCreateRequest dto = new MemberCommentCreateRequest("hello");
             UserPrincipal principal = principal(1L);

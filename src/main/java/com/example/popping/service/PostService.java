@@ -12,6 +12,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
 import lombok.RequiredArgsConstructor;
@@ -261,6 +262,15 @@ public class PostService {
     @Transactional(readOnly = true)
     public Post getPost(Long postId) {
         return postRepository.findById(postId)
+                .orElseThrow(() -> new CustomAppException(
+                        ErrorType.POST_NOT_FOUND,
+                        "해당 게시글이 존재하지 않습니다: " + postId
+                ));
+    }
+
+    @Transactional(propagation = Propagation.MANDATORY)
+    public Post getPostForUpdate(Long postId) {
+        return postRepository.findForUpdateById(postId)
                 .orElseThrow(() -> new CustomAppException(
                         ErrorType.POST_NOT_FOUND,
                         "해당 게시글이 존재하지 않습니다: " + postId
