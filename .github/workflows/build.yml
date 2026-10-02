@@ -9,6 +9,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: popping-build-deploy-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   build:
     name: Build, Analyze and Deploy (JDK 21)
@@ -61,8 +65,13 @@ jobs:
 
       # ✅ application.properties 생성 (여기!)
       - name: Set up application.properties
+        env:
+          APPLICATION_PROPERTIES: ${{ secrets.APPLICATION }}
         run: |
-          echo "${{ secrets.APPLICATION }}" > ./src/main/resources/application.properties
+          printf '%s\n' "$APPLICATION_PROPERTIES" > ./src/main/resources/application.properties
+
+      - name: Test deployment guards and image handoff
+        run: python3 -B -m unittest discover -s scripts/deployment -p 'test_*.py'
 
       # SonarQube 분석
       - name: SonarQube Analyze
@@ -82,6 +91,7 @@ jobs:
 
       # Docker Hub 로그인
       - name: Login to Docker Hub
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: docker/login-action@v1
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
@@ -89,17 +99,37 @@ jobs:
 
       # Jib로 Docker 이미지 빌드 및 Push
       - name: Build and Push with Jib
-        run: ./gradlew :jib
+        id: image
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          ./gradlew :jib -Djib.to.tags="git-${GITHUB_SHA}"
+          image=$(python3 scripts/deployment/jib_image_reference.py build/jib-image.digest)
+          printf 'image=%s\n' "$image" >> "$GITHUB_OUTPUT"
+          printf '%s\n' "$image" > build/release-image.txt
+
+      - name: Preserve exact release image identity
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-image-${{ github.sha }}
+          path: |
+            build/release-image.txt
+            build/jib-image.digest
+            build/jib-image.id
+          if-no-files-found: error
 
       # SSH를 통한 원격 배포
       - name: Deploy via SSH
-        uses: appleboy/ssh-action@master
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: appleboy/ssh-action@v1.2.5
+        env:
+          POPPING_IMAGE: ${{ steps.image.outputs.image }}
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
         with:
           host: ${{ secrets.REMOTE_IP }}
           username: ${{ secrets.REMOTE_SSH_ID }}
           key: ${{ secrets.REMOTE_SSH_KEY }}
           port: ${{ secrets.REMOTE_SSH_PORT }}
-          script: |
-            docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
-            docker-compose pull
-            docker-compose up -d
+          envs: POPPING_IMAGE,DOCKER_USERNAME,DOCKER_PASSWORD
+          script_path: scripts/deployment/deploy_digest.sh
