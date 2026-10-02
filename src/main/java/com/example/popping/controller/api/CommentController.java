@@ -60,7 +60,7 @@ public class CommentController {
             @PathVariable Long commentId,
             @AuthenticationPrincipal UserPrincipal user
     ) {
-        commentService.deleteComment(commentId, user);
+        commentService.deleteComment(postId, commentId, user);
         return ResponseEntity.noContent().build();
     }
 
@@ -71,7 +71,7 @@ public class CommentController {
             @PathVariable Long commentId,
             @Valid @RequestBody GuestPasswordRequest req
     ) {
-        commentService.deleteCommentAsGuest(commentId, req.password());
+        commentService.deleteCommentAsGuest(postId, commentId, req.password());
         return ResponseEntity.noContent().build();
     }
 }

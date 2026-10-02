@@ -14,6 +14,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 import lombok.RequiredArgsConstructor;
 
 import com.example.popping.config.app.CacheConfig;
+import com.example.popping.config.db.StickyPrimaryHolder;
 import com.example.popping.event.CacheEvictEvent;
 
 import com.example.popping.domain.*;
@@ -35,6 +36,7 @@ import com.example.popping.repository.LikeRepository;
 public class CommentService {
 
     public static final int COMMENTS_SIZE = 100;
+    private static final int MAX_COMMENT_PAGE = Integer.MAX_VALUE / COMMENTS_SIZE;
     private static final String COMMENT_FIRST_PAGE_CACHE = CacheConfig.COMMENT_FIRST_PAGE_CACHE;
     private static final String POST_DETAIL_CACHE = CacheConfig.POST_DETAIL_CACHE;
 
@@ -56,7 +58,7 @@ public class CommentService {
         // Acquire the parent X lock before the INSERT's FK check takes an S lock.
         // Concurrent writers then wait here instead of deadlocking during flush.
         Post post = postService.getPostForUpdate(postId);
-        Comment parent = getParentComment(parentId);
+        Comment parent = getParentComment(postId, parentId);
 
         User user = userService.getLoginUserById(principal.getUserId());
 
@@ -76,7 +78,7 @@ public class CommentService {
         String hashedPassword = guestPasswordEncoder.encode(dto.guestPassword());
 
         Post post = postService.getPostForUpdate(postId);
-        Comment parent = getParentComment(parentId);
+        Comment parent = getParentComment(postId, parentId);
 
         Comment comment = Comment.createGuestComment(
                 dto.content(),
@@ -93,28 +95,30 @@ public class CommentService {
         return comment.getId();
     }
 
-    public void deleteComment(Long commentId, UserPrincipal principal) {
-        Comment comment = getComment(commentId);
+    public void deleteComment(Long postId, Long commentId, UserPrincipal principal) {
+        if (principal == null) {
+            throw new CustomAppException(ErrorType.NO_AUTHENTICATION);
+        }
+        // First DB read: wait for preceding writers before creating an RR snapshot.
+        Post post = postService.getPostForUpdate(postId);
+        Comment comment = getCommentInPost(postId, commentId);
 
         User user = userService.getLoginUserById(principal.getUserId());
         validateMemberAuthor(comment, user);
 
-        Long postId = comment.getPost().getId();
-        comment.getPost().decreaseCommentCount();
-        commentRepository.delete(comment);
+        deleteCommentTree(post, comment);
         evictFirstPageCacheByPostId(postId);
         evictPostDetailCacheByPostId(postId);
     }
 
-    public void deleteCommentAsGuest(Long commentId, String password) {
-        Comment comment = getComment(commentId);
+    public void deleteCommentAsGuest(Long postId, Long commentId, String password) {
+        Post post = postService.getPostForUpdate(postId);
+        Comment comment = getCommentInPost(postId, commentId);
 
         validateGuestComment(comment);
         validateGuestPassword(comment, password);
 
-        Long postId = comment.getPost().getId();
-        comment.getPost().decreaseCommentCount();
-        commentRepository.delete(comment);
+        deleteCommentTree(post, comment);
         evictFirstPageCacheByPostId(postId);
         evictPostDetailCacheByPostId(postId);
     }
@@ -137,6 +141,9 @@ public class CommentService {
 
     @Transactional(readOnly = true)
     public CommentPageResponse getCommentPage(Long postId, int page, UserPrincipal principal, String guestIdentifier) {
+        if (page < 0 || page > MAX_COMMENT_PAGE) {
+            throw new CustomAppException(ErrorType.VALIDATION_ERROR, "댓글 페이지 범위가 올바르지 않습니다.");
+        }
         String actor = resolveGuestIdentifier(guestIdentifier);
 
         if (page != 0) {
@@ -169,9 +176,34 @@ public class CommentService {
                 ));
     }
 
-    private Comment getParentComment(Long parentId) {
+    private Comment getParentComment(Long postId, Long parentId) {
         if (parentId == null) return null;
-        return getComment(parentId);
+        return getCommentInPost(postId, parentId);
+    }
+
+    private Comment getCommentInPost(Long postId, Long commentId) {
+        Comment comment = getComment(commentId);
+        if (!postId.equals(comment.getPost().getId())) {
+            throw new CustomAppException(ErrorType.COMMENT_NOT_FOUND);
+        }
+        return comment;
+    }
+
+    private void deleteCommentTree(Post post, Comment root) {
+        Deque<Comment> remaining = new ArrayDeque<>();
+        remaining.push(root);
+        int removedCount = 0;
+        while (!remaining.isEmpty()) {
+            Comment comment = remaining.pop();
+            // Reject legacy cross-post trees rather than modifying an unlocked post.
+            if (!post.getId().equals(comment.getPost().getId())) {
+                throw new IllegalStateException("Comment tree spans multiple posts");
+            }
+            remaining.addAll(comment.getChildren());
+            removedCount++;
+        }
+        post.decreaseCommentCount(removedCount);
+        commentRepository.delete(root);
     }
 
     /**
@@ -187,16 +219,30 @@ public class CommentService {
     }
 
     private FirstPage getFirstPageCommon(Long postId) {
+        // A different JVM may still hold a stale page after this user's write.
+        // Let existing sticky routing read Primary, without reading or filling the cache.
+        if (StickyPrimaryHolder.isSticky()) {
+            return new FirstPage(buildCommentPage(postId, 0), true);
+        }
         Cache cache = cacheManager.getCache(COMMENT_FIRST_PAGE_CACHE);
         if (cache == null) {
             return new FirstPage(buildCommentPage(postId, 0), true);
         }
 
         AtomicBoolean builtNow = new AtomicBoolean(false);
-        CommentPageResponse page = cache.get(postId, () -> {
-            builtNow.set(true);
-            return readOnlyTx.execute(status -> buildCommentPage(postId, 0));
-        });
+        CommentPageResponse page;
+        try {
+            page = cache.get(postId, () -> {
+                builtNow.set(true);
+                return readOnlyTx.execute(status -> buildCommentPage(postId, 0));
+            });
+        } catch (Cache.ValueRetrievalException exception) {
+            // Cache loading must not turn an expected domain error into an internal error.
+            if (exception.getCause() instanceof CustomAppException appException) {
+                throw appException;
+            }
+            throw exception;
+        }
 
         return new FirstPage(page, builtNow.get());
     }

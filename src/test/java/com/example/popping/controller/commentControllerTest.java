@@ -23,11 +23,29 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(CommentController.class)
 @Import({GlobalBindingConfig.class, HtmlSanitizer.class})
 class CommentControllerTest {
+
+    @Test
+    @WithMockUser
+    void memberDelete_passesPathPostIdToService() throws Exception {
+        mockMvc.perform(delete("/boards/test/7/comments/9").with(csrf()))
+                .andExpect(status().isNoContent());
+        verify(commentService).deleteComment(eq(7L), eq(9L), isNull());
+    }
+
+    @Test
+    @WithMockUser
+    void guestDelete_passesPathPostIdAndPasswordToService() throws Exception {
+        mockMvc.perform(delete("/boards/test/7/comments/9/guest").with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"password\":\"test-password\"}"))
+                .andExpect(status().isNoContent());
+        verify(commentService).deleteCommentAsGuest(7L, 9L, "test-password");
+    }
 
     @Autowired
     private MockMvc mockMvc;

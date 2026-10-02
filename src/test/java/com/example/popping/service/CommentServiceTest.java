@@ -139,6 +139,8 @@ class CommentServiceTest {
         Comment parent = mock(Comment.class);
         when(commentRepository.findById(parentId)).thenReturn(Optional.of(parent));
         when(parent.getDepth()).thenReturn(2);
+        when(parent.getPost()).thenReturn(post);
+        when(post.getId()).thenReturn(postId);
 
         Comment saved = commentWithId(101L);
         when(commentRepository.save(any(Comment.class))).thenReturn(saved);
@@ -208,6 +210,13 @@ class CommentServiceTest {
         order.verify(commentRepository).save(any(Comment.class));
     }
 
+    private void givenLockedPost(Comment comment) {
+        Post post = mock(Post.class);
+        when(post.getId()).thenReturn(10L);
+        when(comment.getPost()).thenReturn(post);
+        when(postService.getPostForUpdate(10L)).thenReturn(post);
+    }
+
     @Test
     @DisplayName("댓글 삭제(회원): 작성자면 commentCount 감소 후 삭제한다")
     void deleteComment_success_owner() {
@@ -221,16 +230,16 @@ class CommentServiceTest {
 
         Comment comment = mock(Comment.class);
         when(commentRepository.findById(commentId)).thenReturn(Optional.of(comment));
+        givenLockedPost(comment);
         when(comment.isAuthor(user)).thenReturn(true);
 
-        Post post = mock(Post.class);
-        when(comment.getPost()).thenReturn(post);
+        Post post = comment.getPost();
 
         // when
-        commentService.deleteComment(commentId, principal);
+        commentService.deleteComment(10L, commentId, principal);
 
         // then
-        verify(post).decreaseCommentCount();
+        verify(post).decreaseCommentCount(1);
         verify(commentRepository).delete(comment);
     }
 
@@ -248,12 +257,13 @@ class CommentServiceTest {
 
         Comment comment = mock(Comment.class);
         when(commentRepository.findById(commentId)).thenReturn(Optional.of(comment));
+        givenLockedPost(comment);
         when(comment.isAuthor(user)).thenReturn(false);
 
         // when
         CustomAppException ex = assertThrows(
                 CustomAppException.class,
-                () -> commentService.deleteComment(commentId, principal)
+                () -> commentService.deleteComment(10L, commentId, principal)
         );
 
         // then
@@ -270,19 +280,19 @@ class CommentServiceTest {
 
         Comment comment = mock(Comment.class);
         when(commentRepository.findById(commentId)).thenReturn(Optional.of(comment));
+        givenLockedPost(comment);
         when(comment.isGuest()).thenReturn(true);
         when(comment.getGuestPasswordHash()).thenReturn("HASH");
 
         when(guestPasswordEncoder.matches("raw", "HASH")).thenReturn(true);
 
-        Post post = mock(Post.class);
-        when(comment.getPost()).thenReturn(post);
+        Post post = comment.getPost();
 
         // when
-        commentService.deleteCommentAsGuest(commentId, "raw");
+        commentService.deleteCommentAsGuest(10L, commentId, "raw");
 
         // then
-        verify(post).decreaseCommentCount();
+        verify(post).decreaseCommentCount(1);
         verify(commentRepository).delete(comment);
     }
 
@@ -295,6 +305,7 @@ class CommentServiceTest {
 
         Comment comment = mock(Comment.class);
         when(commentRepository.findById(commentId)).thenReturn(Optional.of(comment));
+        givenLockedPost(comment);
         when(comment.isGuest()).thenReturn(true);
         when(comment.getGuestPasswordHash()).thenReturn("HASH");
 
@@ -303,7 +314,7 @@ class CommentServiceTest {
         // when
         CustomAppException ex = assertThrows(
                 CustomAppException.class,
-                () -> commentService.deleteCommentAsGuest(commentId, "wrong")
+                () -> commentService.deleteCommentAsGuest(10L, commentId, "wrong")
         );
 
         // then
@@ -320,12 +331,13 @@ class CommentServiceTest {
 
         Comment comment = mock(Comment.class);
         when(commentRepository.findById(commentId)).thenReturn(Optional.of(comment));
+        givenLockedPost(comment);
         when(comment.isGuest()).thenReturn(false);
 
         // when
         CustomAppException ex = assertThrows(
                 CustomAppException.class,
-                () -> commentService.deleteCommentAsGuest(commentId, "pw")
+                () -> commentService.deleteCommentAsGuest(10L, commentId, "pw")
         );
 
         // then
