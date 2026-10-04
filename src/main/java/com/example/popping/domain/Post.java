@@ -1,11 +1,16 @@
 package com.example.popping.domain;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.DynamicUpdate;
+
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 
+// Counts and the reaction version change through bulk UPDATEs, outside any loaded entity.
+// Writing only the changed columns keeps an edit's flush from putting old counts back.
+@DynamicUpdate
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -50,6 +55,11 @@ public class Post extends BaseEntity {
 
     @Column(nullable = false)
     private int dislikeCount = 0;
+
+    // Moves in the same UPDATE as the counts, so a client can drop a like broadcast older than
+    // the counts it already shows. The default fills existing rows when the column is added.
+    @Column(nullable = false, columnDefinition = "bigint not null default 0")
+    private long reactionVersion = 0;
 
     private Post(String title, String content, User author,
                  String guestNickname, String guestPasswordHash, Board board) {

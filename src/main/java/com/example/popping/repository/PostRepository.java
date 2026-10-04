@@ -46,15 +46,18 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     @Query("UPDATE Post p SET p.viewCount = p.viewCount + :delta WHERE p.id = :postId")
     void increaseViewCountBy(@Param("postId") Long postId, @Param("delta") long delta);
 
-    @Query("SELECT p.likeCount AS likeCount, p.dislikeCount AS dislikeCount FROM Post p WHERE p.id = :postId")
+    @Query("SELECT p.likeCount AS likeCount, p.dislikeCount AS dislikeCount, "
+            + "p.reactionVersion AS reactionVersion FROM Post p WHERE p.id = :postId")
     LikeCountView findLikeCountsById(@Param("postId") Long postId);
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
-    @Query("UPDATE Post p SET p.likeCount = p.likeCount + :delta WHERE p.id = :postId")
+    @Query("UPDATE Post p SET p.likeCount = p.likeCount + :delta, "
+            + "p.reactionVersion = p.reactionVersion + 1 WHERE p.id = :postId")
     void updateLikeCount(@Param("postId") Long postId, @Param("delta") int delta);
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
-    @Query("UPDATE Post p SET p.dislikeCount = p.dislikeCount + :delta WHERE p.id = :postId")
+    @Query("UPDATE Post p SET p.dislikeCount = p.dislikeCount + :delta, "
+            + "p.reactionVersion = p.reactionVersion + 1 WHERE p.id = :postId")
     void updateDislikeCount(@Param("postId") Long postId, @Param("delta") int delta);
 
     @Modifying
@@ -69,7 +72,8 @@ public interface PostRepository extends JpaRepository<Post, Long> {
                 GROUP BY target_id
             ) l ON p.id = l.target_id
             SET p.like_count    = l.like_count,
-                p.dislike_count = l.dislike_count
+                p.dislike_count = l.dislike_count,
+                p.reaction_version = p.reaction_version + 1
             WHERE p.like_count != l.like_count
                OR p.dislike_count != l.dislike_count
             """, nativeQuery = true)

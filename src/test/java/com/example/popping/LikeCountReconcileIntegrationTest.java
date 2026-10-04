@@ -54,12 +54,16 @@ class LikeCountReconcileIntegrationTest {
         // 강제 불일치: likeCount를 0으로 덮어써 likes 테이블과 어긋나게 만든다
         jdbcTemplate.update("UPDATE post SET like_count = 0 WHERE id = ?", post.getId());
         assertThat(postRepository.findById(post.getId()).orElseThrow().getLikeCount()).isEqualTo(0);
+        long versionBefore = postRepository.findLikeCountsById(post.getId()).getReactionVersion();
 
         // when
         scheduler.reconcileLikeCounts();
 
         // then
         assertThat(postRepository.findById(post.getId()).orElseThrow().getLikeCount()).isEqualTo(1);
+        // A corrected count is a new reaction state, so clients must not keep the old one.
+        assertThat(postRepository.findLikeCountsById(post.getId()).getReactionVersion())
+                .isEqualTo(versionBefore + 1);
     }
 
     @Test
@@ -82,12 +86,15 @@ class LikeCountReconcileIntegrationTest {
         // 강제 불일치
         jdbcTemplate.update("UPDATE comment SET like_count = 0 WHERE id = ?", comment.getId());
         assertThat(commentRepository.findById(comment.getId()).orElseThrow().getLikeCount()).isEqualTo(0);
+        long versionBefore = commentRepository.findLikeCountsById(comment.getId()).getReactionVersion();
 
         // when
         scheduler.reconcileLikeCounts();
 
         // then
         assertThat(commentRepository.findById(comment.getId()).orElseThrow().getLikeCount()).isEqualTo(1);
+        assertThat(commentRepository.findLikeCountsById(comment.getId()).getReactionVersion())
+                .isEqualTo(versionBefore + 1);
     }
 
     @Test
@@ -106,6 +113,7 @@ class LikeCountReconcileIntegrationTest {
                 principal(user.getId()));
 
         int likeCountBefore = postRepository.findById(post.getId()).orElseThrow().getLikeCount();
+        long versionBefore = postRepository.findLikeCountsById(post.getId()).getReactionVersion();
 
         // when
         scheduler.reconcileLikeCounts();
@@ -113,6 +121,7 @@ class LikeCountReconcileIntegrationTest {
         // then
         int likeCountAfter = postRepository.findById(post.getId()).orElseThrow().getLikeCount();
         assertThat(likeCountAfter).isEqualTo(likeCountBefore);
+        assertThat(postRepository.findLikeCountsById(post.getId()).getReactionVersion()).isEqualTo(versionBefore);
     }
 
     private UserPrincipal principal(Long userId) {

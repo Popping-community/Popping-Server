@@ -231,6 +231,11 @@ class LikeServiceTest {
             public int getDislikeCount() {
                 return dislikeCount;
             }
+
+            @Override
+            public long getReactionVersion() {
+                return 0;
+            }
         };
     }
 }
