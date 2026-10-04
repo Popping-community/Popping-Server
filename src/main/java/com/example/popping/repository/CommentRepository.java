@@ -16,24 +16,35 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
         Long getId();
         int getLikeCount();
         int getDislikeCount();
+
+        long getReactionVersion();
     }
 
     @Query("select c.post.id from Comment c where c.id = :commentId")
     Long findPostIdByCommentId(@Param("commentId") Long commentId);
 
-    @Query("SELECT c.id AS id, c.likeCount AS likeCount, c.dislikeCount AS dislikeCount " +
-           "FROM Comment c WHERE c.id IN :ids")
+    @Query("SELECT c.id AS id, c.likeCount AS likeCount, c.dislikeCount AS dislikeCount, "
+           + "c.reactionVersion AS reactionVersion FROM Comment c WHERE c.id IN :ids")
     List<LikeCount> findLikeCountsByIds(@Param("ids") Collection<Long> ids);
 
-    @Query("SELECT c.likeCount AS likeCount, c.dislikeCount AS dislikeCount FROM Comment c WHERE c.id = :commentId")
+    @Query("SELECT c.id AS id, c.likeCount AS likeCount, c.dislikeCount AS dislikeCount, "
+           + "c.reactionVersion AS reactionVersion FROM Comment c "
+           + "WHERE c.post.id = :postId AND c.id IN :ids")
+    List<LikeCount> findLikeCountsByPostIdAndIds(@Param("postId") Long postId,
+                                                 @Param("ids") Collection<Long> ids);
+
+    @Query("SELECT c.likeCount AS likeCount, c.dislikeCount AS dislikeCount, "
+            + "c.reactionVersion AS reactionVersion FROM Comment c WHERE c.id = :commentId")
     LikeCountView findLikeCountsById(@Param("commentId") Long commentId);
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
-    @Query("UPDATE Comment c SET c.likeCount = c.likeCount + :delta WHERE c.id = :commentId")
+    @Query("UPDATE Comment c SET c.likeCount = c.likeCount + :delta, "
+            + "c.reactionVersion = c.reactionVersion + 1 WHERE c.id = :commentId")
     int updateLikeCount(@Param("commentId") Long commentId, @Param("delta") int delta);
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
-    @Query("UPDATE Comment c SET c.dislikeCount = c.dislikeCount + :delta WHERE c.id = :commentId")
+    @Query("UPDATE Comment c SET c.dislikeCount = c.dislikeCount + :delta, "
+            + "c.reactionVersion = c.reactionVersion + 1 WHERE c.id = :commentId")
     int updateDislikeCount(@Param("commentId") Long commentId, @Param("delta") int delta);
 
     @Modifying
@@ -48,7 +59,8 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
                 GROUP BY target_id
             ) l ON c.id = l.target_id
             SET c.like_count    = l.like_count,
-                c.dislike_count = l.dislike_count
+                c.dislike_count = l.dislike_count,
+                c.reaction_version = c.reaction_version + 1
             WHERE c.like_count != l.like_count
                OR c.dislike_count != l.dislike_count
             """, nativeQuery = true)

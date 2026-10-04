@@ -46,7 +46,7 @@ class LikeServiceTest {
 
         when(likeRepository.upsertLike("POST", 10L, "LIKE", 1L, null))
                 .thenReturn(1);
-        when(postService.getLikeCounts(10L)).thenReturn(counts(6, 2));
+        when(postService.getLikeCounts(10L)).thenReturn(counts(6, 2, 7));
 
         // when
         LikeResponse res = likeService.addLike(req, principal);
@@ -58,6 +58,7 @@ class LikeServiceTest {
         assertEquals(LikeResponse.LikeAction.LIKED, res.action());
         assertEquals(6, res.likeCount());
         assertEquals(2, res.dislikeCount());
+        assertEquals(7, res.reactionVersion());
     }
 
     @Test
@@ -88,7 +89,7 @@ class LikeServiceTest {
 
         when(likeRepository.upsertLike("POST", 10L, "LIKE", null, "guest-1"))
                 .thenReturn(0);
-        when(postService.getLikeCounts(10L)).thenReturn(counts(5, 2));
+        when(postService.getLikeCounts(10L)).thenReturn(counts(5, 2, 8));
 
         // when
         LikeResponse res = likeService.addLike(req, null);
@@ -97,6 +98,8 @@ class LikeServiceTest {
         // Clients assign these values, so a duplicate request leaves the display untouched.
         assertEquals(5, res.likeCount());
         assertEquals(2, res.dislikeCount());
+        // The version is the stored one too: a no-op must not look newer than what clients hold.
+        assertEquals(8, res.reactionVersion());
         verify(postService, never()).updateLikeCount(anyLong(), anyInt());
     }
 
@@ -221,6 +224,10 @@ class LikeServiceTest {
     }
 
     private static LikeCountView counts(int likeCount, int dislikeCount) {
+        return counts(likeCount, dislikeCount, 0);
+    }
+
+    private static LikeCountView counts(int likeCount, int dislikeCount, long reactionVersion) {
         return new LikeCountView() {
             @Override
             public int getLikeCount() {
@@ -230,6 +237,11 @@ class LikeServiceTest {
             @Override
             public int getDislikeCount() {
                 return dislikeCount;
+            }
+
+            @Override
+            public long getReactionVersion() {
+                return reactionVersion;
             }
         };
     }

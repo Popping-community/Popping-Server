@@ -568,6 +568,15 @@
     let postId = /*[[${post.id}]]*/ 0;
     let slug = /*[[${slug}]]*/ '';
     let commentCounter = 0;
+    let connecting = false;
+    let refreshInFlight = false;
+    // Latest reaction state shown per target ("post-1", "comment-7"): {likeCount, dislikeCount, version}.
+    // Like updates can arrive late or out of order once relayed between servers, and a refetch can
+    // race them, so anything with a lower version than what is shown is dropped.
+    const reactionState = new Map();
+    const REACTION_REFRESH_MS = 30000;
+    const CONNECT_TIMEOUT_MS = 10000;
+    const REFRESH_TIMEOUT_MS = 5000;
 
     // JavaScript 부분을 수정하여 서버에서 받은 페이지 정보를 사용하도록 합니다:
 
@@ -584,6 +593,41 @@
 
     // WebSocket 관련 함수들
     function connect() {
+        if (connecting || (stompClient && stompClient.connected)) {
+            return;
+        }
+        connecting = true;
+        // If neither callback ever fires, give up on this attempt so the monitor can retry.
+        const connectTimer = setTimeout(function() {
+            if (connecting) {
+                console.error('WebSocket connect timed out');
+                abandonConnection();
+            }
+        }, CONNECT_TIMEOUT_MS);
+        try {
+            openConnection(connectTimer);
+        } catch (error) {
+            console.error('WebSocket connect failed:', error);
+            clearTimeout(connectTimer);
+            abandonConnection();
+        }
+    }
+
+    function abandonConnection() {
+        connecting = false;
+        const stale = stompClient;
+        stompClient = null;
+        try {
+            if (stale) {
+                stale.disconnect();
+            }
+        } catch (ignored) {
+            // The socket may already be gone.
+        }
+        setTimeout(connect, 5000);
+    }
+
+    function openConnection(connectTimer) {
         const socket = new SockJS('/ws', null, {
             transports: ['websocket', 'xhr-streaming', 'xhr-polling'],
             sessionId: function() {
@@ -591,7 +635,8 @@
             }
         });
 
-        stompClient = Stomp.over(socket);
+        const client = Stomp.over(socket);
+        stompClient = client;
         const connectHeaders = {};
 
         const csrfToken = document.querySelector('meta[name="_csrf"]');
@@ -600,16 +645,27 @@
             connectHeaders[csrfHeader.getAttribute('content')] = csrfToken.getAttribute('content');
         }
 
-        stompClient.connect(connectHeaders, function (frame) {
+        client.connect(connectHeaders, function (frame) {
+            if (stompClient !== client) {
+                return; // a timed-out attempt that connected late
+            }
+            clearTimeout(connectTimer);
+            connecting = false;
             console.log('Connected: ' + frame);
-            stompClient.subscribe('/topic/like-updates', function (response) {
+            client.subscribe('/topic/like-updates', function (response) {
                 const parsedResponse = JSON.parse(response.body);
                 updateReaction(parsedResponse);
             });
             console.log('WebSocket connected successfully');
+            // Anything missed while disconnected was never delivered and will not be: refetch.
+            refreshReactions();
         }, function(error) {
+            if (stompClient !== client) {
+                return;
+            }
+            clearTimeout(connectTimer);
             console.error("WebSocket connection error:", error);
-            setTimeout(connect, 5000);
+            abandonConnection();
         });
     }
 
@@ -662,9 +718,26 @@
     }
 
     function updateReaction(response) {
-        const targetType = response.targetType.toLowerCase();
-        const targetId = response.targetId;
+        applyReaction(response.targetType.toLowerCase(), response.targetId,
+            response.likeCount, response.dislikeCount, response.reactionVersion);
+    }
 
+    function applyReaction(targetType, targetId, likeCount, dislikeCount, version) {
+        if (!document.getElementById(`like-count-${targetType}-${targetId}`)) {
+            return;
+        }
+        const key = `${targetType}-${targetId}`;
+        const shown = reactionState.get(key);
+        if (shown && typeof version === 'number' && version <= shown.version) {
+            return;
+        }
+        if (typeof version === 'number') {
+            reactionState.set(key, {likeCount, dislikeCount, version});
+        }
+        writeCounts(targetType, targetId, likeCount, dislikeCount);
+    }
+
+    function writeCounts(targetType, targetId, likeCount, dislikeCount) {
         const likeCountElement = document.getElementById(`like-count-${targetType}-${targetId}`);
         const dislikeCountElement = document.getElementById(`dislike-count-${targetType}-${targetId}`);
 
@@ -675,8 +748,45 @@
         // Assign the absolute counts the server sent; never increment.
         // The broadcast can arrive more than once, or describe a request that was a no-op
         // (liking something already liked), so incrementing drifts away from the database.
-        likeCountElement.textContent = response.likeCount;
-        dislikeCountElement.textContent = response.dislikeCount;
+        likeCountElement.textContent = likeCount;
+        dislikeCountElement.textContent = dislikeCount;
+    }
+
+    // A re-render writes counts from the comment page, which carries no version and can come from
+    // a cache a few seconds old. What was remembered no longer matches the screen, so forget it
+    // and let the refetch that follows the render set counts and versions again.
+    function forgetCommentReactions() {
+        Array.from(reactionState.keys())
+            .filter(key => key.startsWith('comment-'))
+            .forEach(key => reactionState.delete(key));
+    }
+
+    async function refreshReactions() {
+        if (refreshInFlight) {
+            return;
+        }
+        refreshInFlight = true;
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), REFRESH_TIMEOUT_MS);
+        try {
+            const commentIds = Array.from(document.querySelectorAll('[id^="like-count-comment-"]'))
+                .map(el => el.id.substring('like-count-comment-'.length));
+            const query = commentIds.length ? `?commentIds=${commentIds.join(',')}` : '';
+            const response = await fetch(`/boards/${slug}/${postId}/reactions${query}`,
+                {cache: 'no-store', signal: controller.signal});
+            if (!response.ok) {
+                return;
+            }
+            const data = await response.json();
+            applyReaction('post', postId, data.post.likeCount, data.post.dislikeCount, data.post.reactionVersion);
+            data.comments.forEach(c =>
+                applyReaction('comment', c.commentId, c.likeCount, c.dislikeCount, c.reactionVersion));
+        } catch (error) {
+            console.error('반응 수 갱신 실패:', error);
+        } finally {
+            clearTimeout(timeout);
+            refreshInFlight = false;
+        }
     }
 
     function getGuestIdentifier() {
@@ -699,8 +809,10 @@
             hasNext = data.hasNext;
             hasPrevious = data.hasPrevious;
 
+            forgetCommentReactions();
             renderComments(data.comments);
             renderPagination();
+            refreshReactions();
 
             // 댓글 수 업데이트
             updateCommentCount();
@@ -1135,6 +1247,19 @@
             connect();
         }
     }, 30000);
+
+    // A relayed update can be lost without the connection dropping, so refetch now and then
+    // while the page is visible, and when the tab comes back.
+    setInterval(function() {
+        if (document.visibilityState === 'visible') {
+            refreshReactions();
+        }
+    }, REACTION_REFRESH_MS);
+    document.addEventListener('visibilitychange', function() {
+        if (document.visibilityState === 'visible') {
+            refreshReactions();
+        }
+    });
 </script>
 </body>
 </html>

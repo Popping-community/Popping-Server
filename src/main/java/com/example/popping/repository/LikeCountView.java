@@ -8,4 +8,6 @@ public interface LikeCountView {
 	int getLikeCount();
 
 	int getDislikeCount();
+
+	long getReactionVersion();
 }

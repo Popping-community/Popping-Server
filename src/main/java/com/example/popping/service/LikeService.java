@@ -76,7 +76,8 @@ public class LikeService {
                 req.targetType(),
                 action,
                 counts.getLikeCount(),
-                counts.getDislikeCount()
+                counts.getDislikeCount(),
+                counts.getReactionVersion()
         );
     }
 
