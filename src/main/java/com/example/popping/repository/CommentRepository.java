@@ -27,6 +27,12 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
            + "c.reactionVersion AS reactionVersion FROM Comment c WHERE c.id IN :ids")
     List<LikeCount> findLikeCountsByIds(@Param("ids") Collection<Long> ids);
 
+    @Query("SELECT c.id AS id, c.likeCount AS likeCount, c.dislikeCount AS dislikeCount, "
+           + "c.reactionVersion AS reactionVersion FROM Comment c "
+           + "WHERE c.post.id = :postId AND c.id IN :ids")
+    List<LikeCount> findLikeCountsByPostIdAndIds(@Param("postId") Long postId,
+                                                 @Param("ids") Collection<Long> ids);
+
     @Query("SELECT c.likeCount AS likeCount, c.dislikeCount AS dislikeCount, "
             + "c.reactionVersion AS reactionVersion FROM Comment c WHERE c.id = :commentId")
     LikeCountView findLikeCountsById(@Param("commentId") Long commentId);
