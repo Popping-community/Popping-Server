@@ -33,8 +33,8 @@ public interface PostRepository extends JpaRepository<Post, Long> {
         value = "SELECT new com.example.popping.dto.PostListItemResponse(" +
                 "p.id, p.title, COALESCE(u.nickname, p.guestNickname), u.id, p.guestNickname, " +
                 "p.viewCount, p.commentCount, p.likeCount, p.dislikeCount) " +
-                "FROM Post p LEFT JOIN p.author u WHERE p.board = :board " +
-                "ORDER BY p.id DESC"
+                "FROM Post p LEFT JOIN p.author u WHERE p.board = :board"
+                + " ORDER BY p.id DESC"
     )
     Slice<PostListItemResponse> findPostListByBoard(@Param("board") Board board, Pageable pageable);
 
