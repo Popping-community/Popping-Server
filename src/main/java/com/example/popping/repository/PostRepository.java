@@ -26,11 +26,15 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     @Query("SELECT p FROM Post p WHERE p.id = :postId")
     Optional<Post> findForUpdateById(@Param("postId") Long postId);
 
+    // Newest first. Without the ORDER BY, the plan walked idx_post_board in primary-key order and
+    // the first page showed the board's oldest posts. Because that index carries the primary key,
+    // id DESC can be served by reading it backwards without a sort (the plan on MySQL 8.4 does).
     @Query(
         value = "SELECT new com.example.popping.dto.PostListItemResponse(" +
                 "p.id, p.title, COALESCE(u.nickname, p.guestNickname), u.id, p.guestNickname, " +
                 "p.viewCount, p.commentCount, p.likeCount, p.dislikeCount) " +
-                "FROM Post p LEFT JOIN p.author u WHERE p.board = :board"
+                "FROM Post p LEFT JOIN p.author u WHERE p.board = :board " +
+                "ORDER BY p.id DESC"
     )
     Slice<PostListItemResponse> findPostListByBoard(@Param("board") Board board, Pageable pageable);
 
