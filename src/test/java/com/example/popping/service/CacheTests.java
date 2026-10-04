@@ -26,6 +26,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.support.TransactionCallback;
 import org.springframework.transaction.support.TransactionTemplate;
 
+import com.example.popping.config.app.CacheConfig;
 import com.example.popping.event.CacheEvictEvent;
 import com.example.popping.config.db.StickyPrimaryHolder;
 
@@ -343,14 +344,13 @@ class CacheTests {
         }
     }
 
-    // ─── Board First Page Cache ───
+    // ─── Board Page (not cached) ───
 
     @Nested
     @MockitoSettings(strictness = Strictness.LENIENT)
-    class BoardFirstPageCacheTest {
+    class BoardPageNotCachedTest {
 
         @Mock CacheManager cacheManager;
-        @Mock Cache cache;
         @Mock TransactionTemplate readOnlyTx;
         @Mock ApplicationEventPublisher eventPublisher;
         @Mock BoardService boardService;
@@ -363,46 +363,40 @@ class CacheTests {
 
         @InjectMocks PostService postService;
 
-        private final Map<Object, Object> cacheStore = new ConcurrentHashMap<>();
         private Board board;
 
         @BeforeEach
         void setUp() {
-            setUpCacheSimulation(cacheManager, cache, readOnlyTx, cacheStore);
             board = mock(Board.class);
             when(board.getId()).thenReturn(1L);
             when(boardService.getBoard("free")).thenReturn(board);
+            when(postRepository.findPostListByBoard(eq(board), any(PageRequest.class)))
+                    .thenAnswer(invocation -> new SliceImpl<>(List.of(), invocation.getArgument(1), false));
         }
 
         @Test
-        @DisplayName("게시판 첫 페이지 조회: 캐시가 존재하면 DB 조회 없이 캐시 데이터를 반환한다")
-        void getBoardFirstPage_cacheHit() {
-            when(postRepository.findPostListByBoard(board, PageRequest.of(0, 20)))
-                    .thenReturn(new SliceImpl<>(List.of(), PageRequest.of(0, 20), false));
-
+        @DisplayName("게시판 첫 페이지 조회: 캐시 없이 매번 DB를 조회한다")
+        void getBoardFirstPage_readsDatabaseEveryTime() {
             postService.getPostPage("free", 0, 20);
             postService.getPostPage("free", 0, 20);
 
-            verify(postRepository, times(1))
-                    .findPostListByBoard(board, PageRequest.of(0, 20));
+            verify(postRepository, times(2)).findPostListByBoard(board, PageRequest.of(0, 20));
+            verifyNoInteractions(cacheManager);
         }
 
         @Test
-        @DisplayName("게시판 두 번째 페이지 조회: 캐시를 사용하지 않고 매번 DB를 조회한다")
-        void getBoardSecondPage_noCache() {
-            when(postRepository.findPostListByBoard(board, PageRequest.of(1, 20)))
-                    .thenReturn(new SliceImpl<>(List.of(), PageRequest.of(1, 20), false));
-
+        @DisplayName("게시판 두 번째 페이지 조회: 매번 DB를 조회한다")
+        void getBoardSecondPage_readsDatabaseEveryTime() {
             postService.getPostPage("free", 1, 20);
             postService.getPostPage("free", 1, 20);
 
-            verify(postRepository, times(2))
-                    .findPostListByBoard(board, PageRequest.of(1, 20));
+            verify(postRepository, times(2)).findPostListByBoard(board, PageRequest.of(1, 20));
+            verifyNoInteractions(cacheManager);
         }
 
         @Test
-        @DisplayName("게시글 생성: 게시판 첫 페이지 캐시 evict 이벤트를 발행한다")
-        void createPost_shouldPublishBoardCacheEvictEvent() {
+        @DisplayName("게시글 생성: 무효화할 목록 캐시가 없어 캐시 evict 이벤트를 발행하지 않는다")
+        void createPost_publishesNoCacheEvictEvent() {
             MemberPostCreateRequest dto = new MemberPostCreateRequest("title", "content");
             UserPrincipal principal = principal(1L);
             User user = mock(User.class);
@@ -414,24 +408,7 @@ class CacheTests {
 
             postService.createMemberPost("free", dto, principal);
 
-            verify(eventPublisher).publishEvent(any(CacheEvictEvent.class));
-        }
-
-        @Test
-        @DisplayName("게시글 좋아요 변경: 게시판 첫 페이지 캐시를 무효화하지 않는다")
-        void updateLikeCount_shouldNotEvictBoardCache() {
-            when(postRepository.findPostListByBoard(board, PageRequest.of(0, 20)))
-                    .thenReturn(new SliceImpl<>(List.of(), PageRequest.of(0, 20), false));
-
-            postService.getPostPage("free", 0, 20);
-            postService.updateLikeCount(1L, +1);
-
-            verify(cache, never()).evict(any());
             verify(eventPublisher, never()).publishEvent(any(CacheEvictEvent.class));
-
-            postService.getPostPage("free", 0, 20);
-            verify(postRepository, times(1))
-                    .findPostListByBoard(board, PageRequest.of(0, 20));
         }
     }
 
@@ -529,8 +506,8 @@ class CacheTests {
         }
 
         @Test
-        @DisplayName("게시글 수정: postDetail + boardFirstPage 캐시 evict 이벤트를 발행한다")
-        void updatePost_shouldPublishEvictEvents() {
+        @DisplayName("게시글 수정: postDetail 캐시 evict 이벤트만 발행한다")
+        void updatePost_shouldPublishPostDetailEvictEventOnly() {
             User user = mock(User.class);
             when(userService.getLoginUserById(1L)).thenReturn(user);
             when(post.isAuthor(user)).thenReturn(true);
@@ -539,7 +516,8 @@ class CacheTests {
                     new MemberPostUpdateRequest("new", "new"),
                     principal(1L));
 
-            verify(eventPublisher, times(2)).publishEvent(any(CacheEvictEvent.class));
+            verify(eventPublisher, times(1)).publishEvent(any(CacheEvictEvent.class));
+            verify(eventPublisher).publishEvent(new CacheEvictEvent(CacheConfig.POST_DETAIL_CACHE, 50L));
         }
 
         @Test

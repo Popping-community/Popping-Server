@@ -161,10 +161,8 @@ class PostServiceTest {
         when(userService.getLoginUserById(1L)).thenReturn(user);
 
         Post post = mock(Post.class);
-        Board board = mock(Board.class);
         when(postRepository.findById(postId)).thenReturn(Optional.of(post));
         when(post.isAuthor(user)).thenReturn(true);
-        when(post.getBoard()).thenReturn(board);
 
         // when
         postService.updatePost(postId, dto, principal);
@@ -214,10 +212,8 @@ class PostServiceTest {
         );
 
         Post post = mock(Post.class);
-        Board board = mock(Board.class);
         when(postRepository.findById(postId)).thenReturn(Optional.of(post));
         when(post.isGuest()).thenReturn(true);
-        when(post.getBoard()).thenReturn(board);
 
         when(guestPasswordEncoder.encode("9999")).thenReturn("ENC2");
 
@@ -271,10 +267,8 @@ class PostServiceTest {
         when(userService.getLoginUserById(1L)).thenReturn(user);
 
         Post post = mock(Post.class);
-        Board board = mock(Board.class);
         when(postRepository.findById(postId)).thenReturn(Optional.of(post));
         when(post.isAuthor(user)).thenReturn(true);
-        when(post.getBoard()).thenReturn(board);
 
         // when
         postService.deletePost(postId, principal);
@@ -320,10 +314,8 @@ class PostServiceTest {
         Long postId = 40L;
 
         Post post = mock(Post.class);
-        Board board = mock(Board.class);
         when(postRepository.findById(postId)).thenReturn(Optional.of(post));
         when(post.isGuest()).thenReturn(true);
-        when(post.getBoard()).thenReturn(board);
 
         // when
         postService.deletePostAsGuest(postId);

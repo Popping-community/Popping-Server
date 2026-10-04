@@ -20,7 +20,6 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 @Profile("!nocache")
 public class CacheConfig {
 
-	public static final String BOARD_FIRST_PAGE_CACHE = "boardFirstPage";
 	public static final String POST_DETAIL_CACHE = "postDetail";
 	public static final String COMMENT_FIRST_PAGE_CACHE = "commentFirstPage";
 
@@ -31,9 +30,7 @@ public class CacheConfig {
 			@Value("${app.cache.post-detail.enabled:false}") boolean postDetailEnabled) {
 		Assert.isTrue(commentFirstPageTtlSeconds > 0, "Comment cache TTL must be positive");
 		SimpleCacheManager cacheManager = new SimpleCacheManager();
-		List<Cache> caches = new ArrayList<>(List.of(
-				buildCache(BOARD_FIRST_PAGE_CACHE, 50, 5, TimeUnit.MINUTES)
-		));
+		List<Cache> caches = new ArrayList<>();
 		// Local eviction cannot invalidate another JVM. Opt in only when stale detail is acceptable.
 		if (postDetailEnabled) {
 			caches.add(buildCache(POST_DETAIL_CACHE, 1000, 30, TimeUnit.MINUTES));

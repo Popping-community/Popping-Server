@@ -33,9 +33,7 @@ import com.example.popping.repository.MyReactionView;
 @RequiredArgsConstructor
 public class PostService {
 
-    private static final String BOARD_FIRST_PAGE_CACHE = CacheConfig.BOARD_FIRST_PAGE_CACHE;
     private static final String POST_DETAIL_CACHE = CacheConfig.POST_DETAIL_CACHE;
-    private static final int DEFAULT_PAGE_SIZE = 20;
 
     private final BoardService boardService;
     private final ImageService imageService;
@@ -59,7 +57,6 @@ public class PostService {
         post = postRepository.save(post);
 
         linkImages(dto.content(), post);
-        evictBoardFirstPageCache(board.getId());
 
         return post.getId();
     }
@@ -81,7 +78,6 @@ public class PostService {
         post = postRepository.save(post);
 
         linkImages(dto.content(), post);
-        evictBoardFirstPageCache(board.getId());
 
         return post.getId();
     }
@@ -96,7 +92,6 @@ public class PostService {
         post.updateAsMember(dto.title(), dto.content());
 
         linkImages(dto.content(), post);
-        evictBoardFirstPageCache(post.getBoard().getId());
         evictPostDetailCache(postId);
     }
 
@@ -110,7 +105,6 @@ public class PostService {
         post.changeGuestPasswordHash(guestPasswordEncoder.encode(dto.guestPassword()));
 
         linkImages(dto.content(), post);
-        evictBoardFirstPageCache(post.getBoard().getId());
         evictPostDetailCache(postId);
     }
 
@@ -121,10 +115,8 @@ public class PostService {
 
         validateAuthor(post, user);
 
-        Long boardId = post.getBoard().getId();
         deleteImages(post);
         postRepository.delete(post);
-        evictBoardFirstPageCache(boardId);
         evictPostDetailCache(postId);
     }
 
@@ -133,10 +125,8 @@ public class PostService {
         Post post = getPost(postId);
         validateGuestPost(post);
 
-        Long boardId = post.getBoard().getId();
         deleteImages(post);
         postRepository.delete(post);
-        evictBoardFirstPageCache(boardId);
         evictPostDetailCache(postId);
     }
 
@@ -218,26 +208,11 @@ public class PostService {
         return PostResponse.from(post, false, false);
     }
 
+    // Not cached, the first page included: a cached page saved one list query (about
+    // 0.55 ms) while another instance kept serving it for up to its TTL after a write.
     @Transactional(readOnly = true)
     public PostPageResponse getPostPage(String slug, int page, int size) {
-        if (page == 0 && size == DEFAULT_PAGE_SIZE) {
-            return getFirstPageFromCache(slug);
-        }
         return buildPostPage(slug, page, size);
-    }
-
-    // likeCount/dislikeCount changes do NOT evict this cache.
-    // Stale counts are acceptable until TTL expiry (5 min).
-    // Evicting on every like would negate caching benefits.
-    private PostPageResponse getFirstPageFromCache(String slug) {
-        Board board = getBoard(slug);
-        Cache cache = cacheManager.getCache(BOARD_FIRST_PAGE_CACHE);
-        if (cache == null) {
-            return buildPostPage(board, 0, DEFAULT_PAGE_SIZE);
-        }
-        // readOnlyTx joins the outer @Transactional(readOnly=true) — intentional.
-        return cache.get(board.getId(), () -> readOnlyTx.execute(
-                status -> buildPostPage(board, 0, DEFAULT_PAGE_SIZE)));
     }
 
     private PostPageResponse buildPostPage(String slug, int page, int size) {
@@ -300,11 +275,6 @@ public class PostService {
 
         return myReactionViews.stream()
                 .collect(Collectors.toMap(MyReactionView::getTargetId, s -> s));
-    }
-
-    private void evictBoardFirstPageCache(Long boardId) {
-        if (boardId == null) return;
-        eventPublisher.publishEvent(new CacheEvictEvent(BOARD_FIRST_PAGE_CACHE, boardId));
     }
 
     private void evictPostDetailCache(Long postId) {
