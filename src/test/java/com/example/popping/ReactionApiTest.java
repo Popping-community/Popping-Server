@@ -16,6 +16,7 @@ import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DelegatingDataSource;
@@ -33,6 +34,7 @@ import com.example.popping.repository.PostRepository;
 import com.example.popping.repository.UserRepository;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasSize;
@@ -57,6 +59,7 @@ class ReactionApiTest {
     @Autowired BoardRepository boardRepository;
     @Autowired UserRepository userRepository;
     @Autowired JdbcTemplate jdbcTemplate;
+    @Autowired ApplicationContext context;
     @Autowired @Qualifier("txTemplate") TransactionTemplate txTemplate;
     @Autowired @Qualifier("readOnlyTx") TransactionTemplate readOnlyTx;
 
@@ -113,6 +116,7 @@ class ReactionApiTest {
     @Test
     @DisplayName("Primary에서 읽는다 (대조: 읽기 전용 트랜잭션은 Replica로 간다)")
     void readsFromPrimary() throws Exception {
+        assumeRoutingConfigured();
         resetConnectionCounts();
         mvc.perform(get("/boards/{slug}/{postId}/reactions", board.getSlug(), post.getId()))
                 .andExpect(status().isOk());
@@ -131,6 +135,7 @@ class ReactionApiTest {
     @Test
     @DisplayName("읽기 전용 트랜잭션 안에서 불려도 새 트랜잭션을 열어 Primary에서 읽는다")
     void insideReadOnlyTransaction_stillReadsPrimary(@Autowired com.example.popping.service.ReactionReadService service) {
+        assumeRoutingConfigured();
         resetConnectionCounts();
 
         readOnlyTx.executeWithoutResult(status -> service.getReactionCounts(post.getId(), null));
@@ -165,6 +170,12 @@ class ReactionApiTest {
         mvc.perform(get("/boards/{slug}/{postId}/reactions", board.getSlug(), post.getId())
                         .param("commentIds", "abc"))
                 .andExpect(status().isBadRequest());
+    }
+
+    // CI runs one MySQL without app.datasource.write/read, so there is no routing to observe.
+    private void assumeRoutingConfigured() {
+        assumeTrue(context.containsBean("writeDataSource") && context.containsBean("readDataSource"),
+                "Primary/Replica routing is not configured in this environment");
     }
 
     private static void resetConnectionCounts() {
