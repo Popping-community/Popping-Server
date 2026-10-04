@@ -12,13 +12,18 @@ import com.example.popping.domain.Like;
  *
  * <p>{@code action} describes what the requester asked for; it is not a signal that the
  * database actually changed. Use the counters for display state.
+ *
+ * <p>{@code reactionVersion} rises with every change to the target's counters. Broadcasts can
+ * arrive late or out of order, especially once they are relayed between instances, so a client
+ * keeps the highest version it has shown and ignores anything lower.
  */
 public record LikeResponse(
         Long targetId,
         Like.TargetType targetType,
         LikeAction action,
         int likeCount,
-        int dislikeCount
+        int dislikeCount,
+        long reactionVersion
 ) {
     public enum LikeAction {
         LIKED,
