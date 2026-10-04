@@ -15,6 +15,7 @@ import com.example.popping.config.app.CacheConfig;
 import com.example.popping.domain.Board;
 import com.example.popping.domain.Post;
 import com.example.popping.dto.PostResponse;
+import com.example.popping.cache.NoOpCacheInvalidationBroadcaster;
 import com.example.popping.event.CacheEvictEvent;
 import com.example.popping.event.CacheEvictListener;
 import com.example.popping.exception.CustomAppException;
@@ -63,7 +64,7 @@ class PostDetailFreshnessTest {
     }
 
     private void invalidateWriter() {
-        new CacheEvictListener(managers[1]).onCacheEvict(new CacheEvictEvent(CacheConfig.POST_DETAIL_CACHE, 1L));
+        new CacheEvictListener(managers[1], new NoOpCacheInvalidationBroadcaster()).onCacheEvict(new CacheEvictEvent(CacheConfig.POST_DETAIL_CACHE, 1L));
     }
 
     @ParameterizedTest
