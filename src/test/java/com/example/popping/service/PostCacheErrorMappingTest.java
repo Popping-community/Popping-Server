@@ -45,7 +45,7 @@ class PostCacheErrorMappingTest {
     private static final long BOARD_ID = 42L;
     private static final String SLUG = "test";
     enum DetailRoute { CACHED, CACHE_ABSENT }
-    enum BoardRoute { CACHED, CACHE_ABSENT, SECOND_PAGE }
+    enum BoardRoute { FIRST_PAGE, SECOND_PAGE }
     private final PostRepository posts = mock(PostRepository.class);
     private final BoardService boards = mock(BoardService.class);
     private CacheManager cacheManager;
@@ -108,9 +108,9 @@ class PostCacheErrorMappingTest {
 
     @ParameterizedTest
     @EnumSource(BoardRoute.class)
-    void missingBoard_isCheckedBeforeCacheLoader(BoardRoute route) throws Exception {
+    void missingBoard_isCheckedBeforeListQuery(BoardRoute route) throws Exception {
         when(boards.getBoard(SLUG)).thenThrow(new CustomAppException(ErrorType.BOARD_NOT_FOUND));
-        var result = mvc(route == BoardRoute.CACHE_ABSENT).perform(boardRequest(route)).andReturn();
+        var result = mvc(false).perform(boardRequest(route)).andReturn();
         assertError(result, ErrorType.BOARD_NOT_FOUND, ErrorType.BOARD_NOT_FOUND.getMessage());
         verifyNoInteractions(posts);
     }
@@ -127,7 +127,7 @@ class PostCacheErrorMappingTest {
     void boardStorageFailure_remainsInternalWithoutLeakingDetails(BoardRoute route) throws Exception {
         Board board = existingBoard();
         when(posts.findPostListByBoard(eq(board), any())).thenThrow(new DataAccessResourceFailureException("internal-db-secret"));
-        var result = mvc(route == BoardRoute.CACHE_ABSENT).perform(boardRequest(route)).andReturn();
+        var result = mvc(false).perform(boardRequest(route)).andReturn();
         assertError(result, ErrorType.INTERNAL_ERROR, ErrorType.INTERNAL_ERROR.getMessage());
     }
 
@@ -173,18 +173,18 @@ class PostCacheErrorMappingTest {
     }
 
     @Test
-    void boardFailedLoad_isNotCachedAndSubsequentSuccessIsCached() throws Exception {
+    void boardFailedLoad_laterRequestsQueryAgainWithoutCache() throws Exception {
         Board board = existingBoard();
         when(posts.findPostListByBoard(eq(board), any()))
                 .thenThrow(new DataAccessResourceFailureException("temporary-db-failure"))
                 .thenReturn(new SliceImpl<>(List.of(), PageRequest.of(0, 20), false));
         MockMvc mvc = mvc(false);
-        assertError(mvc.perform(boardRequest(BoardRoute.CACHED)).andReturn(), ErrorType.INTERNAL_ERROR,
+        assertError(mvc.perform(boardRequest(BoardRoute.FIRST_PAGE)).andReturn(), ErrorType.INTERNAL_ERROR,
                 ErrorType.INTERNAL_ERROR.getMessage());
-        assertNull(cacheManager.getCache(CacheConfig.BOARD_FIRST_PAGE_CACHE).get(BOARD_ID));
-        mvc.perform(boardRequest(BoardRoute.CACHED)).andExpect(view().name("board/detail"))
+        mvc.perform(boardRequest(BoardRoute.FIRST_PAGE)).andExpect(view().name("board/detail"))
                 .andExpect(model().attributeExists("postPage"));
-        mvc.perform(boardRequest(BoardRoute.CACHED)).andExpect(view().name("board/detail"));
-        verify(posts, times(2)).findPostListByBoard(eq(board), any());
+        mvc.perform(boardRequest(BoardRoute.FIRST_PAGE)).andExpect(view().name("board/detail"));
+        // The board list is not cached: every request after the failure queries again.
+        verify(posts, times(3)).findPostListByBoard(eq(board), any());
     }
 }

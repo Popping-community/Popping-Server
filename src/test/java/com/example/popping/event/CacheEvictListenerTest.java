@@ -51,9 +51,9 @@ class CacheEvictListenerTest {
 	@Test
 	@DisplayName("이벤트 수신: 다른 캐시 이름으로도 동작한다")
 	void onCacheEvict_worksWithDifferentCacheNames() {
-		when(cacheManager.getCache("boardFirstPage")).thenReturn(cache);
+		when(cacheManager.getCache("postDetail")).thenReturn(cache);
 
-		listener.onCacheEvict(new CacheEvictEvent("boardFirstPage", "free"));
+		listener.onCacheEvict(new CacheEvictEvent("postDetail", "free"));
 
 		verify(cache).evict("free");
 	}

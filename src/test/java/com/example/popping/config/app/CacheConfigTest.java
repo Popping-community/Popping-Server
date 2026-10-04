@@ -19,8 +19,7 @@ class CacheConfigTest {
 		contextRunner.withPropertyValues("app.cache.comment-first-page.enabled=false", "app.cache.post-detail.enabled=true").run(context -> {
 			CacheManager manager = context.getBean(CacheManager.class);
 			assertThat(manager.getCache(CacheConfig.COMMENT_FIRST_PAGE_CACHE)).isNull();
-			assertThat(manager.getCacheNames()).containsExactlyInAnyOrder(
-					CacheConfig.BOARD_FIRST_PAGE_CACHE, CacheConfig.POST_DETAIL_CACHE);
+			assertThat(manager.getCacheNames()).containsExactlyInAnyOrder(CacheConfig.POST_DETAIL_CACHE);
 			manager.getCache(CacheConfig.POST_DETAIL_CACHE).put(1L, "post");
 			assertThat(manager.getCache(CacheConfig.POST_DETAIL_CACHE).get(1L, String.class))
 					.isEqualTo("post");
@@ -31,8 +30,8 @@ class CacheConfigTest {
 	void defaultCommentCacheUsesFiveSecondExpiry() {
 		contextRunner.run(context -> {
 					CacheManager manager = context.getBean(CacheManager.class);
-					assertThat(manager.getCacheNames()).containsExactlyInAnyOrder(
-							CacheConfig.BOARD_FIRST_PAGE_CACHE, CacheConfig.COMMENT_FIRST_PAGE_CACHE);
+					// The board first page is not cached; only the comment page is by default.
+					assertThat(manager.getCacheNames()).containsExactly(CacheConfig.COMMENT_FIRST_PAGE_CACHE);
 					manager.getCache(CacheConfig.COMMENT_FIRST_PAGE_CACHE).put(1L, "page");
 					assertThat(manager.getCache(CacheConfig.COMMENT_FIRST_PAGE_CACHE).get(1L, String.class))
 							.isEqualTo("page");
@@ -47,8 +46,18 @@ class CacheConfigTest {
 				"app.cache.comment-first-page.ttl-seconds=2", "app.cache.post-detail.enabled=true").run(context -> {
 			CacheManager manager = context.getBean(CacheManager.class);
 			assertExpiry(manager, CacheConfig.COMMENT_FIRST_PAGE_CACHE, 2);
-			assertExpiry(manager, CacheConfig.BOARD_FIRST_PAGE_CACHE, 300);
 			assertExpiry(manager, CacheConfig.POST_DETAIL_CACHE, 1800);
+		});
+	}
+
+	@Test
+	void bothOptionalCachesOffLeavesNoCacheRegistered() {
+		contextRunner.withPropertyValues("app.cache.comment-first-page.enabled=false",
+				"app.cache.post-detail.enabled=false").run(context -> {
+			CacheManager manager = context.getBean(CacheManager.class);
+			assertThat(manager.getCacheNames()).isEmpty();
+			assertThat(manager.getCache(CacheConfig.COMMENT_FIRST_PAGE_CACHE)).isNull();
+			assertThat(manager.getCache(CacheConfig.POST_DETAIL_CACHE)).isNull();
 		});
 	}
 
@@ -59,11 +68,10 @@ class CacheConfigTest {
 	}
 
 	@Test
-	void explicitPostOffKeepsBoardAndCommentCaches() {
+	void explicitPostOffKeepsCommentCache() {
 		contextRunner.withPropertyValues("app.cache.post-detail.enabled=false").run(context -> {
 			CacheManager manager = context.getBean(CacheManager.class);
 			assertThat(manager.getCache(CacheConfig.POST_DETAIL_CACHE)).isNull();
-			assertExpiry(manager, CacheConfig.BOARD_FIRST_PAGE_CACHE, 300);
 			assertExpiry(manager, CacheConfig.COMMENT_FIRST_PAGE_CACHE, 5);
 		});
 	}
