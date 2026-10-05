@@ -193,6 +193,10 @@ services:
       APP_SESSION_STORE: "redis"
       SPRING_DATA_REDIS_HOST: "redis"
       SPRING_DATA_REDIS_PORT: "6379"
+      # Relays like updates between the apps over Redis Pub/Sub so viewers on the other app
+      # see them live; without it they only see likes taken by their own app
+      # (docs/spec/p1-prime-u2-design-20261005.md). Redis unreachable at startup fails the app.
+      APP_WEBSOCKET_RELAY: "redis"
       # JAVA_TOOL_OPTIONS does NOT set the heap here, whatever it looks like.
       # jib bakes -Xms200m -Xmx240m -XX:MaxMetaspaceSize=256m into the image as
       # command-line arguments (build.gradle jvmFlags), and command-line arguments
