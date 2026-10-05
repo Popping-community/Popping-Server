@@ -1043,7 +1043,7 @@
                 await loadComments(pageToLoad);
                 alert('댓글이 작성되었습니다.');
             } else {
-                alert('댓글 작성에 실패했습니다.');
+                alert(failureMessage(response, '댓글 작성에 실패했습니다.'));
             }
         } catch (error) {
             console.error('댓글 작성 실패:', error);
@@ -1076,7 +1076,7 @@
                 await loadComments(currentPage);
                 alert('답글이 작성되었습니다.');
             } else {
-                alert('답글 작성에 실패했습니다.');
+                alert(failureMessage(response, '답글 작성에 실패했습니다.'));
             }
         } catch (error) {
             console.error('답글 작성 실패:', error);
@@ -1111,7 +1111,7 @@
                 await loadComments(currentPage);
                 alert('답글이 작성되었습니다.');
             } else {
-                alert('답글 작성에 실패했습니다.');
+                alert(failureMessage(response, '답글 작성에 실패했습니다.'));
             }
         } catch (error) {
             console.error('답글 작성 실패:', error);
@@ -1142,6 +1142,16 @@
         }
     }
 
+    // HAProxy answers 429 when one address writes or checks passwords too fast
+    // (docs/spec/rate-limit-haproxy-20261005.md), before the request reaches the app.
+    const TOO_MANY_REQUESTS = 429;
+
+    function failureMessage(response, fallback) {
+        return response.status === TOO_MANY_REQUESTS
+            ? '요청이 너무 많습니다. 잠시 뒤(약 1분) 다시 시도해 주세요.'
+            : fallback;
+    }
+
     // 게스트 댓글 삭제
     async function deleteGuestComment(commentId) {
         const password = document.getElementById(`delete-password-${commentId}`).value;
@@ -1162,6 +1172,8 @@
                 hideDeleteForm(commentId);
                 await loadComments(currentPage);
                 alert('댓글이 삭제되었습니다.');
+            } else if (response.status === TOO_MANY_REQUESTS) {
+                alert(failureMessage(response, ''));
             } else {
                 showError(commentId);
                 document.getElementById(`delete-password-${commentId}`).value = '';
