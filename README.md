@@ -138,6 +138,8 @@ App 1대가 2코어 상한에 도달한 조건에서 HAProxy `cookie insert` 기
 
 ### 7. Read Replica + Sticky Primary
 
+> **현재 로컬 구성(`docker-compose.yml`, 2026-10-05~)은 앱이 Replica를 읽지 않습니다.** 아래 재측정에서 Replica 읽기의 처리량 이득이 재현되지 않았고 부하 시 복제 지연이 수백 초까지 커져, 삭제가 다른 사용자에게 즉시 반영돼야 한다는 기준을 지킬 수 없었습니다. 라우팅 코드는 남겨 두어 설정 하나로 다시 켤 수 있습니다. [결정과 검증](docs/spec/replica-reads-off-20261005.md)
+
 > 2026-09-10 최종 재실험: 고정 20분 워밍업 후 A·B 각 3회를 완료했습니다. TPS 중앙값은 536.700→531.683/s(-0.93%), 평균 응답시간 중앙값은 53.573→57.244ms(+6.85%)였습니다. B 종료 복제 지연은 553·556·463초로 모두 불안정해 초기의 큰 개선을 재현하지 못했습니다. 원복·독립 검산을 완료했습니다. [최종 결과·초기 비교·Grafana](docs/load-test/replica-warm20-20260910.md). [낮 부분 결과](docs/load-test/replica-adoption-rerun-20260910.md)와 [전날 중단 이력](docs/load-test/replica-adoption-fixed-20260910.md)은 별도로 보존했습니다.
 
 별도 Read Replica 실험에서 MySQL 단일 인스턴스가 CPU 100%로 포화된 조건을 다뤘습니다.
