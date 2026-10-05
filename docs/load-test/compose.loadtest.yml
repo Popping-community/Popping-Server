@@ -1,5 +1,8 @@
 # Layered on docker-compose.yml by run-ab.sh only. The test plan drives likes through the
-# HTTP like API, which is off in the regular stack (app.test-api.likes.enabled).
+# HTTP like API, which is off in the regular stack (app.test-api.likes.enabled), and sends
+# everything from one address, which the HAProxy write-path rate limits would block.
+# The containers keep these settings after a run; to go back to the regular stack:
+#   docker compose up -d --force-recreate app-1 app-2 haproxy
 services:
   app-1:
     environment:
@@ -7,3 +10,6 @@ services:
   app-2:
     environment:
       APP_TESTAPI_LIKES_ENABLED: "true"
+  haproxy:
+    environment:
+      RATE_LIMIT_OFF: "1"
