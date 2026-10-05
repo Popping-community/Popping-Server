@@ -576,6 +576,14 @@
     const reactionState = new Map();
     const REACTION_REFRESH_MS = 30000;
     const CONNECT_TIMEOUT_MS = 10000;
+    // Failed connects back off 5 s, 10 s, 20 s, 40 s, then every 60 s, each +-20 % so many
+    // pages do not retry in step. HAProxy limits WebSocket connects per address, and a page
+    // retrying every 5 s would keep that limit full for as long as it stays open.
+    const RECONNECT_BASE_MS = 5000;
+    const RECONNECT_MAX_MS = 60000;
+    const RECONNECT_JITTER = 0.2;
+    let reconnectDelayMs = RECONNECT_BASE_MS;
+    let reconnectTimer = null;
     const REFRESH_TIMEOUT_MS = 5000;
 
     // JavaScript 부분을 수정하여 서버에서 받은 페이지 정보를 사용하도록 합니다:
@@ -617,19 +625,51 @@
         connecting = false;
         const stale = stompClient;
         stompClient = null;
+        closeClient(stale);
+        scheduleReconnect();
+    }
+
+    // disconnect() sends DISCONNECT first and can throw before the socket is open, and its
+    // error was swallowed. Close the socket directly as well, so an attempt that is given up
+    // cannot connect late and live on next to the new one. (Not reproduced locally: abandoning
+    // a connecting socket closed it either way.)
+    function closeClient(client) {
+        if (!client) {
+            return;
+        }
         try {
-            if (stale) {
-                stale.disconnect();
+            client.disconnect();
+        } catch (ignored) {
+            // Not connected yet, or already gone.
+        }
+        try {
+            if (client.ws) {
+                client.ws.close();
             }
         } catch (ignored) {
-            // The socket may already be gone.
+            // Already closed.
         }
-        setTimeout(connect, 5000);
+    }
+
+    // The only place a reconnect is scheduled, so at most one is ever pending.
+    function scheduleReconnect() {
+        if (reconnectTimer !== null) {
+            return;
+        }
+        const jitter = 1 + (Math.random() * 2 - 1) * RECONNECT_JITTER;
+        const delay = Math.round(reconnectDelayMs * jitter);
+        reconnectDelayMs = Math.min(reconnectDelayMs * 2, RECONNECT_MAX_MS);
+        console.log('WebSocket reconnect in ' + delay + ' ms');
+        reconnectTimer = setTimeout(function() {
+            reconnectTimer = null;
+            connect();
+        }, delay);
     }
 
     function openConnection(connectTimer) {
         const socket = new SockJS('/ws', null, {
-            transports: ['websocket', 'xhr-streaming', 'xhr-polling'],
+            // The server offers WebSocket only (WebSocketConfig).
+            transports: ['websocket'],
             sessionId: function() {
                 return Math.random().toString(36).substring(2, 15);
             }
@@ -647,10 +687,12 @@
 
         client.connect(connectHeaders, function (frame) {
             if (stompClient !== client) {
-                return; // a timed-out attempt that connected late
+                closeClient(client); // a timed-out attempt that connected late
+                return;
             }
             clearTimeout(connectTimer);
             connecting = false;
+            reconnectDelayMs = RECONNECT_BASE_MS;
             console.log('Connected: ' + frame);
             client.subscribe('/topic/like-updates', function (response) {
                 const parsedResponse = JSON.parse(response.body);
@@ -1248,11 +1290,12 @@
     // 페이지 언로드 시 WebSocket 연결 해제
     window.addEventListener('beforeunload', disconnect);
 
-    // 연결 상태 모니터링
+    // 연결 상태 모니터링: a safety net only. It goes through the same schedule, so it never
+    // retries sooner than the backoff allows.
     setInterval(function() {
-        if (!stompClient || !stompClient.connected) {
-            console.log('WebSocket disconnected, attempting to reconnect...');
-            connect();
+        if (!connecting && (!stompClient || !stompClient.connected)) {
+            console.log('WebSocket disconnected, scheduling a reconnect');
+            scheduleReconnect();
         }
     }, 30000);
 
