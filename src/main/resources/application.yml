@@ -14,3 +14,13 @@ spring:
       # removed in Boot 3.x. Excluding the auto-configuration hands the decision to
       # RedisSessionConfig, which only switches when app.session.store=redis.
       - org.springframework.boot.autoconfigure.session.SessionAutoConfiguration
+  data:
+    redis:
+      # Fail fast when Redis is gone. With the default 60 s command timeout, requests that
+      # touch the session (logged-in members, guest edit checks, login) hung for over a
+      # minute while Redis was down (measured 2026-10-05); with these values they failed in
+      # a few seconds. Enough hung requests could hold every Tomcat thread and stall reads
+      # that never need Redis - a risk, not reproduced. Redis normally answers in well under
+      # a millisecond, but a GC pause or a load spike could still trip 2 s now and then.
+      timeout: 2s
+      connect-timeout: 1s
