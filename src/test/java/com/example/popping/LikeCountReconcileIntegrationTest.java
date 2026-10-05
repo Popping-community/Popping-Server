@@ -53,16 +53,16 @@ class LikeCountReconcileIntegrationTest {
 
         // 강제 불일치: likeCount를 0으로 덮어써 likes 테이블과 어긋나게 만든다
         jdbcTemplate.update("UPDATE post SET like_count = 0 WHERE id = ?", post.getId());
-        assertThat(postRepository.findById(post.getId()).orElseThrow().getLikeCount()).isEqualTo(0);
-        long versionBefore = postRepository.findLikeCountsById(post.getId()).getReactionVersion();
+        assertThat(primaryLikeCount("post", post.getId())).isEqualTo(0);
+        long versionBefore = primaryVersion("post", post.getId());
 
         // when
         scheduler.reconcileLikeCounts();
 
         // then
-        assertThat(postRepository.findById(post.getId()).orElseThrow().getLikeCount()).isEqualTo(1);
+        assertThat(primaryLikeCount("post", post.getId())).isEqualTo(1);
         // A corrected count is a new reaction state, so clients must not keep the old one.
-        assertThat(postRepository.findLikeCountsById(post.getId()).getReactionVersion())
+        assertThat(primaryVersion("post", post.getId()))
                 .isEqualTo(versionBefore + 1);
     }
 
@@ -85,15 +85,15 @@ class LikeCountReconcileIntegrationTest {
 
         // 강제 불일치
         jdbcTemplate.update("UPDATE comment SET like_count = 0 WHERE id = ?", comment.getId());
-        assertThat(commentRepository.findById(comment.getId()).orElseThrow().getLikeCount()).isEqualTo(0);
-        long versionBefore = commentRepository.findLikeCountsById(comment.getId()).getReactionVersion();
+        assertThat(primaryLikeCount("comment", comment.getId())).isEqualTo(0);
+        long versionBefore = primaryVersion("comment", comment.getId());
 
         // when
         scheduler.reconcileLikeCounts();
 
         // then
-        assertThat(commentRepository.findById(comment.getId()).orElseThrow().getLikeCount()).isEqualTo(1);
-        assertThat(commentRepository.findLikeCountsById(comment.getId()).getReactionVersion())
+        assertThat(primaryLikeCount("comment", comment.getId())).isEqualTo(1);
+        assertThat(primaryVersion("comment", comment.getId()))
                 .isEqualTo(versionBefore + 1);
     }
 
@@ -112,16 +112,26 @@ class LikeCountReconcileIntegrationTest {
                 new LikeRequest(post.getId(), Like.TargetType.POST, Like.Type.LIKE, null),
                 principal(user.getId()));
 
-        int likeCountBefore = postRepository.findById(post.getId()).orElseThrow().getLikeCount();
-        long versionBefore = postRepository.findLikeCountsById(post.getId()).getReactionVersion();
+        int likeCountBefore = primaryLikeCount("post", post.getId());
+        long versionBefore = primaryVersion("post", post.getId());
 
         // when
         scheduler.reconcileLikeCounts();
 
         // then
-        int likeCountAfter = postRepository.findById(post.getId()).orElseThrow().getLikeCount();
+        int likeCountAfter = primaryLikeCount("post", post.getId());
         assertThat(likeCountAfter).isEqualTo(likeCountBefore);
-        assertThat(postRepository.findLikeCountsById(post.getId()).getReactionVersion()).isEqualTo(versionBefore);
+        assertThat(primaryVersion("post", post.getId())).isEqualTo(versionBefore);
+    }
+
+    // Read through JdbcTemplate outside any transaction, which the routing proxy sends to the
+    // Primary: repository reads here may go to the Replica and trail the write they check.
+    private int primaryLikeCount(String table, Long id) {
+        return jdbcTemplate.queryForObject("SELECT like_count FROM " + table + " WHERE id = ?", Integer.class, id);
+    }
+
+    private long primaryVersion(String table, Long id) {
+        return jdbcTemplate.queryForObject("SELECT reaction_version FROM " + table + " WHERE id = ?", Long.class, id);
     }
 
     private UserPrincipal principal(Long userId) {
