@@ -7,31 +7,25 @@ import java.util.Map;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.messaging.MessagingException;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 
 import com.example.popping.controller.mvc.LikeWebSocketController;
 import com.example.popping.domain.Like;
 import com.example.popping.dto.LikeRequest;
 import com.example.popping.dto.LikeResponse;
 import com.example.popping.exception.CustomAppException;
-import com.example.popping.filter.GuestIdentifierFilter;
 import com.example.popping.exception.ErrorType;
-import com.example.popping.relay.LikeRelay;
-import com.example.popping.relay.LikeRelayConfig;
+import com.example.popping.filter.GuestIdentifierFilter;
+import com.example.popping.relay.LikeBroadcaster;
 import com.example.popping.service.LikeService;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
@@ -43,21 +37,18 @@ class LikeWebSocketControllerTest {
 			new LikeResponse(10L, Like.TargetType.POST, LikeResponse.LikeAction.LIKED, 3, 0, 5L);
 
 	@Mock LikeService likeService;
-	@Mock SimpMessagingTemplate messagingTemplate;
-	@Mock LikeRelay likeRelay;
+	@Mock LikeBroadcaster likeBroadcaster;
 
 	@InjectMocks LikeWebSocketController controller;
 
 	@Test
-	@DisplayName("STOMP 좋아요: 이 서버 시청자에게 먼저 보내고, 그다음 다른 서버로 중계한다")
-	void stompLike_sendsLocallyThenRelays() {
+	@DisplayName("STOMP 좋아요: 서비스 결과를 모든 시청자에게 보낸다")
+	void stompLike_broadcastsResult() {
 		when(likeService.addLike(eq(REQUEST), any(), any())).thenReturn(UPDATE);
 
 		controller.handleAddLike(REQUEST, SimpMessageHeaderAccessor.create());
 
-		InOrder order = inOrder(messagingTemplate, likeRelay);
-		order.verify(messagingTemplate).convertAndSend(LikeRelayConfig.LIKE_DESTINATION, UPDATE);
-		order.verify(likeRelay).publish(UPDATE);
+		verify(likeBroadcaster).broadcast(UPDATE);
 	}
 
 	@Test
@@ -68,31 +59,7 @@ class LikeWebSocketControllerTest {
 		assertThatThrownBy(() -> controller.handleRemoveLike(REQUEST, SimpMessageHeaderAccessor.create()))
 				.isInstanceOf(CustomAppException.class);
 
-		verifyNoInteractions(messagingTemplate, likeRelay);
-	}
-
-	@Test
-	@DisplayName("로컬 전송이 실패해도 중계는 한다, 중계가 실패해도 요청은 성공한다")
-	void failuresAreIsolated() {
-		when(likeService.addLike(eq(REQUEST), any(), any())).thenReturn(UPDATE);
-		doThrow(new MessagingException("broker")).when(messagingTemplate).convertAndSend(anyString(), any(Object.class));
-		doThrow(new IllegalStateException("relay")).when(likeRelay).publish(any());
-
-		assertDoesNotThrow(() -> controller.handleAddLike(REQUEST, SimpMessageHeaderAccessor.create()));
-
-		verify(likeRelay).publish(UPDATE);
-	}
-
-	@Test
-	@DisplayName("HTTP 좋아요도 같은 방식으로 보내고 응답을 돌려준다")
-	void httpLike_alsoBroadcasts() {
-		when(likeService.addLike(eq(REQUEST), any(), any())).thenReturn(UPDATE);
-
-		LikeResponse response = controller.add(REQUEST, null, "guest-1");
-
-		assertThat(response).isEqualTo(UPDATE);
-		verify(messagingTemplate).convertAndSend(LikeRelayConfig.LIKE_DESTINATION, UPDATE);
-		verify(likeRelay).publish(UPDATE);
+		verifyNoInteractions(likeBroadcaster);
 	}
 
 	@Test
@@ -114,7 +81,7 @@ class LikeWebSocketControllerTest {
 
 		assertThatThrownBy(() -> controller.handleAddLike(REQUEST, SimpMessageHeaderAccessor.create()))
 				.isInstanceOf(CustomAppException.class);
-		verifyNoInteractions(messagingTemplate, likeRelay);
+		verifyNoInteractions(likeBroadcaster);
 	}
 
 	@Test

@@ -1,0 +1,9 @@
+# Layered on docker-compose.yml by run-ab.sh only. The test plan drives likes through the
+# HTTP like API, which is off in the regular stack (app.test-api.likes.enabled).
+services:
+  app-1:
+    environment:
+      APP_TESTAPI_LIKES_ENABLED: "true"
+  app-2:
+    environment:
+      APP_TESTAPI_LIKES_ENABLED: "true"

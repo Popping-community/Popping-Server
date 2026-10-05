@@ -42,6 +42,8 @@ IMAGE_TAG="$2"
 REPO_DIR="C:/popping-community/popping-server"
 JMETER_BIN="C:/apache-jmeter-5.6.3/bin"
 COMPOSE="$REPO_DIR/docker-compose.yml"
+# Turns on the HTTP like API the test plan uses; the regular stack leaves it off.
+COMPOSE_LOADTEST="$REPO_DIR/docs/load-test/compose.loadtest.yml"
 JMX="$JMETER_BIN/popping-load-test.jmx"
 PROM="http://localhost:9090/api/v1/query"
 OUT_JTL="$JMETER_BIN/$RUN_NAME.jtl"
@@ -229,8 +231,9 @@ grep -n "chooh1010/popping-community" "$COMPOSE"
 
 # 2. Recreate app containers only; DB and monitoring stay up.
 cd "$REPO_DIR" || abort "cannot enter $REPO_DIR"
-docker compose config -q || abort "docker-compose.yml does not render"
-docker compose up -d --force-recreate app-1 app-2 || abort "failed to recreate app containers"
+docker compose -f "$COMPOSE" -f "$COMPOSE_LOADTEST" config -q || abort "docker-compose.yml does not render"
+docker compose -f "$COMPOSE" -f "$COMPOSE_LOADTEST" up -d --force-recreate app-1 app-2 \
+	|| abort "failed to recreate app containers"
 
 # 3. Wait until both apps report UP.
 for port in 8081 8082; do
@@ -246,6 +249,18 @@ for port in 8081 8082; do
 	done
 	[ "$up" -eq 1 ] || abort "app on $port never came up"
 done
+
+# Without the like API every like sample would fail with 404. Each container must carry
+# the setting (the app port is not published per container, so check its environment),
+# and a GET to the POST-only mapping must answer 405 - proof the setting binds - with no
+# side effect.
+for app in popping-app-1 popping-app-2; do
+	docker inspect "$app" --format '{{range .Config.Env}}{{println .}}{{end}}' \
+		| grep -qx "APP_TESTAPI_LIKES_ENABLED=true" || abort "like test API not configured on $app"
+done
+code=$(curl -s -o /dev/null --max-time 3 -w "%{http_code}" "http://127.0.0.1:9091/api/test/likes/add")
+[ "$code" = "405" ] || abort "like test API is not enabled (GET answered $code, expected 405)"
+log "like test API enabled on both apps"
 
 write_metadata
 if [ "$(grep '^jmx_sha256=' "$OUT_META" | cut -d= -f2)" \

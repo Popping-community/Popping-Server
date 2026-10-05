@@ -32,7 +32,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * client could add likes without limit and remove other guests' likes.
  * Reads go through JdbcTemplate outside a transaction, which the routing proxy sends to the Primary.
  */
-@SpringBootTest
+@SpringBootTest(properties = "app.test-api.likes.enabled=true")
 @AutoConfigureMockMvc
 class LikeActorIdentityTest {
 
