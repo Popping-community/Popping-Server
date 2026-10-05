@@ -26,6 +26,8 @@ services:
     networks:
       - popping-net
 
+  # Not read by the apps since 2026-10-05 (see APP_DATASOURCE_READ_JDBC_URL). Kept replicating
+  # for re-running Replica experiments. It does not replace backups: a mistaken delete replicates too.
   mysql-replica:
     image: mysql:8
     container_name: popping-mysql-replica
@@ -135,11 +137,20 @@ services:
       APP_DATASOURCE_WRITE_JDBC_URL: jdbc:mysql://mysql-master:3306/${MYSQL_DATABASE}?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Seoul&zeroDateTimeBehavior=convertToNull&rewriteBatchedStatements=true&useAffectedRows=true
       APP_DATASOURCE_WRITE_USERNAME: root
       APP_DATASOURCE_WRITE_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      APP_DATASOURCE_WRITE_MAXIMUM_POOL_SIZE: "50"
-      APP_DATASOURCE_READ_JDBC_URL: jdbc:mysql://mysql-replica:3306/${MYSQL_DATABASE}?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Seoul&zeroDateTimeBehavior=convertToNull&rewriteBatchedStatements=true&useAffectedRows=true
+      APP_DATASOURCE_WRITE_MAXIMUM_POOL_SIZE: "20"
+      APP_DATASOURCE_WRITE_MINIMUM_IDLE: "5"
+      # Reads go to the Primary too (2026-10-05). Reading the Replica gave no measured
+      # throughput gain and its lag reached hundreds of seconds under load, while a deleted
+      # post must disappear for everyone at once (docs/spec/replica-reads-off-20261005.md).
+      # The routing stays: pointing this URL back at mysql-replica re-enables Replica reads.
+      # Both pools now land on the Primary, so their sizes are budgeted together: 2 apps use
+      # 80, and a third app started alongside them during a rolling deploy brings it to 120,
+      # still under --max-connections=200.
+      APP_DATASOURCE_READ_JDBC_URL: jdbc:mysql://mysql-master:3306/${MYSQL_DATABASE}?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Seoul&zeroDateTimeBehavior=convertToNull&rewriteBatchedStatements=true&useAffectedRows=true
       APP_DATASOURCE_READ_USERNAME: root
       APP_DATASOURCE_READ_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      APP_DATASOURCE_READ_MAXIMUM_POOL_SIZE: "80"
+      APP_DATASOURCE_READ_MAXIMUM_POOL_SIZE: "20"
+      APP_DATASOURCE_READ_MINIMUM_IDLE: "5"
       MANAGEMENT_SERVER_PORT: "8081"
       MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: "health,prometheus"
       MANAGEMENT_ENDPOINT_PROMETHEUS_ENABLED: "true"
@@ -182,6 +193,10 @@ services:
       APP_SESSION_STORE: "redis"
       SPRING_DATA_REDIS_HOST: "redis"
       SPRING_DATA_REDIS_PORT: "6379"
+      # Relays like updates between the apps over Redis Pub/Sub so viewers on the other app
+      # see them live; without it they only see likes taken by their own app
+      # (docs/spec/p1-prime-u2-design-20261005.md). Redis unreachable at startup fails the app.
+      APP_WEBSOCKET_RELAY: "redis"
       # JAVA_TOOL_OPTIONS does NOT set the heap here, whatever it looks like.
       # jib bakes -Xms200m -Xmx240m -XX:MaxMetaspaceSize=256m into the image as
       # command-line arguments (build.gradle jvmFlags), and command-line arguments
