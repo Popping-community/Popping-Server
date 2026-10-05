@@ -48,8 +48,9 @@ class LikeCountReconcileIntegrationTest {
                 Post.createMemberPost("title", "content", user, board));
 
         likeService.addLike(
-                new LikeRequest(post.getId(), Like.TargetType.POST, Like.Type.LIKE, null),
-                principal(user.getId()));
+                new LikeRequest(post.getId(), Like.TargetType.POST, Like.Type.LIKE),
+                principal(user.getId()),
+                null);
 
         // 강제 불일치: likeCount를 0으로 덮어써 likes 테이블과 어긋나게 만든다
         jdbcTemplate.update("UPDATE post SET like_count = 0 WHERE id = ?", post.getId());
@@ -80,8 +81,9 @@ class LikeCountReconcileIntegrationTest {
                 Comment.createMemberComment("comment", user, post, null));
 
         likeService.addLike(
-                new LikeRequest(comment.getId(), Like.TargetType.COMMENT, Like.Type.LIKE, null),
-                principal(user.getId()));
+                new LikeRequest(comment.getId(), Like.TargetType.COMMENT, Like.Type.LIKE),
+                principal(user.getId()),
+                null);
 
         // 강제 불일치
         jdbcTemplate.update("UPDATE comment SET like_count = 0 WHERE id = ?", comment.getId());
@@ -109,8 +111,9 @@ class LikeCountReconcileIntegrationTest {
                 Post.createMemberPost("title", "content", user, board));
 
         likeService.addLike(
-                new LikeRequest(post.getId(), Like.TargetType.POST, Like.Type.LIKE, null),
-                principal(user.getId()));
+                new LikeRequest(post.getId(), Like.TargetType.POST, Like.Type.LIKE),
+                principal(user.getId()),
+                null);
 
         int likeCountBefore = primaryLikeCount("post", post.getId());
         long versionBefore = primaryVersion("post", post.getId());

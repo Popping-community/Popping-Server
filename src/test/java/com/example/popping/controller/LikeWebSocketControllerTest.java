@@ -1,6 +1,8 @@
 package com.example.popping.controller;
 
 import java.lang.reflect.Method;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -19,6 +21,7 @@ import com.example.popping.domain.Like;
 import com.example.popping.dto.LikeRequest;
 import com.example.popping.dto.LikeResponse;
 import com.example.popping.exception.CustomAppException;
+import com.example.popping.filter.GuestIdentifierFilter;
 import com.example.popping.exception.ErrorType;
 import com.example.popping.relay.LikeRelay;
 import com.example.popping.relay.LikeRelayConfig;
@@ -35,7 +38,7 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class LikeWebSocketControllerTest {
 
-	private static final LikeRequest REQUEST = new LikeRequest(10L, Like.TargetType.POST, Like.Type.LIKE, "guest-1");
+	private static final LikeRequest REQUEST = new LikeRequest(10L, Like.TargetType.POST, Like.Type.LIKE);
 	private static final LikeResponse UPDATE =
 			new LikeResponse(10L, Like.TargetType.POST, LikeResponse.LikeAction.LIKED, 3, 0, 5L);
 
@@ -48,7 +51,7 @@ class LikeWebSocketControllerTest {
 	@Test
 	@DisplayName("STOMP 좋아요: 이 서버 시청자에게 먼저 보내고, 그다음 다른 서버로 중계한다")
 	void stompLike_sendsLocallyThenRelays() {
-		when(likeService.addLike(eq(REQUEST), any())).thenReturn(UPDATE);
+		when(likeService.addLike(eq(REQUEST), any(), any())).thenReturn(UPDATE);
 
 		controller.handleAddLike(REQUEST, SimpMessageHeaderAccessor.create());
 
@@ -60,7 +63,7 @@ class LikeWebSocketControllerTest {
 	@Test
 	@DisplayName("서비스가 실패하면 아무것도 보내지 않는다")
 	void serviceFailure_sendsNothing() {
-		when(likeService.removeLike(eq(REQUEST), any())).thenThrow(new CustomAppException(ErrorType.POST_NOT_FOUND));
+		when(likeService.removeLike(eq(REQUEST), any(), any())).thenThrow(new CustomAppException(ErrorType.POST_NOT_FOUND));
 
 		assertThatThrownBy(() -> controller.handleRemoveLike(REQUEST, SimpMessageHeaderAccessor.create()))
 				.isInstanceOf(CustomAppException.class);
@@ -71,7 +74,7 @@ class LikeWebSocketControllerTest {
 	@Test
 	@DisplayName("로컬 전송이 실패해도 중계는 한다, 중계가 실패해도 요청은 성공한다")
 	void failuresAreIsolated() {
-		when(likeService.addLike(eq(REQUEST), any())).thenReturn(UPDATE);
+		when(likeService.addLike(eq(REQUEST), any(), any())).thenReturn(UPDATE);
 		doThrow(new MessagingException("broker")).when(messagingTemplate).convertAndSend(anyString(), any(Object.class));
 		doThrow(new IllegalStateException("relay")).when(likeRelay).publish(any());
 
@@ -83,13 +86,35 @@ class LikeWebSocketControllerTest {
 	@Test
 	@DisplayName("HTTP 좋아요도 같은 방식으로 보내고 응답을 돌려준다")
 	void httpLike_alsoBroadcasts() {
-		when(likeService.addLike(eq(REQUEST), any())).thenReturn(UPDATE);
+		when(likeService.addLike(eq(REQUEST), any(), any())).thenReturn(UPDATE);
 
-		LikeResponse response = controller.add(REQUEST, null);
+		LikeResponse response = controller.add(REQUEST, null, "guest-1");
 
 		assertThat(response).isEqualTo(UPDATE);
 		verify(messagingTemplate).convertAndSend(LikeRelayConfig.LIKE_DESTINATION, UPDATE);
 		verify(likeRelay).publish(UPDATE);
+	}
+
+	@Test
+	@DisplayName("STOMP 게스트 신원은 핸드셰이크가 세션에 넣은 검증된 값만 쓴다")
+	void stompLike_usesGuestFromSessionAttributes() {
+		SimpMessageHeaderAccessor accessor = SimpMessageHeaderAccessor.create();
+		accessor.setSessionAttributes(new HashMap<>(Map.of(GuestIdentifierFilter.GUEST_UUID_ATTR, "verified-uuid")));
+		when(likeService.addLike(REQUEST, null, "verified-uuid")).thenReturn(UPDATE);
+
+		controller.handleAddLike(REQUEST, accessor);
+
+		verify(likeService).addLike(REQUEST, null, "verified-uuid");
+	}
+
+	@Test
+	@DisplayName("세션에 게스트 신원이 없으면 null로 넘겨 서비스가 거절하게 한다")
+	void stompLike_withoutGuestAttribute_passesNull() {
+		when(likeService.addLike(REQUEST, null, null)).thenThrow(new CustomAppException(ErrorType.ACCESS_DENIED));
+
+		assertThatThrownBy(() -> controller.handleAddLike(REQUEST, SimpMessageHeaderAccessor.create()))
+				.isInstanceOf(CustomAppException.class);
+		verifyNoInteractions(messagingTemplate, likeRelay);
 	}
 
 	@Test

@@ -1,6 +1,7 @@
 package com.example.popping.controller.mvc;
 
 import java.security.Principal;
+import java.util.Map;
 
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
@@ -9,6 +10,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestAttribute;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseBody;
 import jakarta.validation.Valid;
@@ -18,6 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 import com.example.popping.domain.UserPrincipal;
 import com.example.popping.dto.LikeRequest;
 import com.example.popping.dto.LikeResponse;
+import com.example.popping.filter.GuestIdentifierFilter;
 import com.example.popping.relay.LikeRelay;
 import com.example.popping.relay.LikeRelayConfig;
 import com.example.popping.service.LikeService;
@@ -44,7 +47,7 @@ public class LikeWebSocketController {
                               SimpMessageHeaderAccessor headerAccessor) {
 
         UserPrincipal userPrincipal = extractUserPrincipal(headerAccessor.getUser());
-        broadcast(likeService.addLike(request, userPrincipal));
+        broadcast(likeService.addLike(request, userPrincipal, guestUuid(headerAccessor)));
     }
 
     @MessageMapping("/like/remove")
@@ -52,22 +55,26 @@ public class LikeWebSocketController {
                                  SimpMessageHeaderAccessor headerAccessor) {
 
         UserPrincipal userPrincipal = extractUserPrincipal(headerAccessor.getUser());
-        broadcast(likeService.removeLike(request, userPrincipal));
+        broadcast(likeService.removeLike(request, userPrincipal, guestUuid(headerAccessor)));
     }
 
     // Broadcasts like the STOMP path, so likes driven over HTTP reach viewers too.
     @PostMapping("/api/test/likes/add")
     @ResponseBody
     public LikeResponse add(@RequestBody LikeRequest request,
-                            @AuthenticationPrincipal UserPrincipal principal) {
-        return broadcast(likeService.addLike(request, principal));
+                            @AuthenticationPrincipal UserPrincipal principal,
+                            @RequestAttribute(name = GuestIdentifierFilter.GUEST_UUID_ATTR, required = false)
+                            String guestUuid) {
+        return broadcast(likeService.addLike(request, principal, guestUuid));
     }
 
     @PostMapping("/api/test/likes/remove")
     @ResponseBody
     public LikeResponse remove(@RequestBody LikeRequest request,
-                               @AuthenticationPrincipal UserPrincipal principal) {
-        return broadcast(likeService.removeLike(request, principal));
+                               @AuthenticationPrincipal UserPrincipal principal,
+                               @RequestAttribute(name = GuestIdentifierFilter.GUEST_UUID_ATTR, required = false)
+                               String guestUuid) {
+        return broadcast(likeService.removeLike(request, principal, guestUuid));
     }
 
     /**
@@ -86,6 +93,13 @@ public class LikeWebSocketController {
             log.warn("Like update not relayed target={}:{}", update.targetType(), update.targetId(), e);
         }
         return update;
+    }
+
+    // Put there by GuestIdentityHandshakeInterceptor from the verified cookie.
+    private String guestUuid(SimpMessageHeaderAccessor headerAccessor) {
+        Map<String, Object> attributes = headerAccessor.getSessionAttributes();
+        if (attributes == null) return null;
+        return attributes.get(GuestIdentifierFilter.GUEST_UUID_ATTR) instanceof String uuid ? uuid : null;
     }
 
     private UserPrincipal extractUserPrincipal(Principal principal) {

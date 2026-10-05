@@ -79,16 +79,28 @@ public interface LikeRepository extends JpaRepository<Like, Long> {
     where l.targetType = :targetType
       and l.targetId = :targetId
       and l.type = :type
-      and (
-            (:user is not null and l.user = :user)
-         or (:guestIdentifier is not null and l.guestIdentifier = :guestIdentifier)
-      )
+      and l.user = :user
     """)
-    int deleteByActor(
+    int deleteByUser(
             @Param("targetType") Like.TargetType targetType,
             @Param("targetId") Long targetId,
             @Param("type") Like.Type type,
-            @Param("user") User user,
+            @Param("user") User user
+    );
+
+    @Modifying
+    @Query("""
+    delete from Like l
+    where l.targetType = :targetType
+      and l.targetId = :targetId
+      and l.type = :type
+      and l.user is null
+      and l.guestIdentifier = :guestIdentifier
+    """)
+    int deleteByGuest(
+            @Param("targetType") Like.TargetType targetType,
+            @Param("targetId") Long targetId,
+            @Param("type") Like.Type type,
             @Param("guestIdentifier") String guestIdentifier
     );
 }

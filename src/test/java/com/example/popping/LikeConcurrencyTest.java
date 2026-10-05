@@ -71,7 +71,7 @@ class LikeConcurrencyTest {
         CountDownLatch start = new CountDownLatch(1);
         CountDownLatch done = new CountDownLatch(threadCount);
 
-        LikeRequest request = new LikeRequest(postId, Like.TargetType.POST, Like.Type.LIKE, null);
+        LikeRequest request = new LikeRequest(postId, Like.TargetType.POST, Like.Type.LIKE);
         UserPrincipal principal = principal(userId);
 
         List<Exception> errors = Collections.synchronizedList(new ArrayList<>());
@@ -82,7 +82,7 @@ class LikeConcurrencyTest {
                 ready.countDown();
                 try {
                     start.await();
-                    likeService.addLike(request, principal);
+                    likeService.addLike(request, principal, null);
                     success.incrementAndGet();
                 } catch (Exception e) {
                     errors.add(e);
@@ -141,8 +141,9 @@ class LikeConcurrencyTest {
 
         // given: 먼저 좋아요 1개를 만들어 둔다
         likeService.addLike(
-                new LikeRequest(postId, Like.TargetType.POST, Like.Type.LIKE, null),
-                principal(userId)
+                new LikeRequest(postId, Like.TargetType.POST, Like.Type.LIKE),
+                principal(userId),
+                null
         );
 
         em.clear();
@@ -161,7 +162,7 @@ class LikeConcurrencyTest {
         CountDownLatch start = new CountDownLatch(1);
         CountDownLatch done = new CountDownLatch(threadCount);
 
-        LikeRequest request = new LikeRequest(postId, Like.TargetType.POST, Like.Type.LIKE, null);
+        LikeRequest request = new LikeRequest(postId, Like.TargetType.POST, Like.Type.LIKE);
         UserPrincipal principal = principal(userId);
 
         List<Exception> errors = Collections.synchronizedList(new ArrayList<>());
@@ -172,7 +173,7 @@ class LikeConcurrencyTest {
                 ready.countDown();
                 try {
                     start.await();
-                    likeService.removeLike(request, principal);
+                    likeService.removeLike(request, principal, null);
                     success.incrementAndGet();
                 } catch (Exception e) {
                     errors.add(e);

@@ -694,10 +694,6 @@
             type: type
         };
 
-        if (!isLoggedIn) {
-            request.guestIdentifier = getGuestIdentifier();
-        }
-
         const headers = {};
         const csrfToken = document.querySelector('meta[name="_csrf"]');
         const csrfHeader = document.querySelector('meta[name="_csrf_header"]');
