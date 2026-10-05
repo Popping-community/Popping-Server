@@ -229,11 +229,12 @@ tagged=$(grep -c "image: chooh1010/popping-community:${IMAGE_TAG}\$" "$COMPOSE")
 [ "$tagged" -eq 2 ] || abort "expected 2 app services on tag $IMAGE_TAG, found $tagged"
 grep -n "chooh1010/popping-community" "$COMPOSE"
 
-# 2. Recreate app containers only; DB and monitoring stay up.
+# 2. Recreate the app containers and HAProxy; DB and monitoring stay up. HAProxy reads
+#    RATE_LIMIT_OFF only when its container is created, so it is recreated every run.
 cd "$REPO_DIR" || abort "cannot enter $REPO_DIR"
 docker compose -f "$COMPOSE" -f "$COMPOSE_LOADTEST" config -q || abort "docker-compose.yml does not render"
-docker compose -f "$COMPOSE" -f "$COMPOSE_LOADTEST" up -d --force-recreate app-1 app-2 \
-	|| abort "failed to recreate app containers"
+docker compose -f "$COMPOSE" -f "$COMPOSE_LOADTEST" up -d --force-recreate app-1 app-2 haproxy \
+	|| abort "failed to recreate app and haproxy containers"
 
 # 3. Wait until both apps report UP.
 for port in 8081 8082; do
@@ -261,6 +262,17 @@ done
 code=$(curl -s -o /dev/null --max-time 3 -w "%{http_code}" "http://127.0.0.1:9091/api/test/likes/add")
 [ "$code" = "405" ] || abort "like test API is not enabled (GET answered $code, expected 405)"
 log "like test API enabled on both apps"
+
+# Every request comes from one address, so the write-path rate limits would answer 429
+# within the first minute (225 logins). The limit tables exist only when limits are on.
+docker inspect popping-haproxy --format '{{range .Config.Env}}{{println .}}{{end}}' \
+	| grep -q "^RATE_LIMIT_OFF=" || abort "haproxy was not created with RATE_LIMIT_OFF"
+tables=$(docker exec popping-haproxy sh -c 'echo "show table" | socat stdio /tmp/haproxy.sock') \
+	|| abort "cannot read haproxy tables"
+# With the limits off there is no table at all, so anything printed - a table or an
+# error from the runtime API - means the check did not prove them off.
+[ -z "$(printf '%s' "$tables" | tr -d '[:space:]')" ] 	|| abort "haproxy rate limits are not confirmed off: $tables"
+log "haproxy rate limits off"
 
 write_metadata
 if [ "$(grep '^jmx_sha256=' "$OUT_META" | cut -d= -f2)" \
