@@ -90,10 +90,11 @@ class ReactionVersionTest {
     @Test
     @DisplayName("같은 사람이 좋아요를 다시 눌러 아무것도 바뀌지 않으면 버전도 그대로다")
     void repeatedLike_leavesVersionUnchanged() {
-        LikeRequest like = new LikeRequest(post.getId(), Like.TargetType.POST, Like.Type.LIKE, "guest-" + post.getId());
+        LikeRequest like = new LikeRequest(post.getId(), Like.TargetType.POST, Like.Type.LIKE);
+        String guest = "guest-" + post.getId();
 
-        likeService.addLike(like, null);
-        likeService.addLike(like, null);
+        likeService.addLike(like, null, guest);
+        likeService.addLike(like, null, guest);
 
         LikeCountView counts = postRepository.findLikeCountsById(post.getId());
         assertThat(counts.getLikeCount()).isEqualTo(1);

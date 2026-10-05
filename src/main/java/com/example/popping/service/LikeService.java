@@ -23,11 +23,14 @@ public class LikeService {
     private final PostService postService;
     private final CommentService commentService;
     private final UserService userService;
-    private final GuestIdentifierService guestIdentifierService;
 
-    public LikeResponse addLike(LikeRequest req, UserPrincipal principal) {
+    /**
+     * @param guestUuid the guest UUID the server verified from the signed cookie, used only
+     *                  when no member is logged in. Never a value taken from the request body.
+     */
+    public LikeResponse addLike(LikeRequest req, UserPrincipal principal, String guestUuid) {
         User user = getUser(principal);
-        String guestIdentifier = resolveGuestIdentifier(req.guestIdentifier());
+        String guestIdentifier = user != null ? null : guestUuid;
         validateActor(user, guestIdentifier);
 
         int inserted = likeRepository.upsertLike(
@@ -45,18 +48,15 @@ public class LikeService {
         return buildResponse(req, addedAction(req.type()));
     }
 
-    public LikeResponse removeLike(LikeRequest req, UserPrincipal principal) {
+    /** Removes only the acting member's or the acting guest's row, never both. */
+    public LikeResponse removeLike(LikeRequest req, UserPrincipal principal, String guestUuid) {
         User user = getUser(principal);
-        String guestIdentifier = resolveGuestIdentifier(req.guestIdentifier());
+        String guestIdentifier = user != null ? null : guestUuid;
         validateActor(user, guestIdentifier);
 
-        int deleted = likeRepository.deleteByActor(
-                req.targetType(),
-                req.targetId(),
-                req.type(),
-                user,
-                guestIdentifier
-        );
+        int deleted = user != null
+                ? likeRepository.deleteByUser(req.targetType(), req.targetId(), req.type(), user)
+                : likeRepository.deleteByGuest(req.targetType(), req.targetId(), req.type(), guestIdentifier);
 
         if (deleted > 0) {
             applyDelta(req.targetType(), req.type(), req.targetId(), -1);
@@ -92,15 +92,6 @@ public class LikeService {
     private User getUser(UserPrincipal principal) {
         if (principal == null) return null;
         return userService.getLoginUserById(principal.getUserId());
-    }
-
-    /**
-     * guestIdentifier가 "uuid.signature" 형태면 서명 검증 후 UUID만 반환.
-     * 서명이 없는 구형 값이거나 null이면 그대로 반환.
-     */
-    private String resolveGuestIdentifier(String raw) {
-        if (raw == null) return null;
-        return guestIdentifierService.extractUuid(raw).orElse(raw);
     }
 
     private void validateActor(User user, String guestIdentifier) {
